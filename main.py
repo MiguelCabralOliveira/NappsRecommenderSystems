@@ -15,7 +15,7 @@ def main():
             
             # Process with TF-IDF
             print("\nStarting TF-IDF processing...")
-            tfidf_df, _ = process_descriptions_tfidf()
+            tfidf_df, _, similar_products = process_descriptions_tfidf()
             
             print("\nProcessing complete! Final output:")
             print(tfidf_df[['product_title', 'clean_text']].head())

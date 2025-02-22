@@ -3,7 +3,7 @@ import pandas as pd
 
 # Fetch all collections and products using shopify storefront api
 # Currently fetching : Collections, Products, Variants, Options, Tags
-def get_collections_products(store_url: str, access_token: str, collections_limit: int = 10, products_limit: int = 10) -> pd.DataFrame | None:
+def get_collections_products(store_url: str, access_token: str, collections_limit: int = 10, products_limit: int = 100) -> pd.DataFrame | None:
     url = f"{store_url}/api/2024-01/graphql.json"
     
     headers = {
@@ -22,7 +22,7 @@ def get_collections_products(store_url: str, access_token: str, collections_limi
                         edges {
                             node {
                                 id
-                                descriptionHtml
+                                description
                                 handle
                                 title
                                 productType
@@ -79,7 +79,7 @@ def get_collections_products(store_url: str, access_token: str, collections_limi
                     'product_title': product['title'],
                     'collection_title': collection_title,
                     'product_id': product['id'],
-                    'description_html': product['descriptionHtml'],
+                    'description': product['description'],
                     'handle': product['handle'],
                     'product_type': product['productType'],
                     'tags': product['tags'],
