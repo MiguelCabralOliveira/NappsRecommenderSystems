@@ -98,10 +98,14 @@ def process_descriptions_tfidf(df, output_prefix="products"):
     final_df = df.copy()
     final_df = final_df.join(tfidf_df)
 
+    recommendation_df = final_df.drop(['product_id', 'description', 'handle'], axis=1)
+    
+    # Save the recommendation DataFrame
     if output_prefix:
+        recommendation_df.to_csv(f"{output_prefix}_recommendation.csv", index=False)
         final_df.to_csv(f"{output_prefix}_with_tfidf.csv", index=False)
     
-    return final_df, tfidf, similar_products
+    return final_df, recommendation_df, tfidf, similar_products
 
 if __name__ == "__main__":
     df, vectorizer, similar_products = process_descriptions_tfidf()
