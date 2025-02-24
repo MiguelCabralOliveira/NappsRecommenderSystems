@@ -15,14 +15,10 @@ def process_variants(df):
             return pd.Series({
                 'min_price': np.nan,
                 'max_price': np.nan,
-                'has_discount': False,
-                'discount_percentage': 0,
+                'has_discount': 0,
                 'size_options': [],
                 'color_options': [],
-                'other_options': [],
-                'num_size_options': 0,
-                'num_color_options': 0,
-                'num_other_options': 0
+                'other_options': []
             })
 
         # Price related features
@@ -62,7 +58,6 @@ def process_variants(df):
             'min_price': min(prices),
             'max_price': max(prices),
             'has_discount': has_discount,
-            'discount_percentage': avg_discount,
             'size_options': size_options,
             'color_options': color_options,
             'other_options': other_options,
@@ -71,33 +66,41 @@ def process_variants(df):
     # Apply the function to variants column
     variant_features = df['variants'].apply(extract_variant_features)
     
-    # Drop original variants column and options
-    result_df = df.drop(['variants', 'options'], axis=1)
+    # Drop variants column
+    result_df = df.drop(['variants'], axis=1)
     
     # Concatenate the new features
     result_df = pd.concat([result_df, variant_features], axis=1)
     
     # Create MinMaxScaler for numerical features
     scaler = MinMaxScaler()
-    numerical_features = ['min_price', 'max_price', 'discount_percentage']
+    numerical_features = ['min_price', 'max_price']
     result_df[numerical_features] = scaler.fit_transform(result_df[numerical_features])
     
-    # Process options into dummy variables
+    # Process options into dummy variables more efficiently
+    option_dummies = []
     for option_type in ['size_options', 'color_options', 'other_options']:
         all_options = []
         for options in result_df[option_type]:
-            if options:  # Only process non-empty arrays
+            if options:
                 all_options.extend(options)
         
-        if all_options:  # Only create dummies if we have options
+        if all_options:
             unique_options = sorted(list(set(all_options)))
             prefix = option_type.replace('_options', '')
             
-            # Create dummy columns
-            for opt in unique_options:
-                result_df[f'{prefix}_{opt}'] = result_df[option_type].apply(lambda x: 1 if opt in x else 0)
-        
-        # Drop original options column
-        result_df = result_df.drop(option_type, axis=1)
+            # Create all dummy columns at once
+            dummy_data = {
+                f'{prefix}_{opt}': [1 if opt in x else 0 for x in result_df[option_type]]
+                for opt in unique_options
+            }
+            option_dummies.append(pd.DataFrame(dummy_data, index=result_df.index))
+    
+    # Drop original options columns
+    result_df = result_df.drop(['size_options', 'color_options', 'other_options'], axis=1)
+    
+    # Concatenate all dummy variables at once
+    if option_dummies:
+        result_df = pd.concat([result_df] + option_dummies, axis=1)
     
     return result_df
