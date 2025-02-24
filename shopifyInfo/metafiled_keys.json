@@ -1,0 +1,14 @@
+{
+  "metafields": [
+    {
+      "namespace": "shopify--discovery--product_recommendation",
+      "key": "related_products",
+      "type": "product_reference"
+    },
+    {
+      "namespace": "reviews",
+      "key": "rating",
+      "type": "number_decimal"
+    }
+  ]
+}
