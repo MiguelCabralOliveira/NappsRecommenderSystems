@@ -1,0 +1,103 @@
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+
+def process_variants(df):
+    """
+    Process variants column to extract meaningful features
+    Args:
+        df: pandas DataFrame containing product data with variants column
+    Returns:
+        DataFrame: processed DataFrame with variant features
+    """
+    def extract_variant_features(variants):
+        if not variants:
+            return pd.Series({
+                'min_price': np.nan,
+                'max_price': np.nan,
+                'has_discount': False,
+                'discount_percentage': 0,
+                'size_options': [],
+                'color_options': [],
+                'other_options': [],
+                'num_size_options': 0,
+                'num_color_options': 0,
+                'num_other_options': 0
+            })
+
+        # Price related features
+        prices = [float(v['price']['amount']) for v in variants]
+        compare_prices = [float(v['compareAtPrice']['amount']) if v['compareAtPrice'] else float(v['price']['amount']) 
+                         for v in variants]
+        
+        # Calculate discount
+        has_discount = any(cp > p for p, cp in zip(prices, compare_prices))
+        avg_discount = np.mean([(cp - p) / cp * 100 
+                              for p, cp in zip(prices, compare_prices) 
+                              if cp > p]) if has_discount else 0
+
+        # Handle options
+        size_options = []
+        color_options = []
+        other_options = []
+
+        for variant in variants:
+            for option in variant['selectedOptions']:
+                option_name = option['name'].lower()
+                option_value = variant['title']
+                
+                if 'size' in option_name:
+                    size_options.append(option_value)
+                elif 'color' in option_name or 'colour' in option_name:
+                    color_options.append(option_value)
+                else:
+                    other_options.append(f"{option_name}:{option_value}")
+
+        # Remove duplicates
+        size_options = list(set(size_options))
+        color_options = list(set(color_options))
+        other_options = list(set(other_options))
+
+        return pd.Series({
+            'min_price': min(prices),
+            'max_price': max(prices),
+            'has_discount': has_discount,
+            'discount_percentage': avg_discount,
+            'size_options': size_options,
+            'color_options': color_options,
+            'other_options': other_options,
+        })
+
+    # Apply the function to variants column
+    variant_features = df['variants'].apply(extract_variant_features)
+    
+    # Drop original variants column and options
+    result_df = df.drop(['variants', 'options'], axis=1)
+    
+    # Concatenate the new features
+    result_df = pd.concat([result_df, variant_features], axis=1)
+    
+    # Create MinMaxScaler for numerical features
+    scaler = MinMaxScaler()
+    numerical_features = ['min_price', 'max_price', 'discount_percentage']
+    result_df[numerical_features] = scaler.fit_transform(result_df[numerical_features])
+    
+    # Process options into dummy variables
+    for option_type in ['size_options', 'color_options', 'other_options']:
+        all_options = []
+        for options in result_df[option_type]:
+            if options:  # Only process non-empty arrays
+                all_options.extend(options)
+        
+        if all_options:  # Only create dummies if we have options
+            unique_options = sorted(list(set(all_options)))
+            prefix = option_type.replace('_options', '')
+            
+            # Create dummy columns
+            for opt in unique_options:
+                result_df[f'{prefix}_{opt}'] = result_df[option_type].apply(lambda x: 1 if opt in x else 0)
+        
+        # Drop original options column
+        result_df = result_df.drop(option_type, axis=1)
+    
+    return result_df
