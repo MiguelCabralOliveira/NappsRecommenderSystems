@@ -42,7 +42,7 @@ def analyze_product_similarity(tfidf_matrix, df, similarity_threshold=0.85):
     
     return pd.DataFrame(similar_products)
 
-def process_descriptions_tfidf(input_path="products.csv", output_prefix="products"):
+def process_descriptions_tfidf(df, output_prefix="products"):
     """
     Process descriptions with TF-IDF and save results
     TF-IDF (Term Frequency-Inverse Documentation Frequency),
@@ -59,8 +59,6 @@ def process_descriptions_tfidf(input_path="products.csv", output_prefix="product
 
     I want to identify the keywords that are most important for the product description.
     """
-    # Load data
-    df = pd.read_csv(input_path)
     
     # Clean HTML descriptions
     df['clean_text'] = df['description'].apply(clean_html)
@@ -97,8 +95,11 @@ def process_descriptions_tfidf(input_path="products.csv", output_prefix="product
         index=valid_descriptions.index)
     
     # Merge with original data
-    final_df = df.join(tfidf_df)
-    final_df.to_csv(f"{output_prefix}_with_tfidf.csv", index=False)
+    final_df = df.copy()
+    final_df = final_df.join(tfidf_df)
+
+    if output_prefix:
+        final_df.to_csv(f"{output_prefix}_with_tfidf.csv", index=False)
     
     return final_df, tfidf, similar_products
 
