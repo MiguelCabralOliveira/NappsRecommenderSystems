@@ -367,8 +367,10 @@ class ProductRecommender:
         if strategy == 'cluster':
             # Simply recommend from the same cluster
             if 'rating' in cluster_products.columns:
+                # Ensure rating is numeric
+                cluster_products['rating_numeric'] = pd.to_numeric(cluster_products['rating'], errors='coerce').fillna(0)
                 recommendations = cluster_products.sort_values(
-                    by='rating', ascending=False
+                    by='rating_numeric', ascending=False
                 ).head(n_recommendations)
             else:
                 recommendations = cluster_products.head(n_recommendations)
@@ -386,15 +388,19 @@ class ProductRecommender:
                 # If enough collection products, use them, otherwise fall back to cluster
                 if len(collection_products) >= n_recommendations:
                     if 'rating' in collection_products.columns:
+                        # Ensure rating is numeric
+                        collection_products['rating_numeric'] = pd.to_numeric(collection_products['rating'], errors='coerce').fillna(0)
                         recommendations = collection_products.sort_values(
-                            by='rating', ascending=False
+                            by='rating_numeric', ascending=False
                         ).head(n_recommendations)
                     else:
                         recommendations = collection_products.head(n_recommendations)
                 else:
                     # Fill remaining slots with cluster recommendations
                     if 'rating' in collection_products.columns:
-                        collection_recs = collection_products.sort_values(by='rating', ascending=False)
+                        # Ensure rating is numeric
+                        collection_products['rating_numeric'] = pd.to_numeric(collection_products['rating'], errors='coerce').fillna(0)
+                        collection_recs = collection_products.sort_values(by='rating_numeric', ascending=False)
                     else:
                         collection_recs = collection_products
                     
@@ -407,8 +413,10 @@ class ProductRecommender:
                     ]
                     
                     if 'rating' in remaining_cluster_products.columns:
+                        # Ensure rating is numeric
+                        remaining_cluster_products['rating_numeric'] = pd.to_numeric(remaining_cluster_products['rating'], errors='coerce').fillna(0)
                         cluster_recs = remaining_cluster_products.sort_values(
-                            by='rating', ascending=False
+                            by='rating_numeric', ascending=False
                         ).head(remaining_slots)
                     else:
                         cluster_recs = remaining_cluster_products.head(remaining_slots)
@@ -418,8 +426,10 @@ class ProductRecommender:
             else:
                 # No collection info, fall back to cluster
                 if 'rating' in cluster_products.columns:
+                    # Ensure rating is numeric
+                    cluster_products['rating_numeric'] = pd.to_numeric(cluster_products['rating'], errors='coerce').fillna(0)
                     recommendations = cluster_products.sort_values(
-                        by='rating', ascending=False
+                        by='rating_numeric', ascending=False
                     ).head(n_recommendations)
                 else:
                     recommendations = cluster_products.head(n_recommendations)
@@ -445,9 +455,11 @@ class ProductRecommender:
             
             # Add rating score (up to 1 point)
             if 'rating' in all_candidate_products.columns:
-                max_rating = all_candidate_products['rating'].max()
+                # Ensure rating is numeric
+                all_candidate_products['rating_numeric'] = pd.to_numeric(all_candidate_products['rating'], errors='coerce').fillna(0)
+                max_rating = all_candidate_products['rating_numeric'].max()
                 if max_rating > 0:
-                    all_candidate_products['rec_score'] += all_candidate_products['rating'].fillna(0) / max_rating
+                    all_candidate_products['rec_score'] += all_candidate_products['rating_numeric'] / max_rating
             
             # Get top recommendations
             recommendations = all_candidate_products.sort_values(
@@ -467,7 +479,57 @@ class ProductRecommender:
             rec['source'] = strategy
         
         return recommendation_list
-    
+
+    def generate_all_recommendations(self, product_df, n_recommendations=5, strategy='hybrid'):
+        """
+        Generate recommendations for all products in the dataframe
+        
+        Args:
+            product_df: DataFrame containing product data
+            n_recommendations: Number of recommendations to generate per product
+            strategy: Recommendation strategy ('hybrid', 'cluster', or 'collection')
+            
+        Returns:
+            DataFrame with recommendations for each product
+        """
+        import pandas as pd
+        from tqdm import tqdm  # For progress bar
+        
+        # Create an empty list to store recommendation data
+        all_recommendations = []
+        
+        # Process each product
+        print(f"Generating {n_recommendations} {strategy} recommendations for {len(product_df)} products...")
+        
+        # Use tqdm for progress tracking
+        for _, row in tqdm(product_df.iterrows(), total=len(product_df)):
+            product_id = row['product_id']
+            product_title = row['product_title']
+            
+            # Get recommendations for this product
+            recommendations = self.get_recommendations(
+                product_id, 
+                n_recommendations=n_recommendations, 
+                strategy=strategy
+            )
+            
+            # If recommendations were found, add them to our list
+            if recommendations:
+                for i, rec in enumerate(recommendations, 1):
+                    all_recommendations.append({
+                        'source_product_id': product_id,
+                        'source_product_title': product_title,
+                        'recommendation_rank': i,
+                        'recommended_product_id': rec['product_id'],
+                        'recommended_product_title': rec['product_title'],
+                        'recommendation_source': rec['source']
+                    })
+        
+        # Convert list to DataFrame
+        recommendations_df = pd.DataFrame(all_recommendations)
+        
+        return recommendations_df
+
     def save_model(self, filename='recommender_model.pkl'):
         """
         Save the trained model to a file

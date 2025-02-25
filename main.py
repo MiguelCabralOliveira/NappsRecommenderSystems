@@ -119,12 +119,26 @@ def main():
                     print(f"{i}. {rec['product_title']}")
             else:
                 print("No recommendations found for this product.")
+            
+            # 9. Generate recommendations for all products
+            print("\nGenerating recommendations for all products...")
+            all_recommendations_df = recommender.generate_all_recommendations(tfidf_df)
+            
+            # Save all recommendations
+            all_recommendations_df.to_csv("all_product_recommendations.csv", index=False)
+            
+            print(f"\nAll recommendations generated successfully!")
+            print(f"Total products processed: {len(tfidf_df)}")
+            print(f"Total products with recommendations: {all_recommendations_df['source_product_id'].nunique()}")
+            print(f"Total recommendations generated: {len(all_recommendations_df)}")
+            print("Recommendations saved to all_product_recommendations.csv")
                 
             print("\nRecommendation model training completed successfully!")
             print("\nOutputs:")
             print("- product_recommender_model.pkl (trained model)")
             print("- product_clusters.png (visualization of product clusters)")
             print("- optimal_clusters.png (analysis of optimal cluster count)")
+            print("- all_product_recommendations.csv (recommendations for all products)")
             
         else:
             print("No products available to generate sample recommendations.")
