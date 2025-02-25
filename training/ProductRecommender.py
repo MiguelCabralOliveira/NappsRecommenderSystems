@@ -1,0 +1,415 @@
+import pandas as pd
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+from collections import defaultdict
+
+class ProductRecommender:
+    def __init__(self, n_clusters=10, random_state=42):
+        """
+        Initialize the product recommender with K-means clustering
+        
+        Args:
+            n_clusters: Number of clusters for K-means (default: 10)
+            random_state: Random seed for reproducibility
+        """
+        self.n_clusters = n_clusters
+        self.random_state = random_state
+        self.kmeans = None
+        self.scaler = StandardScaler()
+        self.feature_columns = None
+        self.product_data = None
+        
+    def _prepare_data(self, df):
+        """
+        Prepare data for clustering by selecting appropriate features
+        
+        Args:
+            df: DataFrame with product data including TF-IDF features
+            
+        Returns:
+            DataFrame with selected features for clustering
+        """
+        # Exclude these columns from feature set
+        exclude_columns = [
+            'product_title', 'product_id', 'vendor', 'description', 
+            'handle', 'product_type', 'clean_text', 'related_products'
+        ]
+        
+        # Get all feature columns (everything not in exclude_columns)
+        self.feature_columns = [col for col in df.columns if col not in exclude_columns]
+        
+        # Handle missing values
+        features_df = df[self.feature_columns].fillna(0)
+        
+        return features_df
+    
+    def find_optimal_clusters(self, df, max_clusters=30):
+        """
+        Find optimal number of clusters using silhouette score
+        
+        Args:
+            df: DataFrame with product data
+            max_clusters: Maximum number of clusters to try
+            
+        Returns:
+            The optimal number of clusters
+        """
+        print("Finding optimal number of clusters...")
+        features_df = self._prepare_data(df)
+        
+        # Scale the features
+        features_scaled = self.scaler.fit_transform(features_df)
+        
+        # Try different numbers of clusters
+        silhouette_scores = []
+        min_clusters = 2  # Silhouette score requires at least 2 clusters
+        
+        for n_clusters in range(min_clusters, min(max_clusters + 1, len(features_df) // 2)):
+            kmeans = KMeans(n_clusters=n_clusters, random_state=self.random_state, n_init=10)
+            cluster_labels = kmeans.fit_predict(features_scaled)
+            
+            # Calculate silhouette score
+            try:
+                silhouette_avg = silhouette_score(features_scaled, cluster_labels)
+                silhouette_scores.append(silhouette_avg)
+                print(f"Clusters: {n_clusters}, Silhouette Score: {silhouette_avg:.4f}")
+            except Exception as e:
+                print(f"Error with {n_clusters} clusters: {e}")
+                silhouette_scores.append(-1)
+        
+        # Find the best number of clusters
+        optimal_clusters = silhouette_scores.index(max(silhouette_scores)) + min_clusters
+        
+        # Plot silhouette scores
+        plt.figure(figsize=(10, 6))
+        plt.plot(range(min_clusters, min_clusters + len(silhouette_scores)), silhouette_scores, marker='o')
+        plt.xlabel('Number of Clusters')
+        plt.ylabel('Silhouette Score')
+        plt.title('Silhouette Score for Different Cluster Numbers')
+        plt.axvline(x=optimal_clusters, color='r', linestyle='--')
+        plt.savefig('optimal_clusters.png')
+        plt.close()
+        
+        print(f"Optimal number of clusters: {optimal_clusters}")
+        return optimal_clusters
+        
+    def fit(self, df, find_optimal=True, max_clusters=30):
+        """
+        Fit the K-means model on product data
+        
+        Args:
+            df: DataFrame with product data including TF-IDF features
+            find_optimal: Whether to find optimal number of clusters
+            max_clusters: Maximum number of clusters to try if find_optimal is True
+        """
+        self.product_data = df.copy()
+        
+        # Find optimal number of clusters if requested
+        if find_optimal and len(df) > 2:
+            self.n_clusters = self.find_optimal_clusters(df, max_clusters)
+        
+        # Prepare features
+        features_df = self._prepare_data(df)
+        
+        # Scale the features
+        features_scaled = self.scaler.fit_transform(features_df)
+        
+        # Apply K-means clustering
+        print(f"Fitting K-means with {self.n_clusters} clusters...")
+        self.kmeans = KMeans(n_clusters=self.n_clusters, random_state=self.random_state, n_init=10)
+        self.kmeans.fit(features_scaled)
+        
+        # Add cluster labels to the product data
+        self.product_data['cluster'] = self.kmeans.predict(features_scaled)
+        
+        # Create cluster statistics
+        cluster_stats = self.product_data.groupby('cluster').agg(
+            count=('product_title', 'count'),
+            products=('product_title', lambda x: list(x)[:5]),  # Sample 5 products from each cluster
+        )
+        
+        print("\nCluster Statistics:")
+        print(cluster_stats[['count']])
+        
+        # Visualize clusters (if data allows for 2D visualization)
+        self._visualize_clusters()
+        
+        return self
+    
+    def _visualize_clusters(self):
+        """
+        Visualize clusters using dimensionality reduction
+        """
+        from sklearn.decomposition import PCA
+        
+        if len(self.product_data) < 3:
+            print("Not enough data for visualization")
+            return
+            
+        features_df = self._prepare_data(self.product_data)
+        features_scaled = self.scaler.transform(features_df)
+        
+        # Use PCA to reduce dimensions to 2D for visualization
+        pca = PCA(n_components=2)
+        features_2d = pca.fit_transform(features_scaled)
+        
+        # Create a DataFrame for plotting
+        viz_df = pd.DataFrame({
+            'x': features_2d[:, 0],
+            'y': features_2d[:, 1],
+            'cluster': self.product_data['cluster'],
+            'product': self.product_data['product_title']
+        })
+        
+        # Plot the clusters
+        plt.figure(figsize=(12, 8))
+        
+        # Create a scatter plot with different colors for each cluster
+        scatter = sns.scatterplot(data=viz_df, x='x', y='y', hue='cluster', palette='viridis', alpha=0.7)
+        
+        # Add labels to the data points
+        for i in range(min(len(viz_df), 20)):  # Limit labels to prevent clutter
+            plt.text(
+                viz_df.iloc[i]['x'] + 0.02, viz_df.iloc[i]['y'] + 0.02,
+                viz_df.iloc[i]['product'][:20] + '...' if len(viz_df.iloc[i]['product']) > 20 else viz_df.iloc[i]['product'],
+                fontsize=8
+            )
+        
+        plt.title('Product Clusters Visualization (PCA 2D projection)')
+        plt.tight_layout()
+        plt.savefig('product_clusters.png')
+        plt.close()
+        
+    def get_product_cluster(self, product_id):
+        """
+        Get the cluster for a specific product
+        
+        Args:
+            product_id: The product ID to look up
+            
+        Returns:
+            The cluster number or None if product not found
+        """
+        product_row = self.product_data[self.product_data['product_id'] == product_id]
+        if len(product_row) > 0:
+            return product_row.iloc[0]['cluster']
+        return None
+    
+    def get_same_cluster_products(self, product_id, n_recommendations=5):
+        """
+        Get products from the same cluster as the specified product
+        
+        Args:
+            product_id: The product ID to get recommendations for
+            n_recommendations: Number of recommendations to return
+            
+        Returns:
+            List of recommended product IDs
+        """
+        product_cluster = self.get_product_cluster(product_id)
+        if product_cluster is None:
+            return []
+        
+        # Get other products in the same cluster
+        cluster_products = self.product_data[
+            (self.product_data['cluster'] == product_cluster) & 
+            (self.product_data['product_id'] != product_id)
+        ]
+        
+        # Return top N recommendations
+        recommendations = cluster_products.sort_values(
+            by='rating', ascending=False
+        ).head(n_recommendations)
+        
+        return recommendations[['product_id', 'product_title']].to_dict('records')
+    
+    def get_recommendations(self, product_id, n_recommendations=5, strategy='hybrid'):
+        """
+        Get product recommendations based on clustering
+        
+        Args:
+            product_id: The product ID to get recommendations for
+            n_recommendations: Number of recommendations to return
+            strategy: Recommendation strategy
+                - 'cluster': Only recommend from same cluster
+                - 'collection': Prefer products from same collection
+                - 'hybrid': Balanced recommendation (default)
+                
+        Returns:
+            List of recommended product dictionaries
+        """
+        if self.kmeans is None:
+            print("Model not fitted yet!")
+            return []
+            
+        product_row = self.product_data[self.product_data['product_id'] == product_id]
+        
+        if len(product_row) == 0:
+            print(f"Product {product_id} not found!")
+            return []
+            
+        product = product_row.iloc[0]
+        product_cluster = product['cluster']
+        
+        # Check if product has existing product recommendations
+        if not pd.isna(product['related_products']) and product['related_products']:
+            if isinstance(product['related_products'], str):
+                try:
+                    # Try to parse as JSON if it's a string
+                    import json
+                    related_products = json.loads(product['related_products'])
+                    if isinstance(related_products, list) and len(related_products) > 0:
+                        print(f"Using {min(len(related_products), n_recommendations)} existing recommendations")
+                        existing_recommendations = []
+                        for related_id in related_products[:n_recommendations]:
+                            related_product = self.product_data[self.product_data['product_id'] == related_id]
+                            if len(related_product) > 0:
+                                existing_recommendations.append({
+                                    'product_id': related_id,
+                                    'product_title': related_product.iloc[0]['product_title'],
+                                    'source': 'existing'
+                                })
+                        return existing_recommendations
+                except:
+                    pass  # If parsing fails, continue with algorithmic recommendations
+        
+        # Find products in the same cluster
+        cluster_products = self.product_data[
+            (self.product_data['cluster'] == product_cluster) & 
+            (self.product_data['product_id'] != product_id)
+        ]
+        
+        # Extract collection information
+        product_collections = [col for col in self.product_data.columns if col.startswith('collection_') and product[col] == 1]
+        
+        # Prepare recommendations based on strategy
+        if strategy == 'cluster':
+            # Simply recommend from the same cluster
+            recommendations = cluster_products.sort_values(
+                by='rating', ascending=False
+            ).head(n_recommendations)
+            
+        elif strategy == 'collection':
+            # Prioritize same collection products
+            if len(product_collections) > 0:
+                # Find products in the same collections
+                collection_filter = self.product_data[product_collections].sum(axis=1) > 0
+                collection_products = self.product_data[
+                    collection_filter & 
+                    (self.product_data['product_id'] != product_id)
+                ]
+                
+                # If enough collection products, use them, otherwise fall back to cluster
+                if len(collection_products) >= n_recommendations:
+                    recommendations = collection_products.sort_values(
+                        by='rating', ascending=False
+                    ).head(n_recommendations)
+                else:
+                    # Fill remaining slots with cluster recommendations
+                    collection_recs = collection_products.sort_values(by='rating', ascending=False)
+                    remaining_slots = n_recommendations - len(collection_recs)
+                    
+                    # Exclude already selected products
+                    already_selected = set(collection_recs['product_id'])
+                    cluster_recs = cluster_products[
+                        ~cluster_products['product_id'].isin(already_selected)
+                    ].sort_values(by='rating', ascending=False).head(remaining_slots)
+                    
+                    # Combine recommendations
+                    recommendations = pd.concat([collection_recs, cluster_recs])
+            else:
+                # No collection info, fall back to cluster
+                recommendations = cluster_products.sort_values(
+                    by='rating', ascending=False
+                ).head(n_recommendations)
+                
+        else:  # hybrid strategy
+            # Calculate a weighted score that considers both cluster and collection
+            all_candidate_products = self.product_data[
+                self.product_data['product_id'] != product_id
+            ].copy()
+            
+            # Initialize score
+            all_candidate_products['rec_score'] = 0
+            
+            # Add score for cluster match (2 points)
+            all_candidate_products.loc[
+                all_candidate_products['cluster'] == product_cluster, 'rec_score'
+            ] += 2
+            
+            # Add score for collection match (3 points)
+            if len(product_collections) > 0:
+                collection_score = all_candidate_products[product_collections].sum(axis=1)
+                all_candidate_products['rec_score'] += collection_score * 3
+            
+            # Add rating score (up to 1 point)
+            if 'rating' in all_candidate_products.columns:
+                max_rating = all_candidate_products['rating'].max()
+                if max_rating > 0:
+                    all_candidate_products['rec_score'] += all_candidate_products['rating'] / max_rating
+            
+            # Get top recommendations
+            recommendations = all_candidate_products.sort_values(
+                by='rec_score', ascending=False
+            ).head(n_recommendations)
+        
+        # Convert to list of dictionaries
+        recommendation_list = recommendations[['product_id', 'product_title']].to_dict('records')
+        
+        # Add the source of recommendation
+        for rec in recommendation_list:
+            rec['source'] = strategy
+        
+        return recommendation_list
+    
+    def save_model(self, filename='recommender_model.pkl'):
+        """
+        Save the trained model to a file
+        
+        Args:
+            filename: Output filename
+        """
+        import pickle
+        with open(filename, 'wb') as f:
+            pickle.dump({
+                'kmeans': self.kmeans,
+                'scaler': self.scaler,
+                'n_clusters': self.n_clusters,
+                'feature_columns': self.feature_columns,
+                'random_state': self.random_state
+            }, f)
+        print(f"Model saved to {filename}")
+    
+    @classmethod
+    def load_model(cls, product_data, filename='recommender_model.pkl'):
+        """
+        Load a trained model from a file
+        
+        Args:
+            product_data: DataFrame with product data
+            filename: Input filename
+            
+        Returns:
+            Loaded ProductRecommender instance
+        """
+        import pickle
+        with open(filename, 'rb') as f:
+            model_data = pickle.load(f)
+        
+        # Create a new instance
+        recommender = cls(n_clusters=model_data['n_clusters'], random_state=model_data['random_state'])
+        recommender.kmeans = model_data['kmeans']
+        recommender.scaler = model_data['scaler']
+        recommender.feature_columns = model_data['feature_columns']
+        recommender.product_data = product_data
+        
+        # Predict clusters for the provided product data
+        features_df = recommender._prepare_data(product_data)
+        features_scaled = recommender.scaler.transform(features_df)
+        recommender.product_data['cluster'] = recommender.kmeans.predict(features_scaled)
+        
+        return recommender

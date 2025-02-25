@@ -26,8 +26,8 @@ def process_variants(df):
         compare_prices = [float(v['compareAtPrice']['amount']) if v['compareAtPrice'] else float(v['price']['amount']) 
                          for v in variants]
         
-        # Calculate discount
-        has_discount = any(cp > p for p, cp in zip(prices, compare_prices))
+        # Calculate discount - explicit integer conversion for has_discount
+        has_discount = 1 if any(cp > p for p, cp in zip(prices, compare_prices)) else 0
         avg_discount = np.mean([(cp - p) / cp * 100 
                               for p, cp in zip(prices, compare_prices) 
                               if cp > p]) if has_discount else 0
@@ -57,7 +57,7 @@ def process_variants(df):
         return pd.Series({
             'min_price': min(prices),
             'max_price': max(prices),
-            'has_discount': has_discount,
+            'has_discount': has_discount,  # Now explicitly an integer (0 or 1)
             'size_options': size_options,
             'color_options': color_options,
             'other_options': other_options,
@@ -104,3 +104,16 @@ def process_variants(df):
         result_df = pd.concat([result_df] + option_dummies, axis=1)
     
     return result_df
+
+
+if __name__ == "__main__":
+    # Debug/testing mode
+    input_df = pd.read_csv("../products.csv")
+    df_processed = process_variants(input_df)
+    
+    # Test has_discount is explicitly integer
+    if 'has_discount' in df_processed.columns:
+        print(f"Has discount dtype: {df_processed['has_discount'].dtype}")
+        print(f"Has discount values: {df_processed['has_discount'].unique()}")
+    
+    print(f"\nTotal features after processing: {len(df_processed.columns)}")
