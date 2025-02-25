@@ -6,6 +6,7 @@ from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 import seaborn as sns
 from collections import defaultdict
+
 class ProductRecommender:
     def __init__(self, n_clusters=10, random_state=42):
         """
@@ -21,6 +22,7 @@ class ProductRecommender:
         self.scaler = StandardScaler()
         self.feature_columns = None
         self.product_data = None
+        self.similar_products_dict = {} 
         
     def _prepare_data(self, df):
         """
@@ -76,6 +78,36 @@ class ProductRecommender:
         
         return features_df
 
+    def load_similarity_data(self, similarity_file):
+        """
+        Load similarity data from CSV file
+        
+        Args:
+            similarity_file: Path to the similarity CSV file
+        """
+        try:
+            similarity_df = pd.read_csv(similarity_file)
+            # Filter pairs with similarity above the threshold
+            high_similarity_df = similarity_df[similarity_df['similarity'] > 0.9]  # Using 0.9 as default threshold
+            
+            # Build a dictionary mapping each product to its highly similar products
+            self.similar_products_dict = {}
+            for _, row in high_similarity_df.iterrows():
+                product1 = row['product1']
+                product2 = row['product2']
+                
+                if product1 not in self.similar_products_dict:
+                    self.similar_products_dict[product1] = []
+                if product2 not in self.similar_products_dict:
+                    self.similar_products_dict[product2] = []
+                    
+                self.similar_products_dict[product1].append(product2)
+                self.similar_products_dict[product2].append(product1)
+                
+            print(f"Loaded {len(high_similarity_df)} high-similarity product pairs")
+        except Exception as e:
+            print(f"Error loading similarity data: {e}")
+            self.similar_products_dict = {}
     
     def find_optimal_clusters(self, df, max_clusters=30):
         """
@@ -293,6 +325,36 @@ class ProductRecommender:
         
         return recommendations[['product_id', 'product_title']].to_dict('records')
     
+    def _filter_similar_products(self, recommendations, product_id, product_title):
+        """
+        Filter out products that are too similar to the query product
+        
+        Args:
+            recommendations: List of recommendation dictionaries
+            product_id: The ID of the product being recommended for
+            product_title: The title of the product being recommended for
+            
+        Returns:
+            Filtered list of recommendations
+        """
+        # If similarity dictionary is not initialized, return all recommendations
+        if not hasattr(self, 'similar_products_dict') or not self.similar_products_dict:
+            return recommendations
+        
+        filtered_recommendations = []
+        
+        # Get list of products too similar to the query product
+        similar_products = self.similar_products_dict.get(product_title, [])
+        
+        for rec in recommendations:
+            # Only include the recommendation if it's not in the similar products list
+            if rec['product_title'] not in similar_products:
+                filtered_recommendations.append(rec)
+            else:
+                print(f"Filtering out {rec['product_title']} - too similar to {product_title}")
+        
+        return filtered_recommendations
+    
     def get_recommendations(self, product_id, n_recommendations=5, strategy='hybrid'):
         """
         Get product recommendations based on clustering
@@ -319,6 +381,7 @@ class ProductRecommender:
             return []
             
         product = product_row.iloc[0]
+        product_title = product['product_title']
         
         # Check if we have cluster information
         if 'cluster' not in product or pd.isna(product['cluster']):
@@ -345,7 +408,12 @@ class ProductRecommender:
                                     'product_title': related_product.iloc[0]['product_title'],
                                     'source': 'existing'
                                 })
-                        return existing_recommendations
+                        
+                        # Filter out similar products from existing recommendations
+                        filtered_recommendations = self._filter_similar_products(
+                            existing_recommendations, product_id, product_title
+                        )
+                        return filtered_recommendations
                 except:
                     pass  # If parsing fails, continue with algorithmic recommendations
         
@@ -371,9 +439,9 @@ class ProductRecommender:
                 cluster_products['rating_numeric'] = pd.to_numeric(cluster_products['rating'], errors='coerce').fillna(0)
                 recommendations = cluster_products.sort_values(
                     by='rating_numeric', ascending=False
-                ).head(n_recommendations)
+                ).head(n_recommendations * 2)  # Get more than needed to account for filtering
             else:
-                recommendations = cluster_products.head(n_recommendations)
+                recommendations = cluster_products.head(n_recommendations * 2)
                 
         elif strategy == 'collection':
             # Prioritize same collection products
@@ -392,9 +460,9 @@ class ProductRecommender:
                         collection_products['rating_numeric'] = pd.to_numeric(collection_products['rating'], errors='coerce').fillna(0)
                         recommendations = collection_products.sort_values(
                             by='rating_numeric', ascending=False
-                        ).head(n_recommendations)
+                        ).head(n_recommendations * 2)
                     else:
-                        recommendations = collection_products.head(n_recommendations)
+                        recommendations = collection_products.head(n_recommendations * 2)
                 else:
                     # Fill remaining slots with cluster recommendations
                     if 'rating' in collection_products.columns:
@@ -404,7 +472,7 @@ class ProductRecommender:
                     else:
                         collection_recs = collection_products
                     
-                    remaining_slots = n_recommendations - len(collection_recs)
+                    remaining_slots = n_recommendations * 2 - len(collection_recs)
                     
                     # Exclude already selected products
                     already_selected = set(collection_recs['product_id'])
@@ -430,9 +498,9 @@ class ProductRecommender:
                     cluster_products['rating_numeric'] = pd.to_numeric(cluster_products['rating'], errors='coerce').fillna(0)
                     recommendations = cluster_products.sort_values(
                         by='rating_numeric', ascending=False
-                    ).head(n_recommendations)
+                    ).head(n_recommendations * 2)
                 else:
-                    recommendations = cluster_products.head(n_recommendations)
+                    recommendations = cluster_products.head(n_recommendations * 2)
                     
         else:  # hybrid strategy
             # Calculate a weighted score that considers both cluster and collection
@@ -461,10 +529,10 @@ class ProductRecommender:
                 if max_rating > 0:
                     all_candidate_products['rec_score'] += all_candidate_products['rating_numeric'] / max_rating
             
-            # Get top recommendations
+            # Get top recommendations (get more than needed to account for filtering)
             recommendations = all_candidate_products.sort_values(
                 by='rec_score', ascending=False
-            ).head(n_recommendations)
+            ).head(n_recommendations * 2)
         
         # If we don't have enough recommendations, just return what we have
         if len(recommendations) == 0:
@@ -478,7 +546,13 @@ class ProductRecommender:
         for rec in recommendation_list:
             rec['source'] = strategy
         
-        return recommendation_list
+        # Filter out similar products
+        filtered_recommendations = self._filter_similar_products(
+            recommendation_list, product_id, product_title
+        )
+        
+        # Return only the requested number of recommendations
+        return filtered_recommendations[:n_recommendations]
 
     def generate_all_recommendations(self, product_df, n_recommendations=5, strategy='hybrid'):
         """
