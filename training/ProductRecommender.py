@@ -6,7 +6,6 @@ from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 import seaborn as sns
 from collections import defaultdict
-
 class ProductRecommender:
     def __init__(self, n_clusters=10, random_state=42):
         """
@@ -36,16 +35,47 @@ class ProductRecommender:
         # Exclude these columns from feature set
         exclude_columns = [
             'product_title', 'product_id', 'vendor', 'description', 
-            'handle', 'product_type', 'clean_text', 'related_products'
+            'handle', 'product_type', 'clean_text', 'related_products',
+            'cluster'  # Also exclude the cluster column if it exists
         ]
         
         # Get all feature columns (everything not in exclude_columns)
         self.feature_columns = [col for col in df.columns if col not in exclude_columns]
         
+        # Create a copy of the DataFrame with selected features
+        features_df = df[self.feature_columns].copy()
+        
         # Handle missing values
-        features_df = df[self.feature_columns].fillna(0)
+        features_df = features_df.fillna(0)
+        
+        # First, convert all object/string columns with numbers to numeric if possible
+        for col in features_df.columns:
+            # Skip columns that are already numeric
+            if pd.api.types.is_numeric_dtype(features_df[col]):
+                continue
+                
+            # Try to convert to numeric, but set errors='coerce' to handle non-convertible values
+            try:
+                features_df[col] = pd.to_numeric(features_df[col], errors='coerce')
+                # Replace NaN values from failed conversions with 0
+                features_df[col] = features_df[col].fillna(0)
+            except:
+                # For columns that can't be converted to numeric at all, 
+                # we'll handle them separately
+                pass
+        
+        # For any columns that still aren't numeric, use dummy variables or drop them
+        non_numeric_cols = features_df.select_dtypes(exclude=['number']).columns
+        if len(non_numeric_cols) > 0:
+            print(f"Warning: Dropping non-numeric columns for clustering: {list(non_numeric_cols)}")
+            features_df = features_df.drop(columns=non_numeric_cols)
+        
+        # Ensure all values are finite (replace inf with large values)
+        features_df = features_df.replace([np.inf, -np.inf], np.nan)
+        features_df = features_df.fillna(0)
         
         return features_df
+
     
     def find_optimal_clusters(self, df, max_clusters=30):
         """
@@ -59,44 +89,78 @@ class ProductRecommender:
             The optimal number of clusters
         """
         print("Finding optimal number of clusters...")
-        features_df = self._prepare_data(df)
         
-        # Scale the features
-        features_scaled = self.scaler.fit_transform(features_df)
-        
-        # Try different numbers of clusters
-        silhouette_scores = []
-        min_clusters = 2  # Silhouette score requires at least 2 clusters
-        
-        for n_clusters in range(min_clusters, min(max_clusters + 1, len(features_df) // 2)):
-            kmeans = KMeans(n_clusters=n_clusters, random_state=self.random_state, n_init=10)
-            cluster_labels = kmeans.fit_predict(features_scaled)
+        try:
+            features_df = self._prepare_data(df)
             
-            # Calculate silhouette score
-            try:
-                silhouette_avg = silhouette_score(features_scaled, cluster_labels)
-                silhouette_scores.append(silhouette_avg)
-                print(f"Clusters: {n_clusters}, Silhouette Score: {silhouette_avg:.4f}")
-            except Exception as e:
-                print(f"Error with {n_clusters} clusters: {e}")
-                silhouette_scores.append(-1)
-        
-        # Find the best number of clusters
-        optimal_clusters = silhouette_scores.index(max(silhouette_scores)) + min_clusters
-        
-        # Plot silhouette scores
-        plt.figure(figsize=(10, 6))
-        plt.plot(range(min_clusters, min_clusters + len(silhouette_scores)), silhouette_scores, marker='o')
-        plt.xlabel('Number of Clusters')
-        plt.ylabel('Silhouette Score')
-        plt.title('Silhouette Score for Different Cluster Numbers')
-        plt.axvline(x=optimal_clusters, color='r', linestyle='--')
-        plt.savefig('optimal_clusters.png')
-        plt.close()
-        
-        print(f"Optimal number of clusters: {optimal_clusters}")
-        return optimal_clusters
-        
+            # Check if we have enough data for clustering
+            if len(features_df) < 3:
+                print("Not enough data for finding optimal clusters, using default value.")
+                return min(self.n_clusters, len(features_df) - 1) or 1
+            
+            # Make sure we have valid numeric data
+            if features_df.empty or features_df.isnull().all().all():
+                print("No valid numeric data for clustering, using default value.")
+                return min(self.n_clusters, len(df) - 1) or 1
+            
+            # Verify all data is numeric
+            if not all(pd.api.types.is_numeric_dtype(features_df[col]) for col in features_df.columns):
+                print("Non-numeric data detected, using default value.")
+                return min(self.n_clusters, len(df) - 1) or 1
+            
+            # Scale the features
+            features_scaled = self.scaler.fit_transform(features_df)
+            
+            # Try different numbers of clusters
+            silhouette_scores = []
+            min_clusters = 2  # Silhouette score requires at least 2 clusters
+            
+            # Limit max_clusters based on data size
+            effective_max_clusters = min(max_clusters + 1, len(features_df) // 2)
+            
+            # Ensure we have a valid range of clusters to try
+            if min_clusters >= effective_max_clusters:
+                print(f"Not enough data for silhouette analysis, using default value.")
+                return min(self.n_clusters, len(features_df) - 1) or 1
+            
+            for n_clusters in range(min_clusters, effective_max_clusters):
+                try:
+                    kmeans = KMeans(n_clusters=n_clusters, random_state=self.random_state, n_init=10)
+                    cluster_labels = kmeans.fit_predict(features_scaled)
+                    
+                    # Calculate silhouette score
+                    silhouette_avg = silhouette_score(features_scaled, cluster_labels)
+                    silhouette_scores.append(silhouette_avg)
+                    print(f"Clusters: {n_clusters}, Silhouette Score: {silhouette_avg:.4f}")
+                except Exception as e:
+                    print(f"Error with {n_clusters} clusters: {e}")
+                    # Don't add invalid scores
+            
+            # Find the best number of clusters, with a fallback
+            if silhouette_scores:
+                optimal_clusters = silhouette_scores.index(max(silhouette_scores)) + min_clusters
+                
+                # Plot silhouette scores
+                plt.figure(figsize=(10, 6))
+                plt.plot(range(min_clusters, min_clusters + len(silhouette_scores)), silhouette_scores, marker='o')
+                plt.xlabel('Number of Clusters')
+                plt.ylabel('Silhouette Score')
+                plt.title('Silhouette Score for Different Cluster Numbers')
+                plt.axvline(x=optimal_clusters, color='r', linestyle='--')
+                plt.savefig('optimal_clusters.png')
+                plt.close()
+                
+                print(f"Optimal number of clusters: {optimal_clusters}")
+                return optimal_clusters
+            else:
+                # Fallback if no valid silhouette scores
+                print("Could not determine optimal clusters, using default value.")
+                return min(self.n_clusters, len(features_df) - 1) or 1
+                
+        except Exception as e:
+            print(f"Error in find_optimal_clusters: {e}")
+            return min(self.n_clusters, len(df) - 1) or 1
+            
     def fit(self, df, find_optimal=True, max_clusters=30):
         """
         Fit the K-means model on product data
@@ -150,6 +214,8 @@ class ProductRecommender:
             print("Not enough data for visualization")
             return
             
+        # Important change: Use the same feature set that was used for clustering
+        # Don't include the 'cluster' column that was added after fitting
         features_df = self._prepare_data(self.product_data)
         features_scaled = self.scaler.transform(features_df)
         
@@ -253,10 +319,16 @@ class ProductRecommender:
             return []
             
         product = product_row.iloc[0]
-        product_cluster = product['cluster']
+        
+        # Check if we have cluster information
+        if 'cluster' not in product or pd.isna(product['cluster']):
+            print("Cluster information not available for this product.")
+            product_cluster = 0  # Default fallback
+        else:
+            product_cluster = product['cluster']
         
         # Check if product has existing product recommendations
-        if not pd.isna(product['related_products']) and product['related_products']:
+        if 'related_products' in product and not pd.isna(product['related_products']) and product['related_products']:
             if isinstance(product['related_products'], str):
                 try:
                     # Try to parse as JSON if it's a string
@@ -283,16 +355,26 @@ class ProductRecommender:
             (self.product_data['product_id'] != product_id)
         ]
         
+        # If no products in the same cluster, use all products
+        if len(cluster_products) == 0:
+            print("No products found in the same cluster, using all products.")
+            cluster_products = self.product_data[self.product_data['product_id'] != product_id]
+        
         # Extract collection information
-        product_collections = [col for col in self.product_data.columns if col.startswith('collection_') and product[col] == 1]
+        product_collections = [col for col in self.product_data.columns if col.startswith('collection_') and product.get(col, 0) == 1]
         
         # Prepare recommendations based on strategy
         if strategy == 'cluster':
             # Simply recommend from the same cluster
-            recommendations = cluster_products.sort_values(
-                by='rating', ascending=False
-            ).head(n_recommendations)
-            
+            if 'rating' in cluster_products.columns:
+                # Ensure rating is numeric
+                cluster_products['rating_numeric'] = pd.to_numeric(cluster_products['rating'], errors='coerce').fillna(0)
+                recommendations = cluster_products.sort_values(
+                    by='rating_numeric', ascending=False
+                ).head(n_recommendations)
+            else:
+                recommendations = cluster_products.head(n_recommendations)
+                
         elif strategy == 'collection':
             # Prioritize same collection products
             if len(product_collections) > 0:
@@ -305,28 +387,53 @@ class ProductRecommender:
                 
                 # If enough collection products, use them, otherwise fall back to cluster
                 if len(collection_products) >= n_recommendations:
-                    recommendations = collection_products.sort_values(
-                        by='rating', ascending=False
-                    ).head(n_recommendations)
+                    if 'rating' in collection_products.columns:
+                        # Ensure rating is numeric
+                        collection_products['rating_numeric'] = pd.to_numeric(collection_products['rating'], errors='coerce').fillna(0)
+                        recommendations = collection_products.sort_values(
+                            by='rating_numeric', ascending=False
+                        ).head(n_recommendations)
+                    else:
+                        recommendations = collection_products.head(n_recommendations)
                 else:
                     # Fill remaining slots with cluster recommendations
-                    collection_recs = collection_products.sort_values(by='rating', ascending=False)
+                    if 'rating' in collection_products.columns:
+                        # Ensure rating is numeric
+                        collection_products['rating_numeric'] = pd.to_numeric(collection_products['rating'], errors='coerce').fillna(0)
+                        collection_recs = collection_products.sort_values(by='rating_numeric', ascending=False)
+                    else:
+                        collection_recs = collection_products
+                    
                     remaining_slots = n_recommendations - len(collection_recs)
                     
                     # Exclude already selected products
                     already_selected = set(collection_recs['product_id'])
-                    cluster_recs = cluster_products[
+                    remaining_cluster_products = cluster_products[
                         ~cluster_products['product_id'].isin(already_selected)
-                    ].sort_values(by='rating', ascending=False).head(remaining_slots)
+                    ]
+                    
+                    if 'rating' in remaining_cluster_products.columns:
+                        # Ensure rating is numeric
+                        remaining_cluster_products['rating_numeric'] = pd.to_numeric(remaining_cluster_products['rating'], errors='coerce').fillna(0)
+                        cluster_recs = remaining_cluster_products.sort_values(
+                            by='rating_numeric', ascending=False
+                        ).head(remaining_slots)
+                    else:
+                        cluster_recs = remaining_cluster_products.head(remaining_slots)
                     
                     # Combine recommendations
                     recommendations = pd.concat([collection_recs, cluster_recs])
             else:
                 # No collection info, fall back to cluster
-                recommendations = cluster_products.sort_values(
-                    by='rating', ascending=False
-                ).head(n_recommendations)
-                
+                if 'rating' in cluster_products.columns:
+                    # Ensure rating is numeric
+                    cluster_products['rating_numeric'] = pd.to_numeric(cluster_products['rating'], errors='coerce').fillna(0)
+                    recommendations = cluster_products.sort_values(
+                        by='rating_numeric', ascending=False
+                    ).head(n_recommendations)
+                else:
+                    recommendations = cluster_products.head(n_recommendations)
+                    
         else:  # hybrid strategy
             # Calculate a weighted score that considers both cluster and collection
             all_candidate_products = self.product_data[
@@ -348,14 +455,21 @@ class ProductRecommender:
             
             # Add rating score (up to 1 point)
             if 'rating' in all_candidate_products.columns:
-                max_rating = all_candidate_products['rating'].max()
+                # Ensure rating is numeric
+                all_candidate_products['rating_numeric'] = pd.to_numeric(all_candidate_products['rating'], errors='coerce').fillna(0)
+                max_rating = all_candidate_products['rating_numeric'].max()
                 if max_rating > 0:
-                    all_candidate_products['rec_score'] += all_candidate_products['rating'] / max_rating
+                    all_candidate_products['rec_score'] += all_candidate_products['rating_numeric'] / max_rating
             
             # Get top recommendations
             recommendations = all_candidate_products.sort_values(
                 by='rec_score', ascending=False
             ).head(n_recommendations)
+        
+        # If we don't have enough recommendations, just return what we have
+        if len(recommendations) == 0:
+            print("No recommendations found for this product.")
+            return []
         
         # Convert to list of dictionaries
         recommendation_list = recommendations[['product_id', 'product_title']].to_dict('records')
@@ -365,7 +479,57 @@ class ProductRecommender:
             rec['source'] = strategy
         
         return recommendation_list
-    
+
+    def generate_all_recommendations(self, product_df, n_recommendations=5, strategy='hybrid'):
+        """
+        Generate recommendations for all products in the dataframe
+        
+        Args:
+            product_df: DataFrame containing product data
+            n_recommendations: Number of recommendations to generate per product
+            strategy: Recommendation strategy ('hybrid', 'cluster', or 'collection')
+            
+        Returns:
+            DataFrame with recommendations for each product
+        """
+        import pandas as pd
+        from tqdm import tqdm  # For progress bar
+        
+        # Create an empty list to store recommendation data
+        all_recommendations = []
+        
+        # Process each product
+        print(f"Generating {n_recommendations} {strategy} recommendations for {len(product_df)} products...")
+        
+        # Use tqdm for progress tracking
+        for _, row in tqdm(product_df.iterrows(), total=len(product_df)):
+            product_id = row['product_id']
+            product_title = row['product_title']
+            
+            # Get recommendations for this product
+            recommendations = self.get_recommendations(
+                product_id, 
+                n_recommendations=n_recommendations, 
+                strategy=strategy
+            )
+            
+            # If recommendations were found, add them to our list
+            if recommendations:
+                for i, rec in enumerate(recommendations, 1):
+                    all_recommendations.append({
+                        'source_product_id': product_id,
+                        'source_product_title': product_title,
+                        'recommendation_rank': i,
+                        'recommended_product_id': rec['product_id'],
+                        'recommended_product_title': rec['product_title'],
+                        'recommendation_source': rec['source']
+                    })
+        
+        # Convert list to DataFrame
+        recommendations_df = pd.DataFrame(all_recommendations)
+        
+        return recommendations_df
+
     def save_model(self, filename='recommender_model.pkl'):
         """
         Save the trained model to a file

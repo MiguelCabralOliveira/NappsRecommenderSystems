@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 from preprocessing.metafields_processor import get_metafield_keys, process_metafields
 
-def get_collections_products(store_url: str, access_token: str, metafields: list, collections_limit: int = 2, products_limit: int = 2) -> pd.DataFrame | None:
+def get_collections_products(store_url: str, access_token: str, metafields: list, collections_limit: int = 100, products_limit: int = 100) -> pd.DataFrame | None:
     """
     Fetch collections and products data from Shopify API
     Args:
