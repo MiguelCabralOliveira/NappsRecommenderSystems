@@ -1,0 +1,19 @@
+{
+  "admin": {
+    "accessToken": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4R0NNIiwidHlwIjoiSldUIn0..VaKMkj2qr19ISZBX.Izccb5rfk1-YA9pwasiNj4hfdY_c3LRaui_6p743gTjIdYuwQ-MIRNSt8dziRB5-Dyn_fvsQZHHT_XkQNXG3W9df7LA4pxEwfcp8QWMMngKSjhSQjtiJzwqQDQwZa2Xp9pKYhdyEmwCzTEk7MMKHWQeTIAhY3orljbGdek8CN2155hl7_G9g03ZyvwC5F1A3YRUa.rX1lN-QoHSpPR1VBBTQC4Q",
+    "accessExpiresAt": "2025-02-26T18:11:00.016582636Z",
+    "refreshToken": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4R0NNIiwidHlwIjoiSldUIn0..ZrrvZr_Qu3Bze-lF.itVmCPvMFI3GRHj-I6Da4kZQ9Oinf4qXJ8E9uQSZL-ovGX9sEpqqycOOHBlOXrc7VUzMxAbR0a3yTLpSnenPRcAaaxJ2oo8En1Pl1cWq61C9FRpmR26lRbzCOynQDevuMwRVFpw_o8oe6JvGnJeiJZNQ7vivtoVL2To.wduF9pU9ev9fqnBbnr3ILw",
+    "refreshExpiresAt": "2025-09-14T17:41:00.027228492Z",
+    "clientID": "cuv08qcsjsos3p3uguj0",
+    "role": "dev",
+    "name": "Miguel Oliveira",
+    "email": "migueloliveir8@gmail.com",
+    "avatarUrl": ""
+  },
+  "shop": {
+    "accessToken": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4R0NNIiwidHlwIjoiSldUIn0..mc0Bfn1G0QrOp_S9.JNPQM2UaO3P2E77QzcuOrT7yr0Oxknx7tVTxgxUlwyJGitNK3_l9apnsBclELWGu5bk4fbQc75ZeKc1KV8W2dWMsym2Ya21WpxObuCfeLsP3mn3rS9PwYDbo30V2NrD9HbneRRGrr6QrCSZJx3AcW2P_AZKB4Y65DpxWNxBaVvnYMSsdomS_vT2Bg-moS9csKqNYiqLJewFn1WUX-uxeYCdkCj0.PYzbS_arruNk1iiqj-4k5g",
+    "accessExpiresAt": "2025-02-26T18:11:00.454853803Z",
+    "refreshExpiresAt": "2025-09-14T17:41:00Z",
+    "shopID": "naevegan"
+  }
+}

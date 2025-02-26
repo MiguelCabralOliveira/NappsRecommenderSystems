@@ -43,6 +43,7 @@ def analyze_product_similarity(tfidf_matrix, df, similarity_threshold=0.85):
     return pd.DataFrame(similar_products)
 
 def process_descriptions_tfidf(df, output_prefix="products"):
+    
     """
     Process descriptions with TF-IDF and save results
     TF-IDF (Term Frequency-Inverse Documentation Frequency),

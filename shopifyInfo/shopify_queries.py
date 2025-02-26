@@ -1,3 +1,7 @@
+import os
+import sys
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
 import requests
 import pandas as pd
 from preprocessing.metafields_processor import get_metafield_keys, process_metafields
@@ -112,8 +116,8 @@ def get_collections_products(store_url: str, access_token: str, metafields: list
         return None
 
 if __name__ == "__main__":
-    store_url = "https://missusstore.myshopify.com"
-    access_token = "b7ac831b000aacb148837ca314aa1e3e"
+    store_url = "https://mrblue-pt.myshopify.com"
+    access_token = "cf98f93e6d396aa0610947269707c390"
     collections_limit = 100
     products_limit = 100
     

@@ -18,7 +18,7 @@ def process_vendors(df):
     )
     
     # Create a new DataFrame with all original columns except vendor
-    result_df = df.drop('vendor', axis=1)  # Drop the original vendor column
+    result_df = df.drop('vendor', axis=1)
     
     # Add the vendor dummy columns
     result_df = pd.concat([result_df, vendor_dummies], axis=1)

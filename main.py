@@ -10,7 +10,7 @@ from preprocessing.metafields_processor import get_metafield_keys, process_metaf
 
 
 def main():
-    """Main function to process product data from Shopify store."""
+    """Main function to process product data from Shopify store"""
     # Get shop credentials
     shop_id = input("Shop ID: ")
     credentials = get_shop_settings(shop_id)

@@ -17,8 +17,7 @@ def process_variants(df):
                 'max_price': np.nan,
                 'has_discount': 0,
                 'size_options': [],
-                'color_options': [],
-                'other_options': []
+                'color_options': []
             })
 
         # Price related features
@@ -57,7 +56,7 @@ def process_variants(df):
         return pd.Series({
             'min_price': min(prices),
             'max_price': max(prices),
-            'has_discount': has_discount,  # Now explicitly an integer (0 or 1)
+            'has_discount': has_discount,
             'size_options': size_options,
             'color_options': color_options,
             'other_options': other_options,
