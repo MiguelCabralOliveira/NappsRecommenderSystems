@@ -1,24 +1,31 @@
 import os
 import sys
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, project_root)
 import requests
 import pandas as pd
-from preprocessing.metafields_processor import get_metafield_keys, process_metafields
+import json
+from dotenv import load_dotenv
+from metafields_fetcher import fetch_metafields
+from shopifyInfo.shop_settings import get_shop_settings
 
-def get_collections_products(store_url: str, access_token: str, metafields: list, collections_limit: int = 100, products_limit: int = 100) -> pd.DataFrame | None:
+# Load environment variables from .env file
+load_dotenv()
+
+def get_shopify_products(store_url: str, access_token: str, metafields_config: list, products_limit: int = 250, cursor: str = None) -> tuple[pd.DataFrame, bool, str] | tuple[None, bool, str]:
     """
-    Fetch collections and products data from Shopify API
+    Fetch products data from Shopify API with pagination support
     Args:
         store_url: Shopify store URL
         access_token: Shopify access token
-        metafields: List of metafield configurations
-        collections_limit: Maximum number of collections to fetch
-        products_limit: Maximum number of products per collection
+        metafields_config: List of metafield configurations
+        products_limit: Maximum number of products to fetch per request
+        cursor: Pagination cursor for fetching next page of results
     Returns:
-        DataFrame: Raw products data or None if error occurs
+        Tuple containing:
+            - DataFrame: Raw products data or None if error occurs
+            - bool: Whether there are more pages to fetch
+            - str: End cursor for pagination
     """
-    url = f"{store_url}/api/2024-01/graphql.json"
+    url = f"{store_url}/api/2025-01/graphql.json"
     
     headers = {
         "X-Shopify-Storefront-Access-Token": access_token,
@@ -27,109 +34,233 @@ def get_collections_products(store_url: str, access_token: str, metafields: list
     
     metafields_identifiers = ",".join([
         f'{{ key: "{field["key"]}", namespace: "{field["namespace"]}" }}'
-        for field in metafields
+        for field in metafields_config
     ])
+    
+    # Build the after parameter for pagination if cursor is provided
+    after_param = f'after: "{cursor}"' if cursor else ''
     
     query = f"""
     query {{
-        collections(first: $collections) {{
-            edges {{
-                node {{
-                    id
-                    title
-                    products(first: $products) {{
-                        edges {{
-                            node {{
-                                id
-                                description
-                                handle
-                                title
-                                productType
-                                tags
-                                vendor
-                                metafields(identifiers: [{metafields_identifiers}]) {{
-                                    value
-                                }}
-                                variants(first: 10) {{
-                                    edges {{
-                                        node {{
-                                            barcode
-                                            availableForSale
-                                            compareAtPrice {{
-                                                amount
-                                            }}
-                                            price {{
-                                                amount
-                                            }}
-                                            quantityAvailable
-                                            selectedOptions {{
-                                                name
-                                            }}
-                                            title
-                                            unitPrice {{
-                                                amount
-                                            }}
-                                            taxable
-                                        }}
-                                    }}
-                                }}
-                            }}
-                        }}
-                    }}
-                }}
+      products(first: {products_limit} {after_param}) {{
+        nodes {{
+          availableForSale
+          id
+          vendor
+          title
+          tags
+          handle
+          isGiftCard
+          productType
+          description
+          collections(first: 250) {{
+            nodes {{
+              id
+              handle
+              title
             }}
+          }}
+          variants(first: 250) {{
+            nodes {{
+              id
+              title
+              currentlyNotInStock
+              availableForSale
+              price {{
+                amount
+              }}
+              compareAtPrice {{
+                amount
+              }}
+              weight
+              quantityAvailable
+              taxable
+              selectedOptions {{
+                name
+              }}
+              unitPrice {{
+                amount
+              }}
+              metafields(identifiers: [{metafields_identifiers}]) {{
+                id
+                value
+                key
+                namespace
+              }}
+            }}
+          }}
         }}
+        pageInfo {{
+          hasNextPage
+          endCursor
+        }}
+      }}
     }}
-    """.replace("$collections", str(collections_limit)).replace("$products", str(products_limit))
+    """
+    
+    # Print the query for debugging
+    print("\n--- DEBUG: GraphQL Query ---")
+    print(query)
+    print("--- END DEBUG ---\n")
     
     try:
+        print(f"Making request to: {url}")
+        
         response = requests.post(url, json={"query": query}, headers=headers)
+        print(f"Response Status Code: {response.status_code}")
+        
         response.raise_for_status()
         data = response.json()
         
+        # Check if there are errors in the response
+        if 'errors' in data:
+            print(f"GraphQL Errors: {data['errors']}")
+            return None, False, ""
+        
+        # Extract pagination info
+        page_info = data['data']['products']['pageInfo']
+        has_next_page = page_info['hasNextPage']
+        end_cursor = page_info['endCursor']
+        
+        # Print pagination info for debugging
+        print(f"Pagination Info - Has Next Page: {has_next_page}, End Cursor: {end_cursor}")
+        
         flattened_data = []
-        for collection_edge in data['data']['collections']['edges']:
-            collection = collection_edge['node']
-            collection_title = collection['title']
-            for product_edge in collection['products']['edges']:
-                product = product_edge['node']
-                
-                product_data = {
-                    'product_title': product['title'],
-                    'collection_title': collection_title,
-                    'product_id': product['id'],
-                    'vendor': product['vendor'],
-                    'description': product['description'],
-                    'handle': product['handle'],
-                    'product_type': product['productType'],
-                    'tags': product['tags'],
-                    'variants': [variant['node'] for variant in product['variants']['edges']],
-                    'metafields': product['metafields']
-                }
-                flattened_data.append(product_data)
+        for product in data['data']['products']['nodes']:
+            # Extract collections data
+            collections = []
+            if 'collections' in product and 'nodes' in product['collections']:
+                collections = [
+                    {
+                        'id': collection['id'],
+                        'handle': collection['handle'],
+                        'title': collection.get('title', '')
+                    } 
+                    for collection in product['collections']['nodes']
+                ]
+            
+            product_data = {
+                'product_title': product['title'],
+                'product_id': product['id'],
+                'vendor': product['vendor'],
+                'description': product.get('description', ''),
+                'handle': product['handle'],
+                'product_type': product['productType'],
+                'is_gift_card': product.get('isGiftCard', False),
+                'available_for_sale': product['availableForSale'],
+                'tags': product['tags'],
+                'collections': collections,
+                'variants': [variant for variant in product['variants']['nodes']],
+                'metafields': [],  # Will be populated from variants
+                'metafields_config': metafields_config  # Store the metafields config
+            }
+            
+            # Extract metafields from variants
+            if 'variants' in product and 'nodes' in product['variants']:
+                for variant in product['variants']['nodes']:
+                    if 'metafields' in variant:
+                        product_data['metafields'].extend(variant['metafields'])
+            
+            flattened_data.append(product_data)
+        
+        print(f"Successfully retrieved {len(flattened_data)} products")
         
         df = pd.DataFrame(flattened_data)
-        return df
-    
+        return df, has_next_page, end_cursor
+        
     except Exception as e:
         print(f"GraphQL Error: {e}")
+        if 'response' in locals():
+            try:
+                error_details = response.json()
+                print(f"Response Error Details: {error_details}")
+            except:
+                print(f"Response Content: {response.text[:500]}...")
+        
+        return None, False, ""
+
+def get_all_products(shop_id: str) -> pd.DataFrame | None:
+    """
+    Fetch all products using pagination
+    Args:
+        shop_id: Shop ID to fetch data for
+    Returns:
+        DataFrame: Combined data from all pages or None if error occurs
+    """
+    email = os.getenv("EMAIL")
+    password = os.getenv("PASSWORD")
+    
+    if not email or not password:
+        print("EMAIL and PASSWORD environment variables are required in .env file")
         return None
+    
+    print(f"Fetching metafields for shop ID: {shop_id}")
+    metafields_config, fetched_store_url, fetched_token = fetch_metafields(email, password, shop_id)
+    
+    if not metafields_config:
+        print("Failed to fetch metafields configuration")
+        return None
+    
+    if not fetched_store_url or not fetched_token:
+        print("Fetching shop settings as fallback...")
+        shop_settings = get_shop_settings(shop_id)
+        
+        if not shop_settings:
+            print("Failed to get shop settings")
+            return None
+        
+        store_url, access_token = shop_settings
+    else:
+        store_url, access_token = fetched_store_url, fetched_token
+    
+    print(f"Using store URL: {store_url}")
+    print(f"Using metafields config: {len(metafields_config)} items")
+    
+    all_products = []
+    has_next_page = True
+    cursor = None
+    page_count = 0
+    
+    while has_next_page:
+        page_count += 1
+        print(f"\n--- Fetching page {page_count} ---")
+        
+        products_df, has_next_page, cursor = get_shopify_products(
+            store_url, access_token, metafields_config, cursor=cursor
+        )
+        
+        if products_df is None:
+            print(f"Failed to retrieve data on page {page_count}")
+            return None
+        
+        all_products.append(products_df)
+        print(f"Fetched {len(products_df)} products. More pages: {has_next_page}")
+        
+        # Limit to prevent infinite loops during testing
+        if page_count >= 10:
+            print("Reached maximum page count (10). Stopping pagination.")
+            break
+    
+    if all_products:
+        combined_df = pd.concat(all_products, ignore_index=True)
+        print(f"Total products retrieved: {len(combined_df)}")
+        return combined_df
+    
+    print("No products retrieved")
+    return None
 
 if __name__ == "__main__":
-    store_url = "https://mrblue-pt.myshopify.com"
-    access_token = "cf98f93e6d396aa0610947269707c390"
-    collections_limit = 100
-    products_limit = 100
-    
-    result = get_collections_products(store_url, access_token, collections_limit, products_limit)
+   
+    shop_id = input("Enter shop ID: ")
+    result = get_all_products(shop_id)
     
     if result is not None:
         print("\nSuccessfully retrieved data!")
         print(f"\nTotal products found: {len(result)}")
         print("\nSample of the data:")
-        print(result[['product_title', 'collection_title', 'product_type']].head())
+        print(result[['product_title', 'vendor', 'product_type']].head())
         
-        result.to_csv("test_products_output.csv", index=False)
-        print("\nFull data saved to 'test_products_output.csv'")
+        result.to_csv("shopify_products_output.csv", index=False)
+        print("\nFull data saved to 'shopify_products_output.csv'")
     else:
         print("\nFailed to retrieve data.")

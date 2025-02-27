@@ -1,32 +1,20 @@
-from shopifyInfo.shop_settings import get_shop_settings
-from shopifyInfo.shopify_queries import get_collections_products
+from shopifyInfo.shopify_queries import get_all_products
 from preprocessing.tfidf_processor import process_descriptions_tfidf
 from preprocessing.collectionHandle_processor import process_collections
 from preprocessing.tags_processor import process_tags
 from preprocessing.variants_processor import process_variants
 from preprocessing.related_products_processor import process_related_products
 from preprocessing.vendor_processor import process_vendors
-from preprocessing.metafields_processor import get_metafield_keys, process_metafields
+from preprocessing.metafields_processor import process_metafields
 
 
 def main():
     """Main function to process product data from Shopify store"""
-    # Get shop credentials
+    # Get shop ID from user input
     shop_id = input("Shop ID: ")
-    credentials = get_shop_settings(shop_id)
     
-    if not credentials:
-        print("Failed to get shop settings. Please check the Shop ID.")
-        return
-        
-    store_url, token = credentials
-    
-    # Get metafields configuration
-    metafields = get_metafield_keys()["metafields"]
-    
-    # Fetch product data from Shopify
     print("Fetching data from Shopify...")
-    collections_data = get_collections_products(store_url, token, metafields)
+    collections_data = get_all_products(shop_id)
     
     if collections_data is None:
         print("Failed to retrieve data from Shopify.")
@@ -38,14 +26,19 @@ def main():
     # 1. Process metafields
     print("Processing metafields...")
     metafields_processed = collections_data.apply(
-        lambda row: process_metafields({'metafields': row['metafields']}, metafields), 
+        lambda row: process_metafields({'metafields': row.get('metafields', [])}, row.get('metafields_config', [])), 
         axis=1
     )
     
     # Add processed metafields to the dataframe
-    collections_data = collections_data.drop('metafields', axis=1)
-    for key in metafields_processed.iloc[0].keys():
-        collections_data[key] = metafields_processed.apply(lambda x: x[key])
+    if 'metafields' in collections_data.columns:
+        collections_data = collections_data.drop('metafields', axis=1)
+    if 'metafields_config' in collections_data.columns:
+        collections_data = collections_data.drop('metafields_config', axis=1)
+    
+    if len(metafields_processed) > 0:
+        for key in metafields_processed.iloc[0].keys():
+            collections_data[key] = metafields_processed.apply(lambda x: x[key])
     
     # Save raw data
     collections_data.to_csv("products.csv", index=False)
