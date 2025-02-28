@@ -4,13 +4,20 @@ import requests
 import pandas as pd
 import json
 from dotenv import load_dotenv
-from metafields_fetcher import fetch_metafields
-from shopifyInfo.shop_settings import get_shop_settings
+
+# Erro com os imports 
+try:
+    from .metafields_fetcher import fetch_metafields
+    from .shop_settings import get_shop_settings
+except ImportError:
+    
+    from metafields_fetcher import fetch_metafields
+    from shop_settings import get_shop_settings
 
 # Load environment variables from .env file
 load_dotenv()
 
-def get_shopify_products(store_url: str, access_token: str, metafields_config: list, products_limit: int = 250, cursor: str = None) -> tuple[pd.DataFrame, bool, str] | tuple[None, bool, str]:
+def get_shopify_products(store_url: str, access_token: str, metafields_config: list, products_limit: int = 1, cursor: str = None) -> tuple[pd.DataFrame, bool, str] | tuple[None, bool, str]:
     """
     Fetch products data from Shopify API with pagination support
     Args:
@@ -50,6 +57,29 @@ def get_shopify_products(store_url: str, access_token: str, metafields_config: l
           title
           tags
           handle
+          metafields(identifiers: [{metafields_identifiers}]) {{
+                id
+                value
+                key
+                namespace
+                type
+                references(first: 10) {{
+                    nodes{{
+                        ... on Metaobject{{
+                        id
+                        fields{{
+                        value
+                        key
+                        type
+                        }}
+                        type
+                        
+                        }}
+
+                    }}
+                
+                }}
+              }}
           isGiftCard
           productType
           description
@@ -80,12 +110,6 @@ def get_shopify_products(store_url: str, access_token: str, metafields_config: l
               }}
               unitPrice {{
                 amount
-              }}
-              metafields(identifiers: [{metafields_identifiers}]) {{
-                id
-                value
-                key
-                namespace
               }}
             }}
           }}
@@ -151,15 +175,15 @@ def get_shopify_products(store_url: str, access_token: str, metafields_config: l
                 'tags': product['tags'],
                 'collections': collections,
                 'variants': [variant for variant in product['variants']['nodes']],
-                'metafields': [],  # Will be populated from variants
-                'metafields_config': metafields_config  # Store the metafields config
+                'metafields': [], 
+                'metafields_config': metafields_config  
             }
             
-            # Extract metafields from variants
-            if 'variants' in product and 'nodes' in product['variants']:
-                for variant in product['variants']['nodes']:
-                    if 'metafields' in variant:
-                        product_data['metafields'].extend(variant['metafields'])
+            # Extract metafields from the product level
+            if 'metafields' in product:
+                # Filter out None/null values and keep only valid metafield objects
+                valid_metafields = [m for m in product['metafields'] if m is not None]
+                product_data['metafields'] = valid_metafields
             
             flattened_data.append(product_data)
         

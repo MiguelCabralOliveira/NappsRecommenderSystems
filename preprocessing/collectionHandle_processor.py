@@ -9,30 +9,33 @@ def process_collections(df):
     Returns:
         DataFrame: processed DataFrame with collection dummies
     """
+    # Extract collection titles from dictionaries
+    def get_collection_title(collection_dict):
+        if isinstance(collection_dict, dict):
+            return collection_dict.get('title', '')
+        return collection_dict
+
+    # First, explode the collections column and extract titles
+    collections_series = df['collections'].explode().apply(get_collection_title)
+    
+    # Remove empty strings and None values
+    collections_series = collections_series[collections_series.notna() & (collections_series != '')]
+    
     # Create dummy variables for collections
     collection_dummies = pd.get_dummies(
-        df['collection_title'], 
-        prefix='collection',
+        collections_series,
+        prefix='collections',
         prefix_sep='_',
         dtype=int
     )
     
-    # Create a new DataFrame with all original columns except collection_title
-    result_df = df.drop('collection_title', axis=1)
+    # Aggregate back to product level using maximum value
+    collection_dummies = collection_dummies.groupby(level=0).max()
+    
+    # Create a new DataFrame with all original columns except collections
+    result_df = df.drop('collections', axis=1)
     
     # Add the collection dummy columns
     result_df = pd.concat([result_df, collection_dummies], axis=1)
     
     return result_df
-
-
-if __name__ == "__main__":
-    # Debug/testing mode
-    input_df = pd.read_csv("c:/Users/Administrator/NappsRecommenderSystem/products.csv")
-    df_processed = process_collections(input_df)
-    df_processed.to_csv("c:/Users/Administrator/NappsRecommenderSystem/products_with_collections.csv", index=False)
-    
-    collection_columns = [col for col in df_processed.columns if col.startswith('collection_')]
-    print(f"Created {len(collection_columns)} collection features:")
-    for col in collection_columns:
-        print(f"- {col}")
