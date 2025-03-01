@@ -2,8 +2,9 @@ import pandas as pd
 
 def process_gif_card(df):
 
-    # Transform the True and False to binary format, 1 and 0
+    df = df[df['is_gift_card'] == False]
 
-    df['is_gift_card'] = df
-    ['is_gift_card'].map({'True': 1, 'False': 0})
+    df = df.drop(columns=['is_gift_card'])
+
     return df
+    
