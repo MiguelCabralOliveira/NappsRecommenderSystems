@@ -6,8 +6,8 @@ from preprocessing.variants_processor import process_variants
 from preprocessing.related_products_processor import process_related_products
 from preprocessing.vendor_processor import process_vendors
 from preprocessing.metafields_processor import process_metafields, apply_tfidf_processing
-from preprocessing.IsGiftCard_processor import process_gif_card
-from preprosssing.AvailableForSale_processor import process_avaiable_for_sale
+from preprocessing.isGiftCard_processor import process_gif_card
+from preprocessing.availableForSale_processor import process_avaiable_for_sale
 import pandas as pd
 
 
@@ -57,8 +57,7 @@ def main():
     # Process available_for_sale
     print("Processing avaiable_for_sale...")
     df = process_avaiable_for_sale(df)
-
-
+    
     # 3. Process tags
     print("Processing tags...")
     df = process_tags(df)
