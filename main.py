@@ -6,6 +6,8 @@ from preprocessing.variants_processor import process_variants
 from preprocessing.related_products_processor import process_related_products
 from preprocessing.vendor_processor import process_vendors
 from preprocessing.metafields_processor import process_metafields, apply_tfidf_processing
+from preprocessing.IsGiftCard_processor import process_gif_card
+from preprosssing.AvailableForSale_processor import process_avaiable_for_sale
 import pandas as pd
 
 
@@ -45,14 +47,25 @@ def main():
     
     # Save raw data
     collections_data.to_csv("products.csv", index=False)
+
+
+    # Process is_gift_card
+    print("Processing is_gift_card...")
+    df = process_gif_card(collections_data)
+
+
+    # Process available_for_sale
+    print("Processing avaiable_for_sale...")
+    df = process_avaiable_for_sale(df)
+
+
+    # 3. Process tags
+    print("Processing tags...")
+    df = process_tags(df)
     
     # 2. Process collections
     print("Processing collections...")
     df = process_collections(collections_data)
-    
-    # 3. Process tags
-    print("Processing tags...")
-    df = process_tags(df)
     
     # 5. Process vendors
     print("Processing vendors...")

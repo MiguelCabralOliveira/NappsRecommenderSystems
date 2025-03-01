@@ -1,12 +1,9 @@
 import pandas as pd
 
 def process_gif_card(df):
-    """
-    Process gift card using dummy variables
-    Args:
-        df: pandas DataFrame containing product data
-    Returns:
-        DataFrame: processed DataFrame with gift card dummies
-    """
-    # Extract gift card from dictionaries
-    boolean_columns = ["is_gift_card"]
+
+    # Transform the True and False to binary format, 1 and 0
+
+    df['is_gift_card'] = df
+    ['is_gift_card'].map({'True': 1, 'False': 0})
+    return df
