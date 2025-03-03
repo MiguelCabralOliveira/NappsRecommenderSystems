@@ -9,6 +9,13 @@ def process_collections(df):
     Returns:
         DataFrame: processed DataFrame with collection dummies
     """
+    # Make sure we're working with a copy to avoid modifying the original
+    df = df.copy()
+    
+    # If collections column doesn't exist, return the DataFrame unchanged
+    if 'collections' not in df.columns:
+        return df
+    
     # Extract collection titles from dictionaries
     def get_collection_title(collection_dict):
         if isinstance(collection_dict, dict):
@@ -32,10 +39,12 @@ def process_collections(df):
     # Aggregate back to product level using maximum value
     collection_dummies = collection_dummies.groupby(level=0).max()
     
-    # Create a new DataFrame with all original columns except collections
-    result_df = df.drop('collections', axis=1)
+    # Drop the collections column from our working copy
+    df = df.drop('collections', axis=1)
     
     # Add the collection dummy columns
-    result_df = pd.concat([result_df, collection_dummies], axis=1)
+    # This preserves the filtering and column changes from previous processors
+    # because we're using the filtered and modified df as our base
+    result_df = pd.concat([df, collection_dummies], axis=1)
     
     return result_df

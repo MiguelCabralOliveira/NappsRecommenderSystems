@@ -60,7 +60,6 @@ def process_descriptions_tfidf(df, output_prefix="products"):
 
     I want to identify the keywords that are most important for the product description.
     """
-    
     # Clean HTML descriptions
     df['clean_text'] = df['description'].apply(clean_html)
     

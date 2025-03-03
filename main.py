@@ -11,18 +11,37 @@ from preprocessing.availableForSale_processor import process_avaiable_for_sale
 import pandas as pd
 
 
+def export_sample(df, step_name):
+    """Export the first row of the DataFrame to a CSV for debugging"""
+    if len(df) > 0:
+        sample_df = df.head(1)
+        filename = f"sample_after_{step_name}.csv"
+        sample_df.to_csv(filename, index=False)
+        print(f"Exported sample to {filename}")
+
+
 def main():
     """Main function to process product data from Shopify store"""
     # Get shop ID from user input
     shop_id = input("Shop ID: ")
     
     print("Fetching data from Shopify...")
-    collections_data = get_all_products(shop_id)
+    raw_data = get_all_products(shop_id)
     
-    if collections_data is None:
+    if raw_data is None:
         print("Failed to retrieve data from Shopify.")
         return
-        
+    
+    # Save raw data immediately after importing
+    raw_data.to_csv("products.csv", index=False)
+    print("Raw data saved to products.csv")
+    
+    # Export raw data sample
+    export_sample(raw_data, "raw_data")
+    
+    # Start with the raw data for processing
+    df = raw_data.copy()
+    
     # Process the data through the pipeline
     print("\nStarting data processing pipeline...")
     
@@ -30,53 +49,57 @@ def main():
     print("Processing metafields...")
     metafields_processed = pd.DataFrame([
         process_metafields(row, row.get('metafields_config', [])) 
-        for _, row in collections_data.iterrows()
-    ], index=collections_data.index)
+        for _, row in df.iterrows()
+    ], index=df.index)
 
     # Apply TF-IDF processing to the metafields data
     metafields_processed = apply_tfidf_processing(metafields_processed)
 
     # Add processed metafields to the dataframe
-    if 'metafields' in collections_data.columns:
-        collections_data = collections_data.drop('metafields', axis=1)
-    if 'metafields_config' in collections_data.columns:
-        collections_data = collections_data.drop('metafields_config', axis=1)
+    if 'metafields' in df.columns:
+        df = df.drop('metafields', axis=1)
+    if 'metafields_config' in df.columns:
+        df = df.drop('metafields_config', axis=1)
 
     # Combine the processed metafields with the original dataframe
-    collections_data = pd.concat([collections_data, metafields_processed], axis=1)
+    df = pd.concat([df, metafields_processed], axis=1)
+    export_sample(df, "metafields")
     
-    # Save raw data
-    collections_data.to_csv("products.csv", index=False)
-
-
-    # Process is_gift_card
+    # 2. Process is_gift_card
     print("Processing is_gift_card...")
-    df = process_gif_card(collections_data)
+    df = process_gif_card(df)
+    export_sample(df, "gift_card")
 
-
-    # Process available_for_sale
-    print("Processing avaiable_for_sale...")
+    # 3. Process available_for_sale
+    print("Processing available_for_sale...")
     df = process_avaiable_for_sale(df)
+    export_sample(df, "available_for_sale")
     
-    # 3. Process tags
+    # 4. Process tags
     print("Processing tags...")
     df = process_tags(df)
+    export_sample(df, "tags")
     
-    # 2. Process collections
+    # 5. Process collections - use the current df, not the original raw_data
     print("Processing collections...")
-    df = process_collections(collections_data)
-    
-    # 5. Process vendors
+    df = process_collections(df)
+    export_sample(df, "collections")
+
+    # 6. Process vendors
     print("Processing vendors...")
     df = process_vendors(df)
+    export_sample(df, "vendors")
     
-    # 6. Process variants
+    # 7. Process variants
     print("Processing variants...")
     df = process_variants(df)
+    export_sample(df, "variants")
     
-    # 7. Process text with TF-IDF
+    # 8. Process text with TF-IDF
     print("Processing product descriptions with TF-IDF...")
     tfidf_df, recommendation_df, _, similar_products = process_descriptions_tfidf(df)
+    export_sample(tfidf_df, "tfidf")
+    export_sample(recommendation_df, "recommendation")
     
     # Save the processed data
     df.to_csv("products_with_variants.csv", index=False)
@@ -93,7 +116,7 @@ def main():
     print("- products_tfidf_matrix.npy (TF-IDF vector representations)")
     print("- products_tfidf_features.csv (TF-IDF feature names)")
     
-    # 8. Train product recommender model
+    # 9. Train product recommender model
     print("\nTraining product recommendation model...")
     try:
         from training.ProductRecommender import ProductRecommender
@@ -124,7 +147,7 @@ def main():
             else:
                 print("No recommendations found for this product.")
             
-            # 9. Generate recommendations for all products
+            # 10. Generate recommendations for all products
             print("\nGenerating recommendations for all products...")
             all_recommendations_df = recommender.generate_all_recommendations(tfidf_df)
             

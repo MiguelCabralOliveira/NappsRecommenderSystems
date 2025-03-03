@@ -39,7 +39,10 @@ def extract_text_from_rich_text(rich_text_value):
         return str(rich_text_value)
 
 def extract_metaobject_reference_data(reference_value):
-    """Extract useful data from metaobject references"""
+    """
+    Extract color hex values from metaobject references
+    Specifically looks for values starting with # in hex format
+    """
     try:
         # Handle string values that need to be parsed
         if isinstance(reference_value, str):
@@ -50,44 +53,50 @@ def extract_metaobject_reference_data(reference_value):
         else:
             data = reference_value
             
+        collected_values = []
+        
         # Handle array of references (list.metaobject_reference)
         if isinstance(data, list):
-            # For lists, we'll extract the first item's fields
+            # Return empty if list is empty
             if not data:
                 return ""
                 
-            # If the list contains simple strings (likely IDs), return joined
+            # If list contains simple strings (likely IDs), just return joined
             if all(isinstance(item, str) for item in data):
                 return " ".join(data)
-            
-            # Try to extract from references structure (first item only)
-            if 'references' in data[0] and 'nodes' in data[0]['references']:
-                nodes = data[0]['references']['nodes']
-                if nodes and 'fields' in nodes[0]:
-                    fields = nodes[0]['fields']
-                    field_values = [field.get('value', '') for field in fields if 'value' in field]
-                    return " ".join(str(value) for value in field_values)
-                    
-            return str(data[0])
-            
-        # Handle single reference object
-        if isinstance(data, dict):
-            if 'references' in data and 'nodes' in data['references']:
-                # Extract data from the first node's fields
-                nodes = data['references']['nodes'] 
-                if nodes and 'fields' in nodes[0]:
-                    fields = nodes[0]['fields']
-                    field_values = [field.get('value', '') for field in fields if 'value' in field]
-                    return " ".join(str(value) for value in field_values)
-            
-            # If we can't extract structured data, return as string
+        
+        # Extract from references structure
+        if isinstance(data, dict) or isinstance(data, list):
+            # Access references data structure
+            references_data = None
+            if isinstance(data, dict) and 'references' in data and 'nodes' in data['references']:
+                references_data = data['references']['nodes']
+            elif isinstance(data, list) and 'references' in data[0] and 'nodes' in data[0]['references']:
+                references_data = data[0]['references']['nodes']
+                
+            # Process the nodes if we found them
+            if references_data:
+                for node in references_data:
+                    if 'fields' in node:
+                        for field in node['fields']:
+                            # Look specifically for values that look like hex colors
+                            value = field.get('value', '')
+                            if isinstance(value, str) and value.startswith('#'):
+                                collected_values.append(value)
+                            # For nested objects like "color" field
+                            elif field.get('key') == 'color' and isinstance(value, str):
+                                collected_values.append(value)
+        
+        # Return the collected color values as a space-separated string
+        if collected_values:
+            return " ".join(collected_values)
+        else:
+            # Fallback to original string if no color values found
             return str(data)
             
-        return str(data)
     except Exception as e:
         print(f"Error extracting data from metaobject reference: {e}")
         return str(reference_value)
-
 def clean_html(html_content):
     """Clean HTML from text content"""
     if not html_content or not isinstance(html_content, str):
