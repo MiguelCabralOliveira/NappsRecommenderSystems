@@ -96,10 +96,11 @@ def extract_product_references(reference_value):
 def extract_hex_colors_from_metaobject(references):
     """
     Extract hex color values from metaobject references
+    Returns an array of hex color values
     """
     try:
         if not references or not isinstance(references, dict) or 'nodes' not in references:
-            return ""
+            return []
             
         nodes = references['nodes']
         colors = []
@@ -112,14 +113,11 @@ def extract_hex_colors_from_metaobject(references):
                         colors.append(field['value'])
                         break
         
-        if colors:
-            return " ".join(colors)
-        return ""
+        return colors
         
     except Exception as e:
         print(f"Error extracting color values: {e}")
-        return ""
-
+        return []
 def extract_metaobject_reference_data(reference_value, references=None, metaobject_type=None):
     """
     Extract data from metaobject references
