@@ -3,7 +3,6 @@ from preprocessing.tfidf_processor import process_descriptions_tfidf
 from preprocessing.collectionHandle_processor import process_collections
 from preprocessing.tags_processor import process_tags
 from preprocessing.variants_processor import process_variants
-from preprocessing.related_products_processor import process_related_products
 from preprocessing.vendor_processor import process_vendors
 from preprocessing.metafields_processor import process_metafields, apply_tfidf_processing
 from preprocessing.isGiftCard_processor import process_gif_card
@@ -47,10 +46,26 @@ def main():
     
     # 1. Process metafields
     print("Processing metafields...")
-    metafields_processed = pd.DataFrame([
-        process_metafields(row, row.get('metafields_config', [])) 
-        for _, row in df.iterrows()
-    ], index=df.index)
+    all_processed_data = []
+    all_product_references = {}
+
+    for _, row in df.iterrows():
+        processed_data, product_refs = process_metafields(row, row.get('metafields_config', []))
+        all_processed_data.append(processed_data)
+        
+        # Collect product references
+        product_id = row.get('product_id', '')
+        for key, value in product_refs.items():
+            all_product_references[f"{product_id}_{key}"] = value
+
+    # Create DataFrame from processed metafields
+    metafields_processed = pd.DataFrame(all_processed_data, index=df.index)
+
+    # Save product references if any were found
+    if all_product_references:
+        from preprocessing.metafields_processor import save_product_references
+        save_product_references(all_product_references, "product_references.csv")
+        print("Product references saved to product_references.csv")
 
     # Apply TF-IDF processing to the metafields data
     metafields_processed = apply_tfidf_processing(metafields_processed)

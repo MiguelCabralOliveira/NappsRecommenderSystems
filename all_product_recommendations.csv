@@ -1,0 +1,51 @@
+source_product_id,source_product_title,recommendation_rank,recommended_product_id,recommended_product_title,recommendation_source
+gid://shopify/Product/7761873731631,USINA GILET,1,gid://shopify/Product/7761874026543,USINA SHORTS,hybrid
+gid://shopify/Product/7761873731631,USINA GILET,2,gid://shopify/Product/7761874157615,USINA TROUSERS,hybrid
+gid://shopify/Product/7761873731631,USINA GILET,3,gid://shopify/Product/7761874223151,KIMONO ITANHANGÁ S3,hybrid
+gid://shopify/Product/7761873731631,USINA GILET,4,gid://shopify/Product/7761874354223,KIMONO ITANHANGÁ S1,hybrid
+gid://shopify/Product/7761873731631,USINA GILET,5,gid://shopify/Product/7761874386991,GRUMARI SHORTS S3,hybrid
+gid://shopify/Product/7761874026543,USINA SHORTS,1,gid://shopify/Product/7761874157615,USINA TROUSERS,hybrid
+gid://shopify/Product/7761874026543,USINA SHORTS,2,gid://shopify/Product/7761874518063,GRUMARI SHORTS S1,hybrid
+gid://shopify/Product/7761874026543,USINA SHORTS,3,gid://shopify/Product/7761874386991,GRUMARI SHORTS S3,hybrid
+gid://shopify/Product/7761874026543,USINA SHORTS,4,gid://shopify/Product/7761874485295,GRUMARI SHORTS S2,hybrid
+gid://shopify/Product/7761874026543,USINA SHORTS,5,gid://shopify/Product/7761873731631,USINA GILET,hybrid
+gid://shopify/Product/7761874157615,USINA TROUSERS,1,gid://shopify/Product/7761874026543,USINA SHORTS,hybrid
+gid://shopify/Product/7761874157615,USINA TROUSERS,2,gid://shopify/Product/7761874518063,GRUMARI SHORTS S1,hybrid
+gid://shopify/Product/7761874157615,USINA TROUSERS,3,gid://shopify/Product/7761874386991,GRUMARI SHORTS S3,hybrid
+gid://shopify/Product/7761874157615,USINA TROUSERS,4,gid://shopify/Product/7761874485295,GRUMARI SHORTS S2,hybrid
+gid://shopify/Product/7761874157615,USINA TROUSERS,5,gid://shopify/Product/7761873731631,USINA GILET,hybrid
+gid://shopify/Product/7761874223151,KIMONO ITANHANGÁ S3,1,gid://shopify/Product/7761874354223,KIMONO ITANHANGÁ S1,hybrid
+gid://shopify/Product/7761874223151,KIMONO ITANHANGÁ S3,2,gid://shopify/Product/7761873731631,USINA GILET,hybrid
+gid://shopify/Product/7761874223151,KIMONO ITANHANGÁ S3,3,gid://shopify/Product/7761874026543,USINA SHORTS,hybrid
+gid://shopify/Product/7761874223151,KIMONO ITANHANGÁ S3,4,gid://shopify/Product/7761874157615,USINA TROUSERS,hybrid
+gid://shopify/Product/7761874223151,KIMONO ITANHANGÁ S3,5,gid://shopify/Product/7761874386991,GRUMARI SHORTS S3,hybrid
+gid://shopify/Product/7761874354223,KIMONO ITANHANGÁ S1,1,gid://shopify/Product/7761874223151,KIMONO ITANHANGÁ S3,hybrid
+gid://shopify/Product/7761874354223,KIMONO ITANHANGÁ S1,2,gid://shopify/Product/7761873731631,USINA GILET,hybrid
+gid://shopify/Product/7761874354223,KIMONO ITANHANGÁ S1,3,gid://shopify/Product/7761874026543,USINA SHORTS,hybrid
+gid://shopify/Product/7761874354223,KIMONO ITANHANGÁ S1,4,gid://shopify/Product/7761874157615,USINA TROUSERS,hybrid
+gid://shopify/Product/7761874354223,KIMONO ITANHANGÁ S1,5,gid://shopify/Product/7761874386991,GRUMARI SHORTS S3,hybrid
+gid://shopify/Product/7761874386991,GRUMARI SHORTS S3,1,gid://shopify/Product/7761874026543,USINA SHORTS,hybrid
+gid://shopify/Product/7761874386991,GRUMARI SHORTS S3,2,gid://shopify/Product/7761874518063,GRUMARI SHORTS S1,hybrid
+gid://shopify/Product/7761874386991,GRUMARI SHORTS S3,3,gid://shopify/Product/7761874157615,USINA TROUSERS,hybrid
+gid://shopify/Product/7761874386991,GRUMARI SHORTS S3,4,gid://shopify/Product/7761874485295,GRUMARI SHORTS S2,hybrid
+gid://shopify/Product/7761874386991,GRUMARI SHORTS S3,5,gid://shopify/Product/7761873731631,USINA GILET,hybrid
+gid://shopify/Product/7761874485295,GRUMARI SHORTS S2,1,gid://shopify/Product/7761874026543,USINA SHORTS,hybrid
+gid://shopify/Product/7761874485295,GRUMARI SHORTS S2,2,gid://shopify/Product/7761874518063,GRUMARI SHORTS S1,hybrid
+gid://shopify/Product/7761874485295,GRUMARI SHORTS S2,3,gid://shopify/Product/7761874157615,USINA TROUSERS,hybrid
+gid://shopify/Product/7761874485295,GRUMARI SHORTS S2,4,gid://shopify/Product/7761874386991,GRUMARI SHORTS S3,hybrid
+gid://shopify/Product/7761874485295,GRUMARI SHORTS S2,5,gid://shopify/Product/7761873731631,USINA GILET,hybrid
+gid://shopify/Product/7761874518063,GRUMARI SHORTS S1,1,gid://shopify/Product/7761874026543,USINA SHORTS,hybrid
+gid://shopify/Product/7761874518063,GRUMARI SHORTS S1,2,gid://shopify/Product/7761874485295,GRUMARI SHORTS S2,hybrid
+gid://shopify/Product/7761874518063,GRUMARI SHORTS S1,3,gid://shopify/Product/7761874157615,USINA TROUSERS,hybrid
+gid://shopify/Product/7761874518063,GRUMARI SHORTS S1,4,gid://shopify/Product/7761874386991,GRUMARI SHORTS S3,hybrid
+gid://shopify/Product/7761874518063,GRUMARI SHORTS S1,5,gid://shopify/Product/7761873731631,USINA GILET,hybrid
+gid://shopify/Product/7761874649135,SILK SCARF SS'24 RJ COLLECTION S12,1,gid://shopify/Product/7761874714671,SILK SCARF SS'24 RJ COLLECTION S11,hybrid
+gid://shopify/Product/7761874649135,SILK SCARF SS'24 RJ COLLECTION S12,2,gid://shopify/Product/7761873731631,USINA GILET,hybrid
+gid://shopify/Product/7761874649135,SILK SCARF SS'24 RJ COLLECTION S12,3,gid://shopify/Product/7761874026543,USINA SHORTS,hybrid
+gid://shopify/Product/7761874649135,SILK SCARF SS'24 RJ COLLECTION S12,4,gid://shopify/Product/7761874223151,KIMONO ITANHANGÁ S3,hybrid
+gid://shopify/Product/7761874649135,SILK SCARF SS'24 RJ COLLECTION S12,5,gid://shopify/Product/7761874157615,USINA TROUSERS,hybrid
+gid://shopify/Product/7761874714671,SILK SCARF SS'24 RJ COLLECTION S11,1,gid://shopify/Product/7761874649135,SILK SCARF SS'24 RJ COLLECTION S12,hybrid
+gid://shopify/Product/7761874714671,SILK SCARF SS'24 RJ COLLECTION S11,2,gid://shopify/Product/7761873731631,USINA GILET,hybrid
+gid://shopify/Product/7761874714671,SILK SCARF SS'24 RJ COLLECTION S11,3,gid://shopify/Product/7761874026543,USINA SHORTS,hybrid
+gid://shopify/Product/7761874714671,SILK SCARF SS'24 RJ COLLECTION S11,4,gid://shopify/Product/7761874223151,KIMONO ITANHANGÁ S3,hybrid
+gid://shopify/Product/7761874714671,SILK SCARF SS'24 RJ COLLECTION S11,5,gid://shopify/Product/7761874157615,USINA TROUSERS,hybrid
