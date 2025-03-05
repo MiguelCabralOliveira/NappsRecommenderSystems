@@ -6,6 +6,7 @@ from preprocessing.variants_processor import process_variants
 from preprocessing.vendor_processor import process_vendors
 from preprocessing.metafields_processor import process_metafields, apply_tfidf_processing, save_color_similarity_data
 from preprocessing.isGiftCard_processor import process_gif_card
+from preprocessing.product_type_processor import process_product_type
 from preprocessing.availableForSale_processor import process_avaiable_for_sale
 import pandas as pd
 
@@ -95,6 +96,10 @@ def main():
     print("Processing available_for_sale...")
     df = process_avaiable_for_sale(df)
     export_sample(df, "available_for_sale")
+
+    print("Processing product types...")
+    df = process_product_type(df)
+    export_sample(df, "product_type")
     
     # 4. Process tags
     print("Processing tags...")
@@ -115,6 +120,8 @@ def main():
     print("Processing variants...")
     df = process_variants(df)
     export_sample(df, "variants")
+
+
     
     # 8. Process text with TF-IDF
     print("Processing product descriptions with TF-IDF...")
@@ -139,70 +146,7 @@ def main():
     
     if not color_similarity_df.empty:
         print("- products_color_similarity.csv (similar products by color)")
-    
-    # 9. Train product recommender model
-    print("\nTraining product recommendation model...")
-    try:
-        from training.ProductRecommender import ProductRecommender
-        
-        # Create and train the recommender
-        recommender = ProductRecommender()
-        
-        # If we have color similarity data, pass it to the recommender
-        if not color_similarity_df.empty:
-            print("Including color similarity data in recommendation model...")
-            recommender.fit(tfidf_df, color_similarity_df=color_similarity_df, find_optimal=True)
-        else:
-            recommender.fit(tfidf_df, find_optimal=True)
-        
-        # Save the trained model
-        recommender.save_model("product_recommender_model.pkl")
-        
-        # Generate sample recommendations
-        if len(tfidf_df) > 0:
-            sample_product_id = tfidf_df.iloc[0]['product_id']
-            sample_product_title = tfidf_df.iloc[0]['product_title']
-            
-            print(f"\nSample recommendations for product: {sample_product_title}")
-            
-            # Get hybrid recommendations (best overall approach)
-            recommendations = recommender.get_recommendations(
-                sample_product_id, n_recommendations=5, strategy='hybrid'
-            )
-            
-            # Print recommendations
-            if recommendations:
-                for i, rec in enumerate(recommendations, 1):
-                    print(f"{i}. {rec['product_title']}")
-            else:
-                print("No recommendations found for this product.")
-            
-            # 10. Generate recommendations for all products
-            print("\nGenerating recommendations for all products...")
-            all_recommendations_df = recommender.generate_all_recommendations(tfidf_df)
-            
-            # Save all recommendations
-            all_recommendations_df.to_csv("all_product_recommendations.csv", index=False)
-            
-            print(f"\nAll recommendations generated successfully!")
-            print(f"Total products processed: {len(tfidf_df)}")
-            print(f"Total products with recommendations: {all_recommendations_df['source_product_id'].nunique()}")
-            print(f"Total recommendations generated: {len(all_recommendations_df)}")
-            print("Recommendations saved to all_product_recommendations.csv")
-                
-            print("\nRecommendation model training completed successfully!")
-            print("\nOutputs:")
-            print("- product_recommender_model.pkl (trained model)")
-            print("- product_clusters.png (visualization of product clusters)")
-            print("- optimal_clusters.png (analysis of optimal cluster count)")
-            print("- all_product_recommendations.csv (recommendations for all products)")
-            
-        else:
-            print("No products available to generate sample recommendations.")
-            
-    except Exception as e:
-        print(f"\nError training recommendation model: {e}")
-        print("Recommendation model training failed, but data processing was completed successfully.")
+
 
 
 if __name__ == "__main__":
