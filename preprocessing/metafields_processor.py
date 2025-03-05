@@ -269,29 +269,38 @@ def extract_metaobject_reference_data(reference_value, references=None, metaobje
         if references and isinstance(references, dict) and 'nodes' in references:
             nodes = references['nodes']
             
-            # For color-related metaobjects, prioritize color extraction
-            if 'color' in str(references).lower():
-                color_values = extract_hex_colors_from_metaobject(references)
-                if color_values:
-                    return color_values
-            
             # Extract values from the fields of each node
-            results = []
+            field_values = []
             for node in nodes:
                 if 'fields' in node and node['fields']:
-                    # Get the first field's value (prioritize)
-                    if len(node['fields']) > 0:
-                        results.append(node['fields'][0].get('value', ''))
+                    # Get the label field as priority if it exists
+                    label_field = next((f for f in node['fields'] if f.get('key') == 'label'), None)
+                    
+                    if label_field and 'value' in label_field:
+                        field_values.append(label_field['value'])
+                    # If no label field, get the first field with a value
+                    elif len(node['fields']) > 0 and 'value' in node['fields'][0]:
+                        field_values.append(node['fields'][0]['value'])
             
-            if results:
-                return " ".join(results)
+            if field_values:
+                # Return a list for single values (this preserves categorical nature)
+                # or join with commas for multiple values
+                if len(field_values) == 1:
+                    return field_values[0]
+                return ", ".join(field_values)
         
         # Parse the reference value if it's a string
         if isinstance(reference_value, str):
             try:
                 data = json.loads(reference_value)
+                
+                # If it's a list of IDs, return empty string - we can't process without references
+                if isinstance(data, list) and all(isinstance(item, str) and 'gid://shopify/Metaobject/' in item for item in data):
+                    return ""
+                
+                return str(data)
             except json.JSONDecodeError:
-                # Return empty string for single metaobject references
+                # Return empty string for single metaobject references without data
                 if 'gid://shopify/Metaobject/' in reference_value:
                     return ""
                 return reference_value
@@ -302,10 +311,11 @@ def extract_metaobject_reference_data(reference_value, references=None, metaobje
         if isinstance(data, list) and all(isinstance(item, str) and 'gid://shopify/Metaobject/' in item for item in data):
             return ""
             
-        return ""
+        return str(data) if data else ""
     except Exception as e:
         print(f"Error extracting data from metaobject reference: {e}")
         return ""
+
 
 def clean_html(html_content):
     """Clean HTML from text content"""
@@ -504,47 +514,88 @@ def vectorize_text_features(metafields_df):
     
     if len(text_columns) == 0:
         return {}
-        
-    # Initialize vectorizer
-    vectorizer = TfidfVectorizer(
-        max_features=100,
-        stop_words='english',
-        max_df=0.8,
-        min_df=0.01  
-    )
+    
+    # Group text columns based on content characteristics
+    short_text_columns = []
+    long_text_columns = []
     
     for col in text_columns:
         # Convert column name to string to avoid errors with integer columns
         col_str = str(col)
         
         # Skip color, dimension, weight, and product reference columns
-        if any(keyword in col_str.lower() for keyword in ['color', 'colour', 'dimension', 'weight', 'product_reference']):
+        if any(keyword in col_str.lower() for keyword in ['color', 'dimension', 'weight', 'product_reference']):
             continue
             
         # Skip columns with array values (like our color arrays)
         if metafields_df[col].apply(lambda x: isinstance(x, list)).any():
             continue
-            
+        
         # Fill NA values with empty string
         text_data = metafields_df[col].fillna('').astype(str)
         
         # Skip if all values are empty after conversion
         if (text_data == '').all():
             continue
+        
+        # Check if this is likely a short text field (like from metaobjects)
+        # by checking average text length and number of unique values
+        avg_length = text_data.str.len().mean()
+        unique_ratio = text_data.nunique() / len(text_data)
+        
+        if avg_length < 100 or unique_ratio < 0.5:
+            short_text_columns.append(col)
+        else:
+            long_text_columns.append(col)
+    
+    # Process short text columns (like fabric types, labels, etc.) using word counts instead of TF-IDF
+    if short_text_columns:
+        for col in short_text_columns:
+            text_data = metafields_df[col].fillna('').astype(str)
             
+            # For short text fields, just create indicator variables
+            # This is more reliable than TF-IDF for categorical text data from metaobjects
+            unique_values = text_data.unique()
+            
+            # Remove empty values
+            unique_values = [v for v in unique_values if v]
+            
+            # Create indicator variables
+            for value in unique_values:
+                value_safe = re.sub(r'\W+', '_', value.lower())[:30]  # create safe column name
+                feature_name = f"{col}_{value_safe}"
+                text_features[feature_name] = (text_data == value).astype(int)
+    
+    # Process long text columns using TF-IDF as before
+    if long_text_columns:
+        # Combine all long text fields for better corpus statistics
+        combined_text = metafields_df[long_text_columns].fillna('').apply(
+            lambda row: ' '.join(row.astype(str)), axis=1
+        )
+        
+        # Initialize vectorizer with more flexible parameters for small datasets
+        vectorizer = TfidfVectorizer(
+            max_features=100,
+            stop_words='english',
+            max_df=0.95,  # More permissive max_df
+            min_df=1      # Allow terms that appear in just one document
+        )
+        
         try:
-            # Apply TF-IDF
-            feature_matrix = vectorizer.fit_transform(text_data)
-            feature_names = [f"{col}_{name}" for name in vectorizer.get_feature_names_out()]
-            text_features[col] = pd.DataFrame(
+            # Apply TF-IDF to combined text
+            feature_matrix = vectorizer.fit_transform(combined_text)
+            feature_names = [f"text_{name}" for name in vectorizer.get_feature_names_out()]
+            
+            text_features['combined_text'] = pd.DataFrame(
                 feature_matrix.toarray(),
                 columns=feature_names,
                 index=metafields_df.index
             )
         except Exception as e:
-            print(f"Error vectorizing column {col}: {e}")
+            print(f"Error vectorizing combined text fields: {e}")
     
     return text_features
+
 
 def normalize_numeric_features(metafields_df):
     """Normalize numeric features using MinMaxScaler"""
@@ -806,38 +857,41 @@ def apply_tfidf_processing(df):
     # Skip processing if DataFrame is empty
     if df.empty:
         return df
-        
-    # Process color arrays first - separate out color columns
-    color_columns = []
-    for col in df.columns:
-        if isinstance(col, str) and ('color' in col.lower() or 'colour' in col.lower()):
-            if df[col].apply(lambda x: isinstance(x, list)).any():
-                color_columns.append(col)
     
-    # Keep all non-list columns for further processing
-    non_color_df = df.drop(columns=color_columns, errors='ignore')
+    # First, make a copy to avoid SettingWithCopyWarning
+    df = df.copy()
     
     # Normalize numeric features (including dimension and weight values)
-    non_color_df = normalize_numeric_features(non_color_df)
+    numeric_columns = df.select_dtypes(include=np.number).columns
+    
+    if len(numeric_columns) > 0:
+        # Handle missing values before scaling
+        df[numeric_columns] = df[numeric_columns].fillna(0)
+        
+        # Use robust scaling for better handling of outliers
+        scaler = MinMaxScaler()
+        df[numeric_columns] = scaler.fit_transform(df[numeric_columns])
     
     # Vectorize text features (except color, dimension, weight, product_reference)
-    text_features = vectorize_text_features(non_color_df)
+    text_features = vectorize_text_features(df)
+    
+    # Handle the case where text features are returned as Series instead of DataFrames
+    for key, feature_data in list(text_features.items()):
+        if isinstance(feature_data, pd.Series):
+            # Convert Series to DataFrame
+            text_features[key] = pd.DataFrame(feature_data, columns=[key])
     
     # Combine all features
-    result_dfs = [non_color_df]
+    result_dfs = [df]
     
-    # Add back the color columns
-    for col in color_columns:
-        # Convert list columns to indicator variables
-        # - If column has color arrays, keep as is
-        result_dfs.append(pd.DataFrame({col: df[col]}))
-    
-    # Add text feature dataframes
-    result_dfs.extend(text_features.values())
+    for feature_name, feature_df in text_features.items():
+        if isinstance(feature_df, pd.DataFrame):
+            result_dfs.append(feature_df)
     
     if len(result_dfs) > 1:
         return pd.concat(result_dfs, axis=1)
     return df
+
 
 def save_product_references(product_references, output_file="product_references.csv"):
     """
