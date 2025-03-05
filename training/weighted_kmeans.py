@@ -1,0 +1,917 @@
+# weighted_kmeans.py
+import pandas as pd
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+import joblib
+from collections import defaultdict
+import re
+import argparse
+
+class WeightedKMeans:
+    """
+    Implements a weighted KMeans clustering algorithm for product data
+    where different feature groups can be assigned different weights.
+    """
+    def __init__(self, n_clusters=5, random_state=42, max_iter=300):
+        """
+        Initialize the WeightedKMeans model.
+        
+        Args:
+            n_clusters: Number of clusters to create
+            random_state: Random seed for reproducibility
+            max_iter: Maximum number of iterations for KMeans
+        """
+        self.n_clusters = n_clusters
+        self.random_state = random_state
+        self.max_iter = max_iter
+        self.kmeans = None
+        self.feature_weights = None
+        self.feature_groups = None
+        self.scaler = StandardScaler()
+        self.silhouette_avg = None
+        self.product_ids = None
+        self.product_titles = None
+        self.cluster_counts = None
+        
+    def load_data(self, data_file):
+        """
+        Load data from a processed CSV file
+        
+        Args:
+            data_file: Path to the processed CSV file (e.g., products_with_tfidf.csv)
+            
+        Returns:
+            DataFrame: Loaded data
+        """
+        if not os.path.exists(data_file):
+            raise FileNotFoundError(f"Data file not found: {data_file}")
+            
+        print(f"Loading data from {data_file}...")
+        df = pd.read_csv(data_file)
+        
+        # Keep product ID and title for reference
+        self.product_ids = df['product_id'].copy() if 'product_id' in df.columns else None
+        self.product_titles = df['product_title'].copy() if 'product_title' in df.columns else None
+        
+        # Remove non-feature columns
+        non_feature_cols = ['product_id', 'product_title', 'handle']
+        feature_cols = [col for col in df.columns if col not in non_feature_cols]
+        
+        print(f"Loaded {len(df)} products with {len(feature_cols)} features")
+        return df[feature_cols]
+    
+    def identify_feature_groups(self, df):
+        """
+        Automatically identify and group features based on their names and types
+        
+        Args:
+            df: DataFrame with features
+            
+        Returns:
+            dict: Dictionary of feature groups
+        """
+        # Initialize feature groups
+        feature_groups = {
+            'tfidf_description': [],
+            'tfidf_metafields': [],
+            'collections': [],
+            'tags': [],
+            'product_type': [],
+            'vendor': [],
+            'variant_attributes': [],
+            'numerical': []
+        }
+        
+        # Identify numerical columns
+        numerical_cols = df.select_dtypes(include=np.number).columns.tolist()
+        
+        # Pattern matching for feature groups
+        for col in df.columns:
+            if col in numerical_cols:
+                # Check specific patterns for groups first
+                if col.startswith('collections_'):
+                    feature_groups['collections'].append(col)
+                elif col.startswith('tag_'):
+                    feature_groups['tags'].append(col)
+                elif col.startswith('product_type_'):
+                    feature_groups['product_type'].append(col)
+                elif col.startswith('vendor_'):
+                    feature_groups['vendor'].append(col)
+                elif col.startswith('size_') or col.startswith('color_') or col.startswith('other_'):
+                    feature_groups['variant_attributes'].append(col)
+                elif col == 'text_' or col.startswith('text_'):
+                    # These are TF-IDF features from description
+                    feature_groups['tfidf_description'].append(col)
+                elif col.startswith('combined_text_'):
+                    # These are TF-IDF features from combined metafields
+                    feature_groups['tfidf_metafields'].append(col)
+                else:
+                    # Default to numerical for any remaining numerical columns
+                    feature_groups['numerical'].append(col)
+        
+        # Remove empty groups
+        self.feature_groups = {k: v for k, v in feature_groups.items() if v}
+        
+        # Print feature group summary
+        print("\nFeature Group Summary:")
+        for group, cols in self.feature_groups.items():
+            print(f"{group}: {len(cols)} features")
+            
+        return self.feature_groups
+    
+    def set_feature_weights(self, weights=None):
+        """
+        Set weights for each feature group
+        
+        Args:
+            weights: Dictionary mapping feature group names to weights
+                    If None, default weights will be used
+        """
+        if weights is None:
+            # Default weights giving higher importance to text and product attributes
+            weights = {
+                'tfidf_description': 1.5,
+                'tfidf_metafields': 1.2,
+                'collections': 1.0,
+                'tags': 1.0,
+                'product_type': 1.3,
+                'vendor': 0.8,
+                'variant_attributes': 1.0,
+                'numerical': 0.9
+            }
+        
+        # Validate that weights exist for all feature groups
+        for group in self.feature_groups:
+            if group not in weights:
+                weights[group] = 1.0  # Default weight if not specified
+        
+        self.feature_weights = weights
+        print("\nFeature Weights:")
+        for group, weight in self.feature_weights.items():
+            if group in self.feature_groups:
+                print(f"{group}: {weight}")
+                
+        return self.feature_weights
+    
+    def apply_weights(self, X):
+        """
+        Apply weights to the feature matrix
+        
+        Args:
+            X: Feature matrix (numpy array)
+            
+        Returns:
+            numpy array: Weighted feature matrix
+        """
+        if self.feature_weights is None or self.feature_groups is None:
+            raise ValueError("Feature weights or groups not set. Call set_feature_weights() first.")
+        
+        # Create a copy of the data to avoid modifying the original
+        X_weighted = X.copy()
+        
+        # Map each feature to its corresponding group and weight
+        feature_to_weight = {}
+        start_idx = 0
+        
+        for group, features in self.feature_groups.items():
+            weight = self.feature_weights.get(group, 1.0)
+            for _ in range(len(features)):
+                feature_to_weight[start_idx] = weight
+                start_idx += 1
+        
+        # Apply weights to each feature
+        for i in range(X_weighted.shape[1]):
+            weight = feature_to_weight.get(i, 1.0)
+            X_weighted[:, i] *= weight
+            
+        return X_weighted
+    
+    def fit(self, data, find_optimal_k=False, k_range=None):
+        """
+        Fit the weighted KMeans model to the data
+        
+        Args:
+            data: DataFrame or path to CSV file
+            find_optimal_k: Whether to find the optimal number of clusters
+            k_range: Range of k values to try if finding optimal k
+            
+        Returns:
+            self: The fitted model
+        """
+        # Load data if string is provided
+        if isinstance(data, str):
+            df = self.load_data(data)
+        else:
+            df = data.copy()
+            
+        # Identify feature groups if not already done
+        if self.feature_groups is None:
+            self.identify_feature_groups(df)
+            
+        # Set default weights if not already done
+        if self.feature_weights is None:
+            self.set_feature_weights()
+        
+        # Standardize the data
+        X = self.scaler.fit_transform(df)
+        
+        # Apply weights to features
+        X_weighted = self.apply_weights(X)
+        
+        # Optionally find optimal k
+        if find_optimal_k:
+            self.find_optimal_k(X_weighted, k_range)
+        
+        # Fit KMeans
+        print(f"\nFitting KMeans with {self.n_clusters} clusters...")
+        self.kmeans = KMeans(
+            n_clusters=self.n_clusters, 
+            random_state=self.random_state,
+            max_iter=self.max_iter
+        ).fit(X_weighted)
+        
+        # Calculate silhouette score
+        self.silhouette_avg = silhouette_score(X_weighted, self.kmeans.labels_)
+        print(f"Silhouette Score: {self.silhouette_avg:.4f}")
+        
+        # Store number of products per cluster
+        self.cluster_counts = np.bincount(self.kmeans.labels_)
+        print("\nNumber of products per cluster:")
+        for i, count in enumerate(self.cluster_counts):
+            print(f"Cluster {i}: {count} products")
+            
+        return self
+    
+    def find_optimal_k(self, X, k_range=None):
+        """
+        Find optimal number of clusters using silhouette score
+        
+        Args:
+            X: Feature matrix
+            k_range: Range of k values to try
+            
+        Returns:
+            int: Optimal number of clusters
+        """
+        if k_range is None:
+            k_range = range(2, 11)
+            
+        print("\nFinding optimal number of clusters...")
+        silhouette_scores = []
+        
+        for k in k_range:
+            print(f"Trying k={k}...", end=" ")
+            kmeans = KMeans(n_clusters=k, random_state=self.random_state).fit(X)
+            score = silhouette_score(X, kmeans.labels_)
+            silhouette_scores.append(score)
+            print(f"Silhouette score: {score:.4f}")
+            
+        # Find optimal k
+        optimal_k = k_range[np.argmax(silhouette_scores)]
+        print(f"Optimal number of clusters: {optimal_k}")
+        
+        # Update n_clusters
+        self.n_clusters = optimal_k
+        
+        # Plot silhouette scores
+        plt.figure(figsize=(10, 6))
+        plt.plot(k_range, silhouette_scores, 'o-')
+        plt.xlabel('Number of clusters (k)')
+        plt.ylabel('Silhouette Score')
+        plt.title('Silhouette Method For Optimal k')
+        plt.grid(True)
+        plt.savefig('optimal_k_silhouette.png')
+        plt.close()
+        
+        return optimal_k
+    
+    def get_cluster_labels(self):
+        """
+        Get cluster labels for the data
+        
+        Returns:
+            numpy array: Cluster labels
+        """
+        if self.kmeans is None:
+            raise ValueError("Model not fitted yet. Call fit() first.")
+            
+        return self.kmeans.labels_
+    
+    def visualize_clusters(self, n_components=2, output_file='cluster_visualization.png'):
+        """
+        Visualize clusters using PCA for dimensionality reduction
+        
+        Args:
+            n_components: Number of PCA components for visualization
+            output_file: Path to save the visualization
+            
+        Returns:
+            None
+        """
+        if self.kmeans is None:
+            raise ValueError("Model not fitted yet. Call fit() first.")
+            
+        # Get data and apply weights
+        df = self.kmeans.cluster_centers_
+        
+        # Apply PCA
+        pca = PCA(n_components=n_components)
+        reduced_data = pca.fit_transform(df)
+        
+        # Create visualization
+        plt.figure(figsize=(12, 8))
+        
+        # First plot: Cluster centers
+        plt.subplot(1, 2, 1)
+        plt.scatter(reduced_data[:, 0], reduced_data[:, 1], c='blue', marker='o', s=100)
+        for i, (x, y) in enumerate(reduced_data):
+            plt.annotate(f'Cluster {i}', (x, y), textcoords="offset points", 
+                        xytext=(0, 10), ha='center')
+        plt.title('Cluster Centers (PCA)')
+        plt.xlabel(f'PCA Component 1 ({pca.explained_variance_ratio_[0]:.2%} variance)')
+        plt.ylabel(f'PCA Component 2 ({pca.explained_variance_ratio_[1]:.2%} variance)')
+        plt.grid(True)
+        
+        # Second plot: Distribution of samples by cluster
+        plt.subplot(1, 2, 2)
+        plt.bar(range(self.n_clusters), self.cluster_counts)
+        plt.xlabel('Cluster')
+        plt.ylabel('Number of Products')
+        plt.title('Products per Cluster')
+        plt.xticks(range(self.n_clusters))
+        plt.grid(True, axis='y')
+        
+        plt.tight_layout()
+        plt.savefig(output_file)
+        plt.close()
+        
+        print(f"Cluster visualization saved to {output_file}")
+    
+    def visualize_feature_importance(self, feature_names, output_file="feature_importance.png"):
+        """
+        Visualize feature importance across all clusters
+        
+        Args:
+            feature_names: List of feature names
+            output_file: Path to save the visualization
+            
+        Returns:
+            None
+        """
+        if self.kmeans is None:
+            raise ValueError("Model not fitted yet. Call fit() first.")
+        
+        if isinstance(feature_names, pd.Index):
+            feature_names = feature_names.tolist()
+            
+        # Get weighted cluster centers
+        centers = self.kmeans.cluster_centers_
+        
+        # Calculate overall feature importance as the mean absolute value across clusters
+        feature_importance = np.mean(np.abs(centers), axis=0)
+        
+        # Get top features
+        num_features = min(20, len(feature_importance))
+        top_indices = np.argsort(feature_importance)[-num_features:]
+        
+        # Create a horizontal bar chart
+        plt.figure(figsize=(12, 10))
+        y_pos = np.arange(len(top_indices))
+        
+        # Create readable feature names
+        display_names = []
+        for idx in top_indices:
+            name = feature_names[idx]
+            # Format for readability
+            if name.startswith('product_type_'):
+                name = f"Type: {name.replace('product_type_', '')}"
+            elif name.startswith('vendor_'):
+                name = f"Vendor: {name.replace('vendor_', '')}"
+            elif name.startswith('collections_'):
+                name = f"Collection: {name.replace('collections_', '')}"
+            elif name.startswith('tag_'):
+                name = f"Tag: {name.replace('tag_', '')}"
+            elif name.startswith('text_'):
+                name = f"Term: {name.replace('text_', '')}"
+            
+            # Truncate long names
+            if len(name) > 30:
+                name = name[:27] + "..."
+                
+            display_names.append(name)
+        
+        # Plot
+        plt.barh(y_pos, [feature_importance[i] for i in top_indices])
+        plt.yticks(y_pos, display_names)
+        plt.xlabel('Feature Importance')
+        plt.title('Top Features by Importance')
+        plt.tight_layout()
+        plt.savefig(output_file)
+        plt.close()
+        
+        print(f"Feature importance visualization saved to {output_file}")
+    
+    def visualize_tsne(self, X, output_file="tsne_visualization.png"):
+        """
+        Visualize data using t-SNE dimensionality reduction
+        
+        Args:
+            X: Feature matrix
+            output_file: Path to save the visualization
+            
+        Returns:
+            None
+        """
+        if self.kmeans is None:
+            raise ValueError("Model not fitted yet. Call fit() first.")
+        
+        # Apply weights
+        X_weighted = self.apply_weights(X)
+        
+        # Sample data if there are too many points (t-SNE is computationally expensive)
+        max_samples = 1000
+        if X_weighted.shape[0] > max_samples:
+            print(f"Sampling {max_samples} points for t-SNE visualization")
+            indices = np.random.choice(X_weighted.shape[0], max_samples, replace=False)
+            X_sample = X_weighted[indices]
+            labels_sample = self.kmeans.labels_[indices]
+        else:
+            X_sample = X_weighted
+            labels_sample = self.kmeans.labels_
+        
+        # Apply t-SNE
+        print("Applying t-SNE dimensionality reduction (this may take a while)...")
+        perplexity = min(30, X_sample.shape[0] - 1)  # Adjust perplexity for small datasets
+        tsne = TSNE(n_components=2, random_state=self.random_state, perplexity=perplexity)
+        X_tsne = tsne.fit_transform(X_sample)
+        
+        # Plot
+        plt.figure(figsize=(12, 10))
+        scatter = plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=labels_sample, cmap='viridis', alpha=0.7)
+        plt.colorbar(scatter, label='Cluster')
+        plt.title('t-SNE Visualization of Clusters')
+        plt.xlabel('t-SNE Dimension 1')
+        plt.ylabel('t-SNE Dimension 2')
+        plt.tight_layout()
+        plt.savefig(output_file)
+        plt.close()
+        
+        print(f"t-SNE visualization saved to {output_file}")
+    
+    def get_top_features_per_cluster(self, feature_names, top_n=10):
+        """
+        Get top features for each cluster
+        
+        Args:
+            feature_names: List of feature names
+            top_n: Number of top features to return per cluster
+            
+        Returns:
+            dict: Dictionary mapping clusters to their top features
+        """
+        if self.kmeans is None:
+            raise ValueError("Model not fitted yet. Call fit() first.")
+            
+        # Ensure feature_names is a list
+        if isinstance(feature_names, pd.Index):
+            feature_names = feature_names.tolist()
+            
+        # Get cluster centers
+        centers = self.kmeans.cluster_centers_
+        
+        top_features = {}
+        
+        for cluster_idx in range(self.n_clusters):
+            # Get importance of each feature for this cluster
+            feature_importance = centers[cluster_idx]
+            
+            # Get index of top features
+            top_indices = np.argsort(feature_importance)[-top_n:][::-1]
+            
+            # Map indices to feature names
+            top_features[cluster_idx] = [(feature_names[i], feature_importance[i]) for i in top_indices]
+            
+        return top_features
+    
+    def evaluate_clusters(self):
+        """
+        Evaluate the quality of clusters using multiple metrics
+        
+        Returns:
+            dict: Dictionary of evaluation metrics
+        """
+        if self.kmeans is None:
+            raise ValueError("Model not fitted yet. Call fit() first.")
+        
+        # Calculate silhouette score
+        silhouette = self.silhouette_avg
+        
+        # Calculate inertia (sum of squared distances)
+        inertia = self.kmeans.inertia_
+        
+        # Store results
+        results = {
+            'silhouette': silhouette,
+            'inertia': inertia
+        }
+        
+        print("\nCluster Evaluation Metrics:")
+        print(f"Silhouette Score: {silhouette:.4f} (higher is better, range: -1 to 1)")
+        print(f"Inertia: {inertia:.4f} (lower is better)")
+        
+        return results
+    
+    def interpret_clusters(self, df, top_n=5):
+        """
+        Interpret clusters by summarizing key characteristics
+        
+        Args:
+            df: Original DataFrame with features
+            top_n: Number of top features to show per cluster
+            
+        Returns:
+            dict: Dictionary of cluster interpretations
+        """
+        if self.kmeans is None:
+            raise ValueError("Model not fitted yet. Call fit() first.")
+            
+        # Get feature names
+        feature_names = df.columns.tolist()
+        
+        # Get top features per cluster
+        top_features = self.get_top_features_per_cluster(feature_names, top_n=top_n)
+        
+        # Create interpretations
+        interpretations = {}
+        
+        print("\nCluster Interpretations:")
+        for cluster_idx in range(self.n_clusters):
+            features = top_features[cluster_idx]
+            feature_names_list = [f[0] for f in features]
+            
+            # Create a human-readable interpretation
+            interpretation = f"Cluster {cluster_idx} ({self.cluster_counts[cluster_idx]} products):\n"
+            interpretation += "Key characteristics:\n"
+            
+            for name, value in features:
+                # Format feature name for readability
+                display_name = name
+                if name.startswith('product_type_'):
+                    display_name = f"Product Type: {name.replace('product_type_', '')}"
+                elif name.startswith('vendor_'):
+                    display_name = f"Vendor: {name.replace('vendor_', '')}"
+                elif name.startswith('collections_'):
+                    display_name = f"Collection: {name.replace('collections_', '')}"
+                elif name.startswith('tag_'):
+                    display_name = f"Tag: {name.replace('tag_', '')}"
+                elif name.startswith('text_'):
+                    display_name = f"Keyword: {name.replace('text_', '')}"
+                    
+                interpretation += f"  - {display_name}: {value:.4f}\n"
+                
+            interpretations[cluster_idx] = interpretation
+            print(interpretation)
+            
+        return interpretations
+    
+    def export_centroids(self, output_file="cluster_centroids.csv"):
+        """
+        Export cluster centroids for external visualization
+        
+        Args:
+            output_file: Path to save the centroids
+            
+        Returns:
+            DataFrame: Centroids dataframe
+        """
+        if self.kmeans is None:
+            raise ValueError("Model not fitted yet. Call fit() first.")
+            
+        # Get feature names
+        feature_names = []
+        for group, features in self.feature_groups.items():
+            feature_names.extend(features)
+            
+        # Create DataFrame with centroids
+        centroids_df = pd.DataFrame(
+            self.kmeans.cluster_centers_,
+            columns=feature_names
+        )
+        
+        # Add cluster ID
+        # Add cluster size
+        centroids_df['cluster_size'] = self.cluster_counts
+        
+        # Save to CSV
+        centroids_df.to_csv(output_file, index=False)
+        print(f"Cluster centroids exported to {output_file}")
+        
+        return centroids_df
+    
+    def export_cluster_assignments(self, output_file="cluster_assignments.csv"):
+        """
+        Export cluster assignments for all products
+        
+        Args:
+            output_file: Path to save the assignments
+            
+        Returns:
+            DataFrame: Assignments dataframe
+        """
+        if self.kmeans is None:
+            raise ValueError("Model not fitted yet. Call fit() first.")
+            
+        # Create DataFrame with cluster assignments
+        assignments_df = pd.DataFrame({
+            'product_id': self.product_ids,
+            'product_title': self.product_titles,
+            'cluster': self.kmeans.labels_
+        })
+        
+        # Save to CSV
+        assignments_df.to_csv(output_file, index=False)
+        print(f"Cluster assignments exported to {output_file}")
+        
+        return assignments_df
+    
+    def predict(self, X):
+        """
+        Predict clusters for new data
+        
+        Args:
+            X: Feature matrix or DataFrame
+            
+        Returns:
+            numpy array: Cluster labels
+        """
+        if self.kmeans is None:
+            raise ValueError("Model not fitted yet. Call fit() first.")
+            
+        # Convert DataFrame to numpy array if needed
+        if isinstance(X, pd.DataFrame):
+            X = X.values
+            
+        # Standardize
+        X_scaled = self.scaler.transform(X)
+        
+        # Apply weights
+        X_weighted = self.apply_weights(X_scaled)
+        
+        # Predict
+        return self.kmeans.predict(X_weighted)
+    
+    def save_model(self, output_dir="models"):
+        """
+        Save the model to disk
+        
+        Args:
+            output_dir: Directory to save the model
+            
+        Returns:
+            None
+        """
+        if self.kmeans is None:
+            raise ValueError("Model not fitted yet. Call fit() first.")
+            
+        # Create directory if it doesn't exist
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Save KMeans model
+        joblib.dump(self.kmeans, f"{output_dir}/kmeans_model.pkl")
+        
+        # Save scaler
+        joblib.dump(self.scaler, f"{output_dir}/scaler.pkl")
+        
+        # Save weights and groups
+        joblib.dump({
+            'feature_weights': self.feature_weights,
+            'feature_groups': self.feature_groups,
+            'silhouette_avg': self.silhouette_avg,
+            'n_clusters': self.n_clusters,
+            'random_state': self.random_state,
+            'max_iter': self.max_iter,
+            'cluster_counts': self.cluster_counts.tolist() if self.cluster_counts is not None else None
+        }, f"{output_dir}/model_params.pkl")
+        
+        print(f"Model saved to {output_dir}")
+    
+    @classmethod
+    def load_model(cls, model_dir="models"):
+        """
+        Load a saved model
+        
+        Args:
+            model_dir: Directory containing the saved model
+            
+        Returns:
+            WeightedKMeans: Loaded model
+        """
+        # Check if model exists
+        kmeans_path = f"{model_dir}/kmeans_model.pkl"
+        scaler_path = f"{model_dir}/scaler.pkl"
+        params_path = f"{model_dir}/model_params.pkl"
+        
+        if not (os.path.exists(kmeans_path) and os.path.exists(scaler_path) and os.path.exists(params_path)):
+            raise FileNotFoundError(f"Model files not found in {model_dir}")
+            
+        # Load files
+        kmeans = joblib.load(kmeans_path)
+        scaler = joblib.load(scaler_path)
+        params = joblib.load(params_path)
+        
+        # Create instance
+        instance = cls(
+            n_clusters=params['n_clusters'],
+            random_state=params['random_state'],
+            max_iter=params['max_iter']
+        )
+        
+        # Set attributes
+        instance.kmeans = kmeans
+        instance.scaler = scaler
+        instance.feature_weights = params['feature_weights']
+        instance.feature_groups = params['feature_groups']
+        instance.silhouette_avg = params['silhouette_avg']
+        instance.cluster_counts = np.array(params['cluster_counts']) if params['cluster_counts'] is not None else None
+        
+        print(f"Model loaded from {model_dir}")
+        return instance
+
+
+def map_products_to_clusters(products_df, clusters_df):
+    """
+    Map products to their clusters and analyze characteristics
+    
+    Args:
+        products_df: DataFrame with original product data
+        clusters_df: DataFrame with cluster assignments
+        
+    Returns:
+        DataFrame: Product data with cluster assignments
+    """
+    # Merge dataframes
+    merged_df = products_df.merge(
+        clusters_df[['product_id', 'cluster']], 
+        on='product_id', 
+        how='left'
+    )
+    
+    # Generate cluster stats
+    cluster_stats = merged_df.groupby('cluster').agg({
+        'product_title': 'count',
+        'min_price': 'mean',
+        'max_price': 'mean',
+        'has_discount': 'mean'
+    }).rename(columns={'product_title': 'product_count'})
+    
+    print("\nCluster Statistics:")
+    print(cluster_stats)
+    
+    return merged_df
+
+
+def find_similar_products(product_id, products_df, clusters_df, top_n=5):
+    """
+    Find similar products based on cluster assignment
+    
+    Args:
+        product_id: Product ID to find similar products for
+        products_df: DataFrame with original product data
+        clusters_df: DataFrame with cluster assignments
+        top_n: Number of similar products to return
+        
+    Returns:
+        DataFrame: Similar products
+    """
+    # Find the cluster for the given product
+    product_cluster = clusters_df[clusters_df['product_id'] == product_id]['cluster'].values
+    
+    if len(product_cluster) == 0:
+        print(f"Product ID {product_id} not found")
+        return pd.DataFrame()
+        
+    product_cluster = product_cluster[0]
+    
+    # Get products in the same cluster
+    cluster_products = clusters_df[clusters_df['cluster'] == product_cluster]
+    
+    # Exclude the query product
+    similar_products = cluster_products[cluster_products['product_id'] != product_id]
+    
+    # Return top N similar products
+    return similar_products.head(top_n)
+
+
+def main():
+    """Main function to run clustering"""
+    parser = argparse.ArgumentParser(description='Run Weighted KMeans clustering on product data')
+    parser.add_argument('--input', type=str, default='products_with_tfidf.csv',
+                        help='Path to input CSV file with processed product data')
+    parser.add_argument('--clusters', type=int, default=5,
+                        help='Number of clusters to create')
+    parser.add_argument('--find-optimal-k', action='store_true',
+                        help='Find optimal number of clusters')
+    parser.add_argument('--min-k', type=int, default=2,
+                        help='Minimum number of clusters to try when finding optimal k')
+    parser.add_argument('--max-k', type=int, default=15,
+                        help='Maximum number of clusters to try when finding optimal k')
+    parser.add_argument('--output-dir', type=str, default='results',
+                        help='Directory to save results')
+    parser.add_argument('--save-model', action='store_true',
+                        help='Save the model')
+    
+    args = parser.parse_args()
+    
+    # Create output directory
+    os.makedirs(args.output_dir, exist_ok=True)
+    
+    # Load data
+    print(f"Loading data from {args.input}")
+    df = pd.read_csv(args.input)
+    
+    # Keep original data for reference
+    orig_df = df.copy()
+    
+    # Initialize model
+    model = WeightedKMeans(n_clusters=args.clusters)
+    
+    # Identify feature groups
+    feature_df = df.copy()
+    
+    # Remove non-feature columns
+    non_feature_cols = ['product_id', 'product_title', 'handle']
+    feature_cols = [col for col in feature_df.columns if col not in non_feature_cols]
+    feature_df = feature_df[feature_cols]
+    
+    # Identify feature groups
+    feature_groups = model.identify_feature_groups(feature_df)
+    
+    # Set custom weights (can be adjusted based on domain knowledge)
+    weights = {
+        'tfidf_description': 1.5,  # Higher weight for product descriptions
+        'tfidf_metafields': 1.2,   # Good weight for metafield text
+        'collections': 1.0,         # Standard weight
+        'tags': 1.0,                # Standard weight
+        'product_type': 1.3,        # Higher weight for product type
+        'vendor': 0.8,              # Lower weight
+        'variant_attributes': 1.0,  # Standard weight
+        'numerical': 0.9            # Slightly lower weight
+    }
+    model.set_feature_weights(weights)
+    
+    # Find optimal k if requested
+    k_range = None
+    if args.find_optimal_k:
+        k_range = range(args.min_k, args.max_k + 1)
+    
+    # Fit model
+    model.fit(feature_df, find_optimal_k=args.find_optimal_k, k_range=k_range)
+    
+    # Create visualizations
+    model.visualize_clusters(output_file=f"{args.output_dir}/clusters.png")
+    model.visualize_feature_importance(feature_df.columns, output_file=f"{args.output_dir}/feature_importance.png")
+    
+    # t-SNE visualization on standardized data
+    model.visualize_tsne(model.scaler.transform(feature_df), output_file=f"{args.output_dir}/tsne.png")
+    
+    # Export results
+    model.export_centroids(output_file=f"{args.output_dir}/centroids.csv")
+    assignments_df = model.export_cluster_assignments(output_file=f"{args.output_dir}/assignments.csv")
+    
+    # Interpret clusters
+    model.interpret_clusters(feature_df)
+    
+    # Evaluate clusters
+    model.evaluate_clusters()
+    
+    # Map products to clusters
+    mapped_df = map_products_to_clusters(orig_df, assignments_df)
+    mapped_df.to_csv(f"{args.output_dir}/products_with_clusters.csv", index=False)
+    
+    # Example: Find similar products
+    if len(df) > 0:
+        sample_product_id = df['product_id'].iloc[0]
+        similar_products = find_similar_products(sample_product_id, orig_df, assignments_df)
+        
+        print("\nExample: Similar Products")
+        print(f"For product: {df[df['product_id'] == sample_product_id]['product_title'].iloc[0]}")
+        if not similar_products.empty:
+            for _, row in similar_products.iterrows():
+                print(f"- {row['product_title']}")
+    
+    # Save model if requested
+    if args.save_model:
+        model.save_model(f"{args.output_dir}/model")
+    
+    print(f"\nClustering complete! Results saved to {args.output_dir}")
+
+
+if __name__ == "__main__":
+    main()
