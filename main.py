@@ -4,7 +4,7 @@ from preprocessing.collectionHandle_processor import process_collections
 from preprocessing.tags_processor import process_tags
 from preprocessing.variants_processor import process_variants
 from preprocessing.vendor_processor import process_vendors
-from preprocessing.metafields_processor import process_metafields, apply_tfidf_processing
+from preprocessing.metafields_processor import process_metafields, apply_tfidf_processing, save_color_similarity_data
 from preprocessing.isGiftCard_processor import process_gif_card
 from preprocessing.availableForSale_processor import process_avaiable_for_sale
 import pandas as pd
@@ -80,6 +80,12 @@ def main():
     df = pd.concat([df, metafields_processed], axis=1)
     export_sample(df, "metafields")
     
+    # Calculate and save color similarity data
+    print("Calculating color similarities...")
+    color_similarity_df = save_color_similarity_data()
+    if not color_similarity_df.empty:
+        print(f"Color similarity data saved for {color_similarity_df['source_product_id'].nunique()} products")
+    
     # 2. Process is_gift_card
     print("Processing is_gift_card...")
     df = process_gif_card(df)
@@ -131,6 +137,9 @@ def main():
     print("- products_tfidf_matrix.npy (TF-IDF vector representations)")
     print("- products_tfidf_features.csv (TF-IDF feature names)")
     
+    if not color_similarity_df.empty:
+        print("- products_color_similarity.csv (similar products by color)")
+    
     # 9. Train product recommender model
     print("\nTraining product recommendation model...")
     try:
@@ -138,7 +147,13 @@ def main():
         
         # Create and train the recommender
         recommender = ProductRecommender()
-        recommender.fit(tfidf_df, find_optimal=True)
+        
+        # If we have color similarity data, pass it to the recommender
+        if not color_similarity_df.empty:
+            print("Including color similarity data in recommendation model...")
+            recommender.fit(tfidf_df, color_similarity_df=color_similarity_df, find_optimal=True)
+        else:
+            recommender.fit(tfidf_df, find_optimal=True)
         
         # Save the trained model
         recommender.save_model("product_recommender_model.pkl")

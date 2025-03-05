@@ -55,18 +55,37 @@ def color_similarity(color1, color2):
         lab1 = hex_to_lab(color1)
         lab2 = hex_to_lab(color2)
         
-        # Calculate color difference using CIEDE2000 (perceptually uniform)
-        delta_e = delta_e_cie2000(lab1, lab2)
-        
-        # Convert distance to similarity score (smaller distance = higher similarity)
-        # Max meaningful distance is around 100 for completely different colors
-        similarity = max(0, 1 - (delta_e / 100))
-        
-        return similarity
+        try:
+            # Calculate color difference using CIEDE2000 (perceptually uniform)
+            delta_e = delta_e_cie2000(lab1, lab2)
+            
+            # Convert distance to similarity score (smaller distance = higher similarity)
+            # Max meaningful distance is around 100 for completely different colors
+            similarity = max(0, 1 - (delta_e / 100))
+            
+            return similarity
+        except AttributeError as e:
+            # Handle the asscalar error
+            if "asscalar" in str(e):
+                # Fallback to a simpler distance calculation
+                l1, a1, b1 = lab1.get_value_tuple()
+                l2, a2, b2 = lab2.get_value_tuple()
+                
+                # Calculate Euclidean distance
+                distance = ((l1 - l2)**2 + (a1 - a2)**2 + (b1 - b2)**2)**0.5
+                
+                # Convert to similarity (0-1 scale)
+                # Max meaningful distance in Lab space is around 100-150
+                similarity = max(0, 1 - (distance / 150))
+                
+                return similarity
+            else:
+                raise
     except Exception as e:
         print(f"Error calculating color similarity: {e}")
         return 0
 
+        
 def calculate_product_color_similarity(product1_colors, product2_colors):
     """
     Calculate color similarity between two products with multiple colors
@@ -176,18 +195,56 @@ def extract_hex_colors_from_metaobject(references):
         colors = []
         
         for node in nodes:
+            # Check all fields for color values
             if 'fields' in node:
-                # Check if there's a 'color' field directly
                 for field in node['fields']:
-                    if field.get('key') == 'color' and field.get('value', '').startswith('#'):
-                        colors.append(field['value'])
-                        break
+                    # Look for fields with key 'color' or value that looks like a hex color
+                    if (field.get('key', '').lower() == 'color' or 
+                        field.get('key', '').lower() == 'hex' or 
+                        field.get('key', '').lower() == 'code') and field.get('value'):
+                        
+                        value = field.get('value', '')
+                        # Ensure it's a valid hex color
+                        if isinstance(value, str) and (value.startswith('#') and len(value) in [4, 7]):
+                            colors.append(value)
+                            
+                    # Also look for color values in field names that contain 'color'
+                    elif 'color' in field.get('key', '').lower() and field.get('value'):
+                        value = field.get('value', '')
+                        # Check if it looks like a hex code
+                        if isinstance(value, str) and re.match(r'^#?[0-9A-Fa-f]{3,6}$', value):
+                            # Add # if missing
+                            if not value.startswith('#'):
+                                value = f"#{value}"
+                            colors.append(value)
         
         return colors
         
     except Exception as e:
         print(f"Error extracting color values: {e}")
         return []
+
+def extract_colors_from_variant_options(variant_options):
+    """
+    Extract color information from variant options
+    Returns a list of color values
+    """
+    if not variant_options or not isinstance(variant_options, list):
+        return []
+    
+    colors = []
+    for option in variant_options:
+        if ('color' in option.lower() or 'colour' in option.lower()) and option:
+            # Extract just the color part, assuming format like "Color: Blue" or similar
+            parts = option.split(':')
+            if len(parts) > 1:
+                color_value = parts[1].strip()
+                if color_value:
+                    colors.append(color_value)
+            else:
+                colors.append(option)
+    
+    return colors
 
 def extract_metaobject_reference_data(reference_value, references=None, metaobject_type=None):
     """
@@ -211,6 +268,12 @@ def extract_metaobject_reference_data(reference_value, references=None, metaobje
         # If we have direct references data with nodes, process it
         if references and isinstance(references, dict) and 'nodes' in references:
             nodes = references['nodes']
+            
+            # For color-related metaobjects, prioritize color extraction
+            if 'color' in str(references).lower():
+                color_values = extract_hex_colors_from_metaobject(references)
+                if color_values:
+                    return color_values
             
             # Extract values from the fields of each node
             results = []
@@ -366,6 +429,7 @@ def process_metafield_value(metafield):
     # Check if this is a dimension or weight field by type or key
     is_dimension = 'dimension' in metafield_type.lower() or 'dimension' in metafield_key.lower()
     is_weight = 'weight' in metafield_type.lower() or 'weight' in metafield_key.lower()
+    is_color = 'color' in metafield_type.lower() or 'color' in metafield_key.lower()
     
     # Handle different metafield types
     if is_dimension:
@@ -374,6 +438,11 @@ def process_metafield_value(metafield):
     elif is_weight:
         # For weight, return the numerical value in standard unit (g)
         return process_weight(value, include_unit=False)
+    elif is_color and isinstance(value, str) and (value.startswith('#') or re.match(r'^[0-9A-Fa-f]{6}$', value)):
+        # Ensure hex color has # prefix
+        if not value.startswith('#'):
+            value = f"#{value}"
+        return [value]  # Return as a list for consistency with other color processing
     elif 'rich_text_field' in metafield_type:
         return extract_text_from_rich_text(value)
     elif 'product_reference' in metafield_type:
@@ -449,7 +518,7 @@ def vectorize_text_features(metafields_df):
         col_str = str(col)
         
         # Skip color, dimension, weight, and product reference columns
-        if any(keyword in col_str.lower() for keyword in ['color', 'dimension', 'weight', 'product_reference']):
+        if any(keyword in col_str.lower() for keyword in ['color', 'colour', 'dimension', 'weight', 'product_reference']):
             continue
             
         # Skip columns with array values (like our color arrays)
@@ -506,6 +575,7 @@ def process_metafields(product, metafields_config=None):
     
     processed_data = {}
     product_references = {}
+    product_colors = []
     
     if 'metafields' not in product or not product['metafields']:
         return processed_data, product_references
@@ -542,7 +612,7 @@ def process_metafields(product, metafields_config=None):
         
         # Get field type and check if it's a special field type
         field_type = metafield.get('type', '').lower()
-        is_color_related = 'color' in key.lower() or 'color' in field_type
+        is_color_related = 'color' in key.lower() or 'colour' in key.lower() or 'color' in field_type
         is_dimension_related = 'dimension' in key.lower() or 'dimension' in field_type
         is_weight_related = 'weight' in key.lower() or 'weight' in field_type
         is_product_reference = 'product_reference' in field_type
@@ -574,6 +644,29 @@ def process_metafields(product, metafields_config=None):
                 ALL_PRODUCT_COLORS[product_id] = colors
                 
                 continue
+            
+            # Also try direct color value processing for non-reference color fields
+            if 'value' in metafield:
+                value = metafield['value']
+                if isinstance(value, str):
+                    # Check if it's a direct hex color value
+                    if value.startswith('#') and len(value) in [4, 7]:
+                        processed_data[unique_key] = [value]
+                        product_colors.append(value)
+                        continue
+                    
+                    # Try to parse if it's JSON
+                    try:
+                        color_data = json.loads(value)
+                        if isinstance(color_data, dict) and 'hex' in color_data:
+                            hex_value = color_data['hex']
+                            if not hex_value.startswith('#'):
+                                hex_value = f"#{hex_value}"
+                            processed_data[unique_key] = [hex_value]
+                            product_colors.append(hex_value)
+                            continue
+                    except json.JSONDecodeError:
+                        pass
         
         # Special handling for dimension metafields
         elif is_dimension_related and 'value' in metafield:
@@ -604,6 +697,36 @@ def process_metafields(product, metafields_config=None):
         if 'value' in metafield:
             processed_value = process_metafield_value(metafield)
             processed_data[unique_key] = processed_value
+            
+            # If this returns a list of colors, add them to product_colors
+            if is_color_related and isinstance(processed_value, list):
+                product_colors.extend(processed_value)
+    
+    # Check variant colors if available
+    if 'variants' in product and product['variants']:
+        for variant in product['variants']:
+            if 'selectedOptions' in variant:
+                for option in variant['selectedOptions']:
+                    option_name = option.get('name', '').lower()
+                    option_value = option.get('value', '')
+                    
+                    if ('color' in option_name or 'colour' in option_name) and option_value:
+                        # If it's a hex color, add it directly
+                        if option_value.startswith('#'):
+                            product_colors.append(option_value)
+                        # Otherwise add it as a text color for name matching
+                        else:
+                            color_key = f"variant_color_{option_value.lower().replace(' ', '_')}"
+                            processed_data[color_key] = 1
+    
+    # If we have product colors, store in global dictionary
+    if product_colors:
+        # Remove duplicates
+        unique_colors = list(set(product_colors))
+        ALL_PRODUCT_COLORS[product_id] = unique_colors
+        
+        # Also store in processed data as a consolidated field
+        processed_data['product_colors'] = unique_colors
     
     return processed_data, product_references
 
@@ -659,9 +782,6 @@ def calculate_color_similarities(top_n=10, output_file="color_similarity.csv"):
         # Add to overall results
         similarity_data.extend(top_similarities)
     
-    # Clear global dictionary to free memory
-    ALL_PRODUCT_COLORS.clear()
-    
     # Create DataFrame from similarity data
     similarity_df = pd.DataFrame(similarity_data)
     
@@ -687,14 +807,32 @@ def apply_tfidf_processing(df):
     if df.empty:
         return df
         
+    # Process color arrays first - separate out color columns
+    color_columns = []
+    for col in df.columns:
+        if isinstance(col, str) and ('color' in col.lower() or 'colour' in col.lower()):
+            if df[col].apply(lambda x: isinstance(x, list)).any():
+                color_columns.append(col)
+    
+    # Keep all non-list columns for further processing
+    non_color_df = df.drop(columns=color_columns, errors='ignore')
+    
     # Normalize numeric features (including dimension and weight values)
-    df = normalize_numeric_features(df)
+    non_color_df = normalize_numeric_features(non_color_df)
     
     # Vectorize text features (except color, dimension, weight, product_reference)
-    text_features = vectorize_text_features(df)
+    text_features = vectorize_text_features(non_color_df)
     
     # Combine all features
-    result_dfs = [df]
+    result_dfs = [non_color_df]
+    
+    # Add back the color columns
+    for col in color_columns:
+        # Convert list columns to indicator variables
+        # - If column has color arrays, keep as is
+        result_dfs.append(pd.DataFrame({col: df[col]}))
+    
+    # Add text feature dataframes
     result_dfs.extend(text_features.values())
     
     if len(result_dfs) > 1:
@@ -732,6 +870,32 @@ def save_product_references(product_references, output_file="product_references.
         print(f"No product references found, CSV not created")
         return pd.DataFrame()
 
+def save_color_similarity_data():
+    """
+    Calculate and save color similarity data from global product colors
+    
+    Returns:
+        DataFrame with color similarity data
+    """
+    global ALL_PRODUCT_COLORS
+    
+    # Check if we have color data
+    if not ALL_PRODUCT_COLORS:
+        print("No product color data found for similarity calculation")
+        return pd.DataFrame()
+    
+    # Calculate color similarities
+    similarity_df = calculate_color_similarities(top_n=10, output_file="products_color_similarity.csv")
+    
+    # Log the results
+    if not similarity_df.empty:
+        print(f"Generated color similarity data for {similarity_df['source_product_id'].nunique()} products")
+        print(f"Total similarity pairs: {len(similarity_df)}")
+    else:
+        print("No color similarity data generated")
+    
+    return similarity_df
+
 def process_all_products(products_data, metafields_config=None, output_prefix=None):
     """
     Process all products in a dataset
@@ -742,7 +906,7 @@ def process_all_products(products_data, metafields_config=None, output_prefix=No
         output_prefix: Prefix for output files
         
     Returns:
-        Tuple of (processed_df, references_df)
+        Tuple of (processed_df, references_df, color_similarity_df)
     """
     global ALL_PRODUCT_COLORS
     # Clear the global colors dict before starting
@@ -784,9 +948,10 @@ def process_all_products(products_data, metafields_config=None, output_prefix=No
     # Create DataFrame from processed data
     processed_df = pd.DataFrame(all_processed_data)
     
-    # Generate color similarity data
+    # Calculate color similarities
+    color_similarity_df = None
     if ALL_PRODUCT_COLORS:
-        color_similarity_file = f"{output_prefix}_color_similarity.csv" if output_prefix else "color_similarity.csv"
+        color_similarity_file = f"{output_prefix}_color_similarity.csv" if output_prefix else "products_color_similarity.csv"
         color_similarity_df = calculate_color_similarities(output_file=color_similarity_file)
     
     # Apply TF-IDF processing
@@ -803,4 +968,4 @@ def process_all_products(products_data, metafields_config=None, output_prefix=No
         processed_df.to_csv(f"{output_prefix}_processed.csv", index=False)
         print(f"Processed data saved to {output_prefix}_processed.csv")
     
-    return processed_df, references_df
+    return processed_df, references_df, color_similarity_df

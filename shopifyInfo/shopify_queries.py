@@ -17,7 +17,7 @@ except ImportError:
 # Load environment variables from .env file
 load_dotenv()
 
-def get_shopify_products(store_url: str, access_token: str, metafields_config: list, products_limit: int = 1, cursor: str = None) -> tuple[pd.DataFrame, bool, str] | tuple[None, bool, str]:
+def get_shopify_products(store_url: str, access_token: str, metafields_config: list, products_limit: int = 250, cursor: str = None) -> tuple[pd.DataFrame, bool, str] | tuple[None, bool, str]:
     """
     Fetch products data from Shopify API with pagination support
     Args:
