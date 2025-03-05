@@ -4,7 +4,7 @@ from preprocessing.collectionHandle_processor import process_collections
 from preprocessing.tags_processor import process_tags
 from preprocessing.variants_processor import process_variants
 from preprocessing.vendor_processor import process_vendors
-from preprocessing.metafields_processor import process_metafields, apply_tfidf_processing, save_color_similarity_data
+from preprocessing.metafields_processor import process_metafields, apply_tfidf_processing, save_color_similarity_data, remove_color_columns
 from preprocessing.isGiftCard_processor import process_gif_card
 from preprocessing.product_type_processor import process_product_type
 from preprocessing.availableForSale_processor import process_avaiable_for_sale
@@ -67,8 +67,18 @@ def main():
         from preprocessing.metafields_processor import save_product_references
         save_product_references(all_product_references, "product_references.csv")
         print("Product references saved to product_references.csv")
+    
+    # Calculate and save color similarity data before removing color columns
+    print("Calculating color similarities...")
+    color_similarity_df = save_color_similarity_data()
+    if not color_similarity_df.empty:
+        print(f"Color similarity data saved for {color_similarity_df['source_product_id'].nunique()} products")
+    
+    # Remove color columns after similarity calculation
+    print("Removing color columns after similarity calculation...")
+    metafields_processed = remove_color_columns(metafields_processed)
 
-    # Apply TF-IDF processing to the metafields data
+    # Apply TF-IDF processing to the metafields data - this will also remove original text columns
     metafields_processed = apply_tfidf_processing(metafields_processed)
 
     # Add processed metafields to the dataframe
@@ -80,12 +90,6 @@ def main():
     # Combine the processed metafields with the original dataframe
     df = pd.concat([df, metafields_processed], axis=1)
     export_sample(df, "metafields")
-    
-    # Calculate and save color similarity data
-    print("Calculating color similarities...")
-    color_similarity_df = save_color_similarity_data()
-    if not color_similarity_df.empty:
-        print(f"Color similarity data saved for {color_similarity_df['source_product_id'].nunique()} products")
     
     # 2. Process is_gift_card
     print("Processing is_gift_card...")
@@ -106,7 +110,7 @@ def main():
     df = process_tags(df)
     export_sample(df, "tags")
     
-    # 5. Process collections - use the current df, not the original raw_data
+    # 5. Process collections
     print("Processing collections...")
     df = process_collections(df)
     export_sample(df, "collections")
@@ -120,8 +124,6 @@ def main():
     print("Processing variants...")
     df = process_variants(df)
     export_sample(df, "variants")
-
-
     
     # 8. Process text with TF-IDF
     print("Processing product descriptions with TF-IDF...")
@@ -146,8 +148,6 @@ def main():
     
     if not color_similarity_df.empty:
         print("- products_color_similarity.csv (similar products by color)")
-
-
 
 if __name__ == "__main__":
     main()

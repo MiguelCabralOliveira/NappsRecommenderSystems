@@ -32,6 +32,12 @@ LENGTH_CONVERSIONS = {
 # Global dictionary to store product colors
 ALL_PRODUCT_COLORS = {}
 
+# Track which columns are text fields that need TF-IDF processing and removal
+TEXT_FIELD_COLUMNS = []
+
+# Track which columns contain color data and should be removed after similarity processing
+COLOR_COLUMNS = []
+
 def hex_to_lab(hex_color):
     """Convert hex color to LAB color space"""
     # Remove '#' if present
@@ -182,6 +188,25 @@ def extract_product_references(reference_value):
         print(f"Error extracting product references: {e}")
         return []
 
+def is_text_field_in_metaobject(metaobject):
+    """
+    Check if the metaobject has text fields that should be processed with TF-IDF
+    Returns True if the first field has a text type
+    """
+    if not metaobject or not isinstance(metaobject, dict) or 'fields' not in metaobject:
+        return False
+    
+    # Check if fields is a list with at least one item
+    if not metaobject['fields'] or not isinstance(metaobject['fields'], list):
+        return False
+    
+    # Get the first field
+    first_field = metaobject['fields'][0]
+    
+    # Check if it's a text field
+    field_type = first_field.get('type', '').lower()
+    return 'single_line_text_field' in field_type or 'multi_line_text_field' in field_type or 'rich_text_field' in field_type
+
 def extract_hex_colors_from_metaobject(references):
     """
     Extract hex color values from metaobject references
@@ -246,14 +271,17 @@ def extract_colors_from_variant_options(variant_options):
     
     return colors
 
-def extract_metaobject_reference_data(reference_value, references=None, metaobject_type=None):
+def extract_metaobject_reference_data(reference_value, references=None, metaobject_type=None, unique_key=None):
     """
     Extract data from metaobject references
     Args:
         reference_value: The metaobject reference value
         references: The references data structure if available
         metaobject_type: The type of the metaobject if known
+        unique_key: The unique key for this metafield
     """
+    global TEXT_FIELD_COLUMNS, COLOR_COLUMNS
+    
     try:
         # Check if this is a color-related metaobject
         is_color_type = metaobject_type and 'color' in metaobject_type.lower()
@@ -263,16 +291,33 @@ def extract_metaobject_reference_data(reference_value, references=None, metaobje
             color_values = extract_hex_colors_from_metaobject(references)
             # Return color values as-is (as array) instead of joining them
             if color_values:
+                # Track this column as one containing color data
+                if unique_key:
+                    COLOR_COLUMNS.append(unique_key)
                 return color_values
         
         # If we have direct references data with nodes, process it
         if references and isinstance(references, dict) and 'nodes' in references:
             nodes = references['nodes']
             
+            # Check if any of the nodes have text fields that need TF-IDF processing
+            has_text_fields = any(is_text_field_in_metaobject(node) for node in nodes)
+            
+            # Check if this might be a color metaobject
+            might_be_color = any('color' in node.get('type', '').lower() for node in nodes if 'type' in node)
+            
             # Extract values from the fields of each node
             field_values = []
+            has_color_values = False
+            
             for node in nodes:
                 if 'fields' in node and node['fields']:
+                    # Check for color fields in this node
+                    for field in node['fields']:
+                        if field.get('key', '').lower() == 'color' and field.get('value', '').startswith('#'):
+                            has_color_values = True
+                            break
+                            
                     # Get the label field as priority if it exists
                     label_field = next((f for f in node['fields'] if f.get('key') == 'label'), None)
                     
@@ -283,6 +328,15 @@ def extract_metaobject_reference_data(reference_value, references=None, metaobje
                         field_values.append(node['fields'][0]['value'])
             
             if field_values:
+                # If this appears to be a color metaobject, track the column
+                if might_be_color or has_color_values:
+                    if unique_key:
+                        COLOR_COLUMNS.append(unique_key)
+                
+                # If this metaobject reference has text fields, mark it for TF-IDF processing
+                if has_text_fields and unique_key:
+                    TEXT_FIELD_COLUMNS.append(unique_key)
+                
                 # Return a list for single values (this preserves categorical nature)
                 # or join with commas for multiple values
                 if len(field_values) == 1:
@@ -429,17 +483,26 @@ def process_weight(weight_value, include_unit=False):
 
 def process_metafield_value(metafield):
     """Process a single metafield based on its type"""
+    global TEXT_FIELD_COLUMNS, COLOR_COLUMNS
+    
     if not metafield or 'value' not in metafield:
         return None
         
-    metafield_type = metafield.get('type', '')
+    metafield_type = metafield.get('type', '').lower()
     metafield_key = metafield.get('key', '')
+    namespace = metafield.get('namespace', '')
+    unique_key = f"{namespace}_{metafield_key}"
     value = metafield['value']
     
     # Check if this is a dimension or weight field by type or key
-    is_dimension = 'dimension' in metafield_type.lower() or 'dimension' in metafield_key.lower()
-    is_weight = 'weight' in metafield_type.lower() or 'weight' in metafield_key.lower()
-    is_color = 'color' in metafield_type.lower() or 'color' in metafield_key.lower()
+    is_dimension = 'dimension' in metafield_type or 'dimension' in metafield_key.lower()
+    is_weight = 'weight' in metafield_type or 'weight' in metafield_key.lower()
+    is_color = 'color' in metafield_type or 'color' in metafield_key.lower() or 'color' in namespace.lower()
+    
+    # Track text fields for later TF-IDF processing and removal
+    is_text_field = 'multi_line_text_field' in metafield_type or 'single_line_text_field' in metafield_type or 'rich_text_field' in metafield_type
+    if is_text_field:
+        TEXT_FIELD_COLUMNS.append(unique_key)
     
     # Handle different metafield types
     if is_dimension:
@@ -452,6 +515,8 @@ def process_metafield_value(metafield):
         # Ensure hex color has # prefix
         if not value.startswith('#'):
             value = f"#{value}"
+        # Track this color column
+        COLOR_COLUMNS.append(unique_key)
         return [value]  # Return as a list for consistency with other color processing
     elif 'rich_text_field' in metafield_type:
         return extract_text_from_rich_text(value)
@@ -465,15 +530,19 @@ def process_metafield_value(metafield):
         metaobject_type = None
         
         # Try to determine if this is a color-related metaobject
-        if 'color' in metafield_key.lower():
+        if 'color' in metafield_key.lower() or 'colour' in metafield_key.lower():
             metaobject_type = 'color'
+            # Track this column as potentially containing color data
+            COLOR_COLUMNS.append(unique_key)
         elif references and 'nodes' in references:
             for node in references['nodes']:
                 if 'type' in node and 'color' in node['type'].lower():
                     metaobject_type = node['type']
+                    # Track this column as potentially containing color data
+                    COLOR_COLUMNS.append(unique_key)
                     break
                     
-        return extract_metaobject_reference_data(value, references, metaobject_type)
+        return extract_metaobject_reference_data(value, references, metaobject_type, unique_key)
     elif 'multi_line_text_field' in metafield_type:
         return clean_html(value)
     elif 'single_line_text_field' in metafield_type or 'url' in metafield_type:
@@ -509,28 +578,25 @@ def vectorize_text_features(metafields_df):
     Apply TF-IDF vectorization to text features
     Returns dict mapping feature name to vectorized data
     """
+    global TEXT_FIELD_COLUMNS
+    
     text_features = {}
-    text_columns = metafields_df.select_dtypes(include=['object']).columns
+    text_columns = [col for col in metafields_df.columns if col in TEXT_FIELD_COLUMNS]
     
     if len(text_columns) == 0:
         return {}
+    
+    print(f"Applying TF-IDF to {len(text_columns)} text columns: {text_columns}")
     
     # Group text columns based on content characteristics
     short_text_columns = []
     long_text_columns = []
     
     for col in text_columns:
-        # Convert column name to string to avoid errors with integer columns
-        col_str = str(col)
-        
-        # Skip color, dimension, weight, and product reference columns
-        if any(keyword in col_str.lower() for keyword in ['color', 'dimension', 'weight', 'product_reference']):
+        # Skip if column doesn't exist (might have been removed)
+        if col not in metafields_df.columns:
             continue
             
-        # Skip columns with array values (like our color arrays)
-        if metafields_df[col].apply(lambda x: isinstance(x, list)).any():
-            continue
-        
         # Fill NA values with empty string
         text_data = metafields_df[col].fillna('').astype(str)
         
@@ -622,7 +688,7 @@ def process_metafields(product, metafields_config=None):
         - processed_data: Dictionary with processed metafield data
         - product_references: Dictionary with product reference relationships
     """
-    global ALL_PRODUCT_COLORS
+    global ALL_PRODUCT_COLORS, TEXT_FIELD_COLUMNS, COLOR_COLUMNS
     
     processed_data = {}
     product_references = {}
@@ -663,7 +729,9 @@ def process_metafields(product, metafields_config=None):
         
         # Get field type and check if it's a special field type
         field_type = metafield.get('type', '').lower()
-        is_color_related = 'color' in key.lower() or 'colour' in key.lower() or 'color' in field_type
+        is_color_related = ('color' in key.lower() or 'colour' in key.lower() or 
+                           'color' in namespace.lower() or 'colour' in namespace.lower() or
+                           'color' in field_type.lower())
         is_dimension_related = 'dimension' in key.lower() or 'dimension' in field_type
         is_weight_related = 'weight' in key.lower() or 'weight' in field_type
         is_product_reference = 'product_reference' in field_type
@@ -691,6 +759,10 @@ def process_metafields(product, metafields_config=None):
                 # Store the colors as an array directly, not as a joined string
                 processed_data[unique_key] = colors
                 
+                # Track this column as containing color data
+                if unique_key not in COLOR_COLUMNS:
+                    COLOR_COLUMNS.append(unique_key)
+                
                 # Also store in global product colors dictionary for later similarity calculation
                 ALL_PRODUCT_COLORS[product_id] = colors
                 
@@ -704,6 +776,11 @@ def process_metafields(product, metafields_config=None):
                     if value.startswith('#') and len(value) in [4, 7]:
                         processed_data[unique_key] = [value]
                         product_colors.append(value)
+                        
+                        # Track this column as containing color data
+                        if unique_key not in COLOR_COLUMNS:
+                            COLOR_COLUMNS.append(unique_key)
+                            
                         continue
                     
                     # Try to parse if it's JSON
@@ -715,6 +792,11 @@ def process_metafields(product, metafields_config=None):
                                 hex_value = f"#{hex_value}"
                             processed_data[unique_key] = [hex_value]
                             product_colors.append(hex_value)
+                            
+                            # Track this column as containing color data
+                            if unique_key not in COLOR_COLUMNS:
+                                COLOR_COLUMNS.append(unique_key)
+                                
                             continue
                     except json.JSONDecodeError:
                         pass
@@ -732,16 +814,45 @@ def process_metafields(product, metafields_config=None):
         # For metaobject references with available references data
         if metafield.get('type') in ['list.metaobject_reference', 'metaobject_reference'] and 'references' in metafield and metafield['references']:
             if metafield['references'] and 'nodes' in metafield['references'] and metafield['references']['nodes']:
+                nodes = metafield['references']['nodes']
+                
+                # Check if any node has a text field that should be processed with TF-IDF
+                has_text_fields = any(is_text_field_in_metaobject(node) for node in nodes)
+                if has_text_fields:
+                    TEXT_FIELD_COLUMNS.append(unique_key)
+                    
+                # Check if any node appears to be related to colors
+                is_color_metaobject = False
+                for node in nodes:
+                    if 'type' in node and ('color' in node['type'].lower() or 'colour' in node['type'].lower()):
+                        is_color_metaobject = True
+                        break
+                    
+                    # Check fields for color values
+                    if 'fields' in node:
+                        for field in node['fields']:
+                            if field.get('key', '').lower() in ['color', 'colour', 'hex'] and isinstance(field.get('value', ''), str):
+                                if field['value'].startswith('#') or re.match(r'^[0-9A-Fa-f]{6}$', field['value']):
+                                    is_color_metaobject = True
+                                    break
+                
+                if is_color_metaobject and unique_key not in COLOR_COLUMNS:
+                    COLOR_COLUMNS.append(unique_key)
+                    
                 values = []
-                for node in metafield['references']['nodes']:
+                for node in nodes:
                     if 'fields' in node and node['fields']:
-                        # Get the first field's value
-                        first_field = node['fields'][0]
-                        if 'value' in first_field:
-                            values.append(first_field['value'])
+                        # Get the label field as priority if it exists
+                        label_field = next((f for f in node['fields'] if f.get('key') == 'label'), None)
+                        
+                        if label_field and 'value' in label_field:
+                            values.append(label_field['value'])
+                        # If no label field, get the first field with a value
+                        elif len(node['fields']) > 0 and 'value' in node['fields'][0]:
+                            values.append(node['fields'][0]['value'])
                 
                 if values:
-                    processed_data[unique_key] = " ".join(values)
+                    processed_data[unique_key] = ", ".join(values)
                     continue
         
         # For all other types, use the metafield value processor
@@ -769,6 +880,10 @@ def process_metafields(product, metafields_config=None):
                         else:
                             color_key = f"variant_color_{option_value.lower().replace(' ', '_')}"
                             processed_data[color_key] = 1
+                            
+                            # Track this column as potentially color-related
+                            if color_key not in COLOR_COLUMNS:
+                                COLOR_COLUMNS.append(color_key)
     
     # If we have product colors, store in global dictionary
     if product_colors:
@@ -778,8 +893,70 @@ def process_metafields(product, metafields_config=None):
         
         # Also store in processed data as a consolidated field
         processed_data['product_colors'] = unique_colors
+        
+        # Track the consolidated product_colors column
+        if 'product_colors' not in COLOR_COLUMNS:
+            COLOR_COLUMNS.append('product_colors')
     
     return processed_data, product_references
+
+def apply_tfidf_processing(df):
+    """
+    Apply TF-IDF processing to text columns and normalize numeric columns
+    Args:
+        df: DataFrame with processed metafields
+    Returns:
+        DataFrame with TF-IDF vectorized text and normalized numeric features
+    """
+    global TEXT_FIELD_COLUMNS
+    
+    # Skip processing if DataFrame is empty
+    if df.empty:
+        return df
+    
+    # First, make a copy to avoid SettingWithCopyWarning
+    df = df.copy()
+    
+    # Normalize numeric features (including dimension and weight values)
+    numeric_columns = df.select_dtypes(include=np.number).columns
+    
+    if len(numeric_columns) > 0:
+        # Handle missing values before scaling
+        df[numeric_columns] = df[numeric_columns].fillna(0)
+        
+        # Use robust scaling for better handling of outliers
+        scaler = MinMaxScaler()
+        df[numeric_columns] = scaler.fit_transform(df[numeric_columns])
+    
+    # Vectorize text features for all text columns in TEXT_FIELD_COLUMNS
+    text_features = vectorize_text_features(df)
+    
+    # Handle the case where text features are returned as Series instead of DataFrames
+    for key, feature_data in list(text_features.items()):
+        if isinstance(feature_data, pd.Series):
+            # Convert Series to DataFrame
+            text_features[key] = pd.DataFrame(feature_data, columns=[key])
+    
+    # Combine all features
+    result_dfs = [df]
+    
+    for feature_name, feature_df in text_features.items():
+        if isinstance(feature_df, pd.DataFrame):
+            result_dfs.append(feature_df)
+    
+    # Create result DataFrame with all features combined
+    if len(result_dfs) > 1:
+        result_df = pd.concat(result_dfs, axis=1)
+    else:
+        result_df = df
+    
+    # Remove the original text columns that were processed
+    columns_to_drop = [col for col in result_df.columns if col in TEXT_FIELD_COLUMNS]
+    if columns_to_drop:
+        print(f"Removing {len(columns_to_drop)} text columns that were processed with TF-IDF: {columns_to_drop}")
+        result_df = result_df.drop(columns=columns_to_drop)
+    
+    return result_df
 
 def calculate_color_similarities(top_n=10, output_file="color_similarity.csv"):
     """
@@ -846,52 +1023,61 @@ def calculate_color_similarities(top_n=10, output_file="color_similarity.csv"):
     
     return similarity_df
 
-def apply_tfidf_processing(df):
+def save_color_similarity_data():
     """
-    Apply TF-IDF processing to text columns and normalize numeric columns
+    Calculate and save color similarity data from global product colors
+    
+    Returns:
+        DataFrame with color similarity data
+    """
+    global ALL_PRODUCT_COLORS
+    
+    # Check if we have color data
+    if not ALL_PRODUCT_COLORS:
+        print("No product color data found for similarity calculation")
+        return pd.DataFrame()
+    
+    # Calculate color similarities
+    similarity_df = calculate_color_similarities(top_n=10, output_file="products_color_similarity.csv")
+    
+    # Log the results
+    if not similarity_df.empty:
+        print(f"Generated color similarity data for {similarity_df['source_product_id'].nunique()} products")
+        print(f"Total similarity pairs: {len(similarity_df)}")
+    else:
+        print("No color similarity data generated")
+    
+    return similarity_df
+
+def remove_color_columns(df):
+    """
+    Remove all color-related columns from the dataframe
+    
     Args:
         df: DataFrame with processed metafields
+        
     Returns:
-        DataFrame with TF-IDF vectorized text and normalized numeric features
+        DataFrame with color columns removed
     """
-    # Skip processing if DataFrame is empty
-    if df.empty:
+    global COLOR_COLUMNS
+    
+    if not COLOR_COLUMNS:
+        print("No color columns detected for removal.")
         return df
     
-    # First, make a copy to avoid SettingWithCopyWarning
+    # Make a copy to avoid SettingWithCopyWarning
     df = df.copy()
     
-    # Normalize numeric features (including dimension and weight values)
-    numeric_columns = df.select_dtypes(include=np.number).columns
+    # Get columns that exist in the dataframe
+    cols_to_remove = [col for col in COLOR_COLUMNS if col in df.columns]
     
-    if len(numeric_columns) > 0:
-        # Handle missing values before scaling
-        df[numeric_columns] = df[numeric_columns].fillna(0)
-        
-        # Use robust scaling for better handling of outliers
-        scaler = MinMaxScaler()
-        df[numeric_columns] = scaler.fit_transform(df[numeric_columns])
+    if cols_to_remove:
+        print(f"Removing {len(cols_to_remove)} color columns after similarity processing: {cols_to_remove}")
+        df = df.drop(columns=cols_to_remove)
+    else:
+        print("No color columns found in dataframe to remove.")
     
-    # Vectorize text features (except color, dimension, weight, product_reference)
-    text_features = vectorize_text_features(df)
-    
-    # Handle the case where text features are returned as Series instead of DataFrames
-    for key, feature_data in list(text_features.items()):
-        if isinstance(feature_data, pd.Series):
-            # Convert Series to DataFrame
-            text_features[key] = pd.DataFrame(feature_data, columns=[key])
-    
-    # Combine all features
-    result_dfs = [df]
-    
-    for feature_name, feature_df in text_features.items():
-        if isinstance(feature_df, pd.DataFrame):
-            result_dfs.append(feature_df)
-    
-    if len(result_dfs) > 1:
-        return pd.concat(result_dfs, axis=1)
     return df
-
 
 def save_product_references(product_references, output_file="product_references.csv"):
     """
@@ -924,32 +1110,6 @@ def save_product_references(product_references, output_file="product_references.
         print(f"No product references found, CSV not created")
         return pd.DataFrame()
 
-def save_color_similarity_data():
-    """
-    Calculate and save color similarity data from global product colors
-    
-    Returns:
-        DataFrame with color similarity data
-    """
-    global ALL_PRODUCT_COLORS
-    
-    # Check if we have color data
-    if not ALL_PRODUCT_COLORS:
-        print("No product color data found for similarity calculation")
-        return pd.DataFrame()
-    
-    # Calculate color similarities
-    similarity_df = calculate_color_similarities(top_n=10, output_file="products_color_similarity.csv")
-    
-    # Log the results
-    if not similarity_df.empty:
-        print(f"Generated color similarity data for {similarity_df['source_product_id'].nunique()} products")
-        print(f"Total similarity pairs: {len(similarity_df)}")
-    else:
-        print("No color similarity data generated")
-    
-    return similarity_df
-
 def process_all_products(products_data, metafields_config=None, output_prefix=None):
     """
     Process all products in a dataset
@@ -962,9 +1122,11 @@ def process_all_products(products_data, metafields_config=None, output_prefix=No
     Returns:
         Tuple of (processed_df, references_df, color_similarity_df)
     """
-    global ALL_PRODUCT_COLORS
-    # Clear the global colors dict before starting
+    global ALL_PRODUCT_COLORS, TEXT_FIELD_COLUMNS, COLOR_COLUMNS
+    # Clear the global colors dict and text columns list before starting
     ALL_PRODUCT_COLORS.clear()
+    TEXT_FIELD_COLUMNS.clear()
+    COLOR_COLUMNS.clear()
     
     all_processed_data = []
     all_product_references = {}
@@ -1008,7 +1170,10 @@ def process_all_products(products_data, metafields_config=None, output_prefix=No
         color_similarity_file = f"{output_prefix}_color_similarity.csv" if output_prefix else "products_color_similarity.csv"
         color_similarity_df = calculate_color_similarities(output_file=color_similarity_file)
     
-    # Apply TF-IDF processing
+    # After calculating color similarities, remove color columns
+    processed_df = remove_color_columns(processed_df)
+    
+    # Apply TF-IDF processing - this will remove text columns after processing them
     processed_df = apply_tfidf_processing(processed_df)
     
     # Save product references to separate CSV

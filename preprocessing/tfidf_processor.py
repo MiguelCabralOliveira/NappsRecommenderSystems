@@ -43,7 +43,6 @@ def analyze_product_similarity(tfidf_matrix, df, similarity_threshold=0.85):
     return pd.DataFrame(similar_products)
 
 def process_descriptions_tfidf(df, output_prefix="products"):
-    
     """
     Process descriptions with TF-IDF and save results
     TF-IDF (Term Frequency-Inverse Documentation Frequency),
@@ -97,8 +96,12 @@ def process_descriptions_tfidf(df, output_prefix="products"):
     # Merge with original data
     final_df = df.copy()
     final_df = final_df.join(tfidf_df)
-
-    recommendation_df = final_df.drop(['product_id', 'description', 'handle'], axis=1)
+    
+    # Remove the original description column and clean_text
+    final_df = final_df.drop(['description', 'clean_text'], axis=1)
+    
+    # Create a copy for recommendation without certain columns
+    recommendation_df = final_df.drop(['handle'], axis=1)
     
     # Save the recommendation DataFrame
     if output_prefix:
@@ -108,7 +111,7 @@ def process_descriptions_tfidf(df, output_prefix="products"):
     return final_df, recommendation_df, tfidf, similar_products
 
 if __name__ == "__main__":
-    df, vectorizer, similar_products = process_descriptions_tfidf()
+    df, recommendation_df, vectorizer, similar_products = process_descriptions_tfidf()
     print("TF-IDF processing complete!")
     if not similar_products.empty:
         print(f"\nFound {len(similar_products)} pairs of similar products")
