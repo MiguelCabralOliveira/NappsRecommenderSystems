@@ -4,6 +4,10 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.feature_extraction.text import TfidfVectorizer
 from bs4 import BeautifulSoup
+from colormath.color_objects import sRGBColor, LabColor
+from colormath.color_conversions import convert_color
+from colormath.color_diff import delta_e_cie2000
+import re
 
 # Unit conversion constants
 # Weight conversions to grams
@@ -24,6 +28,72 @@ LENGTH_CONVERSIONS = {
     'FEET': 304.8,
     'YARDS': 914.4
 }
+
+# Global dictionary to store product colors
+ALL_PRODUCT_COLORS = {}
+
+def hex_to_lab(hex_color):
+    """Convert hex color to LAB color space"""
+    # Remove '#' if present
+    hex_color = hex_color.lstrip('#')
+    
+    # Convert hex to RGB (0-1 scale)
+    r = int(hex_color[0:2], 16) / 255.0
+    g = int(hex_color[2:4], 16) / 255.0
+    b = int(hex_color[4:6], 16) / 255.0
+    
+    # Convert RGB to LAB
+    rgb = sRGBColor(r, g, b)
+    lab = convert_color(rgb, LabColor)
+    
+    return lab
+
+def color_similarity(color1, color2):
+    """Calculate similarity between two colors (0-1 scale, higher means more similar)"""
+    try:
+        # Convert hex to Lab
+        lab1 = hex_to_lab(color1)
+        lab2 = hex_to_lab(color2)
+        
+        # Calculate color difference using CIEDE2000 (perceptually uniform)
+        delta_e = delta_e_cie2000(lab1, lab2)
+        
+        # Convert distance to similarity score (smaller distance = higher similarity)
+        # Max meaningful distance is around 100 for completely different colors
+        similarity = max(0, 1 - (delta_e / 100))
+        
+        return similarity
+    except Exception as e:
+        print(f"Error calculating color similarity: {e}")
+        return 0
+
+def calculate_product_color_similarity(product1_colors, product2_colors):
+    """
+    Calculate color similarity between two products with multiple colors
+    Returns a similarity score between 0 and 1
+    """
+    # Handle empty color arrays
+    if not product1_colors or not product2_colors:
+        return 0
+    
+    # Compute all pairwise similarities
+    similarity_matrix = np.zeros((len(product1_colors), len(product2_colors)))
+    
+    for i, color1 in enumerate(product1_colors):
+        for j, color2 in enumerate(product2_colors):
+            similarity_matrix[i, j] = color_similarity(color1, color2)
+    
+    # Calculate overall similarity using a weighted approach:
+    # 1. Dominant color match (max similarity between any color pair)
+    dominant_similarity = np.max(similarity_matrix) if similarity_matrix.size > 0 else 0
+    
+    # 2. Average similarity across all combinations
+    average_similarity = np.mean(similarity_matrix) if similarity_matrix.size > 0 else 0
+    
+    # 3. Combine with more weight on dominant similarity (70/30 split)
+    overall_similarity = 0.7 * dominant_similarity + 0.3 * average_similarity
+    
+    return overall_similarity
 
 def extract_text_from_rich_text(rich_text_value):
     """Extract text from rich text field structure"""
@@ -118,6 +188,7 @@ def extract_hex_colors_from_metaobject(references):
     except Exception as e:
         print(f"Error extracting color values: {e}")
         return []
+
 def extract_metaobject_reference_data(reference_value, references=None, metaobject_type=None):
     """
     Extract data from metaobject references
@@ -133,6 +204,7 @@ def extract_metaobject_reference_data(reference_value, references=None, metaobje
         # If it's a color type and we have references, extract hex colors
         if is_color_type and references:
             color_values = extract_hex_colors_from_metaobject(references)
+            # Return color values as-is (as array) instead of joining them
             if color_values:
                 return color_values
         
@@ -366,10 +438,10 @@ def vectorize_text_features(metafields_df):
         
     # Initialize vectorizer
     vectorizer = TfidfVectorizer(
-        max_features=100,  # Limit features to prevent dimensionality explosion
+        max_features=100,
         stop_words='english',
-        max_df=0.8,        # Ignore terms that appear in >80% of documents
-        min_df=0.01        # Ignore terms that appear in <1% of documents  
+        max_df=0.8,
+        min_df=0.01  
     )
     
     for col in text_columns:
@@ -380,8 +452,8 @@ def vectorize_text_features(metafields_df):
         if any(keyword in col_str.lower() for keyword in ['color', 'dimension', 'weight', 'product_reference']):
             continue
             
-        # Skip columns with all empty/NA values
-        if metafields_df[col].isna().all() or (metafields_df[col] == '').all():
+        # Skip columns with array values (like our color arrays)
+        if metafields_df[col].apply(lambda x: isinstance(x, list)).any():
             continue
             
         # Fill NA values with empty string
@@ -404,6 +476,7 @@ def vectorize_text_features(metafields_df):
             print(f"Error vectorizing column {col}: {e}")
     
     return text_features
+
 def normalize_numeric_features(metafields_df):
     """Normalize numeric features using MinMaxScaler"""
     numeric_columns = metafields_df.select_dtypes(include=np.number).columns
@@ -429,6 +502,8 @@ def process_metafields(product, metafields_config=None):
         - processed_data: Dictionary with processed metafield data
         - product_references: Dictionary with product reference relationships
     """
+    global ALL_PRODUCT_COLORS
+    
     processed_data = {}
     product_references = {}
     
@@ -492,7 +567,12 @@ def process_metafields(product, metafields_config=None):
         if is_color_related and 'references' in metafield and metafield['references']:
             colors = extract_hex_colors_from_metaobject(metafield['references'])
             if colors:
+                # Store the colors as an array directly, not as a joined string
                 processed_data[unique_key] = colors
+                
+                # Also store in global product colors dictionary for later similarity calculation
+                ALL_PRODUCT_COLORS[product_id] = colors
+                
                 continue
         
         # Special handling for dimension metafields
@@ -526,6 +606,74 @@ def process_metafields(product, metafields_config=None):
             processed_data[unique_key] = processed_value
     
     return processed_data, product_references
+
+def calculate_color_similarities(top_n=10, output_file="color_similarity.csv"):
+    """
+    Calculate color similarities between all products and save to CSV
+    
+    Args:
+        top_n: Number of similar products to keep for each product
+        output_file: CSV filename to save the results
+    
+    Returns:
+        DataFrame: DataFrame with color similarity data
+    """
+    global ALL_PRODUCT_COLORS
+    
+    if not ALL_PRODUCT_COLORS:
+        print("No color data found. Skipping color similarity calculation.")
+        return pd.DataFrame()
+    
+    print(f"Calculating color similarities for {len(ALL_PRODUCT_COLORS)} products...")
+    
+    # Prepare results storage
+    similarity_data = []
+    
+    # Generate all product pairs
+    product_ids = list(ALL_PRODUCT_COLORS.keys())
+    
+    for i, source_id in enumerate(product_ids):
+        source_colors = ALL_PRODUCT_COLORS[source_id]
+        product_similarities = []
+        
+        for j, target_id in enumerate(product_ids):
+            # Skip comparing a product to itself
+            if source_id == target_id:
+                continue
+                
+            target_colors = ALL_PRODUCT_COLORS[target_id]
+            sim = calculate_product_color_similarity(source_colors, target_colors)
+            
+            # Only include if similarity is above a threshold
+            if sim > 0.2:  # Skip very dissimilar products
+                product_similarities.append({
+                    'source_product_id': source_id,
+                    'target_product_id': target_id,
+                    'color_similarity': sim
+                })
+        
+        # Sort by similarity (descending) and keep top_n
+        product_similarities.sort(key=lambda x: x['color_similarity'], reverse=True)
+        top_similarities = product_similarities[:top_n]
+        
+        # Add to overall results
+        similarity_data.extend(top_similarities)
+    
+    # Clear global dictionary to free memory
+    ALL_PRODUCT_COLORS.clear()
+    
+    # Create DataFrame from similarity data
+    similarity_df = pd.DataFrame(similarity_data)
+    
+    # Save to CSV
+    if not similarity_df.empty:
+        similarity_df.to_csv(output_file, index=False)
+        print(f"Color similarity data saved to {output_file}")
+        print(f"Generated {len(similarity_df)} color similarity pairs")
+    else:
+        print("No color similarity data generated.")
+    
+    return similarity_df
 
 def apply_tfidf_processing(df):
     """
@@ -596,6 +744,10 @@ def process_all_products(products_data, metafields_config=None, output_prefix=No
     Returns:
         Tuple of (processed_df, references_df)
     """
+    global ALL_PRODUCT_COLORS
+    # Clear the global colors dict before starting
+    ALL_PRODUCT_COLORS.clear()
+    
     all_processed_data = []
     all_product_references = {}
     
@@ -612,6 +764,10 @@ def process_all_products(products_data, metafields_config=None, output_prefix=No
         # Add product ID to processed data
         product_id = product.get('product_id', None)
         if product_id:
+            # Extract just the numeric part if it's a GID
+            if isinstance(product_id, str) and 'gid://shopify/Product/' in product_id:
+                product_id = product_id.split('/')[-1]
+                
             processed_data['product_id'] = product_id
             
         # Add other essential product data
@@ -627,6 +783,11 @@ def process_all_products(products_data, metafields_config=None, output_prefix=No
     
     # Create DataFrame from processed data
     processed_df = pd.DataFrame(all_processed_data)
+    
+    # Generate color similarity data
+    if ALL_PRODUCT_COLORS:
+        color_similarity_file = f"{output_prefix}_color_similarity.csv" if output_prefix else "color_similarity.csv"
+        color_similarity_df = calculate_color_similarities(output_file=color_similarity_file)
     
     # Apply TF-IDF processing
     processed_df = apply_tfidf_processing(processed_df)
