@@ -45,19 +45,6 @@ def analyze_product_similarity(tfidf_matrix, df, similarity_threshold=0.85):
 def process_descriptions_tfidf(df, output_prefix="products"):
     """
     Process descriptions with TF-IDF and save results
-    TF-IDF (Term Frequency-Inverse Documentation Frequency),
-    is a technique to analyze the importance of a word relative to the document 
-
-    Term Frequency (TF): Measures how often a word appears in a document.
-    Inverse Document Frequency (IDF): Measures how important a word is across all documents.
-
-    The TF-IDF score is calculated as:
-    TF-IDF = TF * IDF
-
-    TF = (word_count_in_doc / total_words_in_doc)
-    IDF = log(N / df_i)
-
-    I want to identify the keywords that are most important for the product description.
     """
     # Clean HTML descriptions
     df['clean_text'] = df['description'].apply(clean_html)
@@ -82,15 +69,18 @@ def process_descriptions_tfidf(df, output_prefix="products"):
         print(similar_products)
         similar_products.to_csv(f"{output_prefix}_similar_products.csv", index=False)
     
+    # Get feature names with description_ prefix
+    feature_names = [f"description_{name}" for name in tfidf.get_feature_names_out()]
+    
     # Save artifacts
     np.save(f"{output_prefix}_tfidf_matrix.npy", tfidf_matrix.toarray())
-    pd.DataFrame(tfidf.get_feature_names_out()).to_csv(
+    pd.DataFrame(feature_names).to_csv(
         f"{output_prefix}_tfidf_features.csv", index=False, header=False)
     
-    # Add TF-IDF vectors to original DataFrame
+    # Add TF-IDF vectors to original DataFrame with prefixed column names
     tfidf_df = pd.DataFrame(
         tfidf_matrix.toarray(),
-        columns=tfidf.get_feature_names_out(),
+        columns=feature_names,  # Use prefixed feature names
         index=valid_descriptions.index)
     
     # Merge with original data

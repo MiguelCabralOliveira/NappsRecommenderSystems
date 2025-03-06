@@ -20,6 +20,48 @@ def export_sample(df, step_name):
         print(f"Exported sample to {filename}")
 
 
+def document_feature_sources(df, output_file="feature_sources.csv"):
+    """
+    Document the sources of all features in the processed DataFrame
+    """
+    feature_sources = []
+    
+    # Categorize columns by their prefixes
+    for column in df.columns:
+        if column.startswith('description_'):
+            source = 'TF-IDF from product descriptions'
+        elif column.startswith('metafield_'):
+            source = 'TF-IDF from product metafields'
+        elif column.startswith('tag_'):
+            source = 'Tag dummy variable'
+        elif column.startswith('product_type_'):
+            source = 'Product type dummy variable'
+        elif column.startswith('collections_'):
+            source = 'Collection dummy variable'
+        elif column.startswith('vendor_'):
+            source = 'Vendor dummy variable'
+        elif column.startswith('variant_'):
+            source = 'Variant option dummy variable'
+        elif column.startswith('price_'):
+            source = 'Price-related feature from variants'
+        elif column == 'product_id' or column == 'product_title' or column == 'handle':
+            source = 'Original product information'
+        else:
+            source = 'Other/Unknown'
+        
+        feature_sources.append({
+            'feature_name': column,
+            'source': source
+        })
+    
+    # Create DataFrame and save to CSV
+    sources_df = pd.DataFrame(feature_sources)
+    sources_df.to_csv(output_file, index=False)
+    print(f"Feature sources documented in {output_file}")
+    
+    return sources_df
+
+
 def main():
     """Main function to process product data from Shopify store"""
     # Get shop ID from user input
@@ -136,6 +178,9 @@ def main():
     tfidf_df.to_csv("products_with_tfidf.csv", index=False)
     recommendation_df.to_csv("products_recommendation.csv", index=False)
     
+    # Document feature sources
+    document_feature_sources(tfidf_df, "feature_sources.csv")
+    
     # Output completion message
     print("\nProcessing complete!")
     print("\nProcessed files saved:")
@@ -145,9 +190,11 @@ def main():
     print("- products_recommendation.csv (ready for recommendation model)")
     print("- products_tfidf_matrix.npy (TF-IDF vector representations)")
     print("- products_tfidf_features.csv (TF-IDF feature names)")
+    print("- feature_sources.csv (documentation of feature sources)")
     
     if not color_similarity_df.empty:
         print("- products_color_similarity.csv (similar products by color)")
+
 
 if __name__ == "__main__":
     main()

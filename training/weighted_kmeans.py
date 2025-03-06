@@ -79,41 +79,43 @@ class WeightedKMeans:
         """
         # Initialize feature groups
         feature_groups = {
-            'tfidf_description': [],
-            'tfidf_metafields': [],
+            'description_tfidf': [],
+            'metafield_data': [],
             'collections': [],
             'tags': [],
             'product_type': [],
             'vendor': [],
-            'variant_attributes': [],
+            'variant_size': [],
+            'variant_color': [],
+            'variant_other': [],
             'numerical': []
         }
         
-        # Identify numerical columns
-        numerical_cols = df.select_dtypes(include=np.number).columns.tolist()
-        
-        # Pattern matching for feature groups
+        # Pattern matching for feature groups based on column names
         for col in df.columns:
-            if col in numerical_cols:
-                # Check specific patterns for groups first
-                if col.startswith('collections_'):
-                    feature_groups['collections'].append(col)
-                elif col.startswith('tag_'):
-                    feature_groups['tags'].append(col)
-                elif col.startswith('product_type_'):
-                    feature_groups['product_type'].append(col)
-                elif col.startswith('vendor_'):
-                    feature_groups['vendor'].append(col)
-                elif col.startswith('size_') or col.startswith('color_') or col.startswith('other_'):
-                    feature_groups['variant_attributes'].append(col)
-                elif col == 'text_' or col.startswith('text_'):
-                    # These are TF-IDF features from description
-                    feature_groups['tfidf_description'].append(col)
-                elif col.startswith('combined_text_'):
-                    # These are TF-IDF features from combined metafields
-                    feature_groups['tfidf_metafields'].append(col)
-                else:
-                    # Default to numerical for any remaining numerical columns
+            if col.startswith('description_'):
+                feature_groups['description_tfidf'].append(col)
+            elif col.startswith('metafield_'):
+                feature_groups['metafield_data'].append(col)
+            elif col.startswith('collections_'):
+                feature_groups['collections'].append(col)
+            elif col.startswith('tag_'):
+                feature_groups['tags'].append(col)
+            elif col.startswith('product_type_'):
+                feature_groups['product_type'].append(col)
+            elif col.startswith('vendor_'):
+                feature_groups['vendor'].append(col)
+            elif col.startswith('variant_size_'):
+                feature_groups['variant_size'].append(col)
+            elif col.startswith('variant_color_'):
+                feature_groups['variant_color'].append(col)
+            elif col.startswith('variant_other_'):
+                feature_groups['variant_other'].append(col)
+            elif col in ['min_price', 'max_price', 'has_discount']:
+                feature_groups['numerical'].append(col)
+            else:
+                # Default to numerical for any other columns
+                if col in df.select_dtypes(include=np.number).columns:
                     feature_groups['numerical'].append(col)
         
         # Remove empty groups
@@ -135,16 +137,18 @@ class WeightedKMeans:
                     If None, default weights will be used
         """
         if weights is None:
-            # Default weights giving higher importance to text and product attributes
+            # Default weights with higher weights for tags and product_type as requested
             weights = {
-                'tfidf_description': 1.5,
-                'tfidf_metafields': 1.2,
-                'collections': 1.0,
-                'tags': 1.0,
-                'product_type': 1.3,
-                'vendor': 0.8,
-                'variant_attributes': 1.0,
-                'numerical': 0.9
+                'tags': 1.8,                # Higher weight for tags
+                'product_type': 1.8,        # Higher weight for product types
+                'description_tfidf': 1.0,   # Standard weight for descriptive text
+                'metafield_data': 1.0,      # Standard weight for metafield data
+                'collections': 1.0,         # Standard weight for collections
+                'vendor': 1.0,              # Standard weight for vendor
+                'variant_size': 1.0,        # Standard weight for size variants
+                'variant_color': 1.0,       # Standard weight for color variants
+                'variant_other': 1.0,       # Standard weight for other variants
+                'numerical': 1.0            # Standard weight for numerical data
             }
         
         # Validate that weights exist for all feature groups
@@ -398,8 +402,17 @@ class WeightedKMeans:
                 name = f"Collection: {name.replace('collections_', '')}"
             elif name.startswith('tag_'):
                 name = f"Tag: {name.replace('tag_', '')}"
-            elif name.startswith('text_'):
-                name = f"Term: {name.replace('text_', '')}"
+            elif name.startswith('description_'):
+                name = f"Desc: {name.replace('description_', '')}"
+            elif name.startswith('metafield_'):
+                name = f"Meta: {name.replace('metafield_', '')}"
+            elif name.startswith('variant_'):
+                if name.startswith('variant_size_'):
+                    name = f"Size: {name.replace('variant_size_', '')}"
+                elif name.startswith('variant_color_'):
+                    name = f"Color: {name.replace('variant_color_', '')}"
+                elif name.startswith('variant_other_'):
+                    name = f"Var: {name.replace('variant_other_', '')}"
             
             # Truncate long names
             if len(name) > 30:
@@ -571,8 +584,16 @@ class WeightedKMeans:
                     display_name = f"Collection: {name.replace('collections_', '')}"
                 elif name.startswith('tag_'):
                     display_name = f"Tag: {name.replace('tag_', '')}"
-                elif name.startswith('text_'):
-                    display_name = f"Keyword: {name.replace('text_', '')}"
+                elif name.startswith('description_'):
+                    display_name = f"Description Term: {name.replace('description_', '')}"
+                elif name.startswith('metafield_'):
+                    display_name = f"Metafield: {name.replace('metafield_', '')}"
+                elif name.startswith('variant_size_'):
+                    display_name = f"Size Variant: {name.replace('variant_size_', '')}"
+                elif name.startswith('variant_color_'):
+                    display_name = f"Color Variant: {name.replace('variant_color_', '')}"
+                elif name.startswith('variant_other_'):
+                    display_name = f"Other Variant: {name.replace('variant_other_', '')}"
                     
                 interpretation += f"  - {display_name}: {value:.4f}\n"
                 
@@ -606,6 +627,8 @@ class WeightedKMeans:
         )
         
         # Add cluster ID
+        centroids_df['cluster_id'] = range(self.n_clusters)
+        
         # Add cluster size
         centroids_df['cluster_size'] = self.cluster_counts
         
@@ -853,16 +876,19 @@ def main():
     # Identify feature groups
     feature_groups = model.identify_feature_groups(feature_df)
     
-    # Set custom weights (can be adjusted based on domain knowledge)
+    # Set custom weights - giving higher importance to product_type and tags
+    # These are easily adjustable for future fine-tuning
     weights = {
-        'tfidf_description': 1.5,  # Higher weight for product descriptions
-        'tfidf_metafields': 1.2,   # Good weight for metafield text
+        'product_type': 1.8,        # Higher weight for product types  
+        'tags': 1.8,                # Higher weight for tags
+        'description_tfidf': 1.0,   # Standard weight
+        'metafield_data': 1.0,      # Standard weight
         'collections': 1.0,         # Standard weight
-        'tags': 1.0,                # Standard weight
-        'product_type': 1.3,        # Higher weight for product type
-        'vendor': 0.8,              # Lower weight
-        'variant_attributes': 1.0,  # Standard weight
-        'numerical': 0.9            # Slightly lower weight
+        'vendor': 1.0,              # Standard weight
+        'variant_size': 1.0,        # Standard weight
+        'variant_color': 1.0,       # Standard weight
+        'variant_other': 1.0,       # Standard weight
+        'numerical': 1.0            # Standard weight
     }
     model.set_feature_weights(weights)
     

@@ -626,10 +626,10 @@ def vectorize_text_features(metafields_df):
             # Remove empty values
             unique_values = [v for v in unique_values if v]
             
-            # Create indicator variables
+            # Create indicator variables with metafield_ prefix
             for value in unique_values:
                 value_safe = re.sub(r'\W+', '_', value.lower())[:30]  # create safe column name
-                feature_name = f"{col}_{value_safe}"
+                feature_name = f"metafield_{col}_{value_safe}"  # Add metafield_ prefix
                 text_features[feature_name] = (text_data == value).astype(int)
     
     # Process long text columns using TF-IDF as before
@@ -650,7 +650,8 @@ def vectorize_text_features(metafields_df):
         try:
             # Apply TF-IDF to combined text
             feature_matrix = vectorizer.fit_transform(combined_text)
-            feature_names = [f"text_{name}" for name in vectorizer.get_feature_names_out()]
+            # Add metafield_ prefix to feature names
+            feature_names = [f"metafield_{name}" for name in vectorizer.get_feature_names_out()]
             
             text_features['combined_text'] = pd.DataFrame(
                 feature_matrix.toarray(),

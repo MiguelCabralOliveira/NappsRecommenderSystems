@@ -76,7 +76,6 @@ def process_variants(df):
     numerical_features = ['min_price', 'max_price']
     result_df[numerical_features] = scaler.fit_transform(result_df[numerical_features])
     
-    # Process options into dummy variables more efficiently
     option_dummies = []
     for option_type in ['size_options', 'color_options', 'other_options']:
         all_options = []
@@ -86,9 +85,15 @@ def process_variants(df):
         
         if all_options:
             unique_options = sorted(list(set(all_options)))
-            prefix = option_type.replace('_options', '')
+            # Add a 'variant_' prefix to make the source clear
+            if option_type == 'size_options':
+                prefix = 'variant_size'
+            elif option_type == 'color_options':
+                prefix = 'variant_color'
+            else:
+                prefix = 'variant_other'
             
-            # Create all dummy columns at once
+            # Create all dummy columns at once with appropriate prefix
             dummy_data = {
                 f'{prefix}_{opt}': [1 if opt in x else 0 for x in result_df[option_type]]
                 for opt in unique_options
