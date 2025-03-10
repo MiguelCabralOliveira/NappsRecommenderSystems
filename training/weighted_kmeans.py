@@ -255,7 +255,8 @@ class WeightedKMeans:
     
     def find_optimal_k(self, X, k_range=None):
         """
-        Find optimal number of clusters using silhouette score
+        Find optimal number of clusters using Davies-Bouldin Index
+        Lower Davies-Bouldin values indicate better clustering.
         
         Args:
             X: Feature matrix
@@ -265,37 +266,77 @@ class WeightedKMeans:
             int: Optimal number of clusters
         """
         if k_range is None:
-            k_range = range(2, 11)
+            k_range = range(10, 31)  # Start from 10 clusters and go up to 30
             
-        print("\nFinding optimal number of clusters...")
+        print("\nFinding optimal number of clusters using Davies-Bouldin Index...")
+        davies_bouldin_scores = []
         silhouette_scores = []
+        
+        previous_db_score = float('inf')
+        consecutive_increases = 0
+        optimal_k = k_range[0]  # Default to first k
         
         for k in k_range:
             print(f"Trying k={k}...", end=" ")
-            kmeans = KMeans(n_clusters=k, random_state=self.random_state).fit(X)
-            score = silhouette_score(X, kmeans.labels_)
-            silhouette_scores.append(score)
-            print(f"Silhouette score: {score:.4f}")
+            kmeans = KMeans(n_clusters=k, random_state=self.random_state, max_iter=self.max_iter).fit(X)
             
-        # Find optimal k
-        optimal_k = k_range[np.argmax(silhouette_scores)]
-        print(f"Optimal number of clusters: {optimal_k}")
+            # Calculate Davies-Bouldin Index (lower is better)
+            db_score = davies_bouldin_score(X, kmeans.labels_)
+            davies_bouldin_scores.append(db_score)
+            
+            # Also calculate silhouette score for reference
+            sil_score = silhouette_score(X, kmeans.labels_)
+            silhouette_scores.append(sil_score)
+            
+            print(f"Davies-Bouldin: {db_score:.4f}, Silhouette: {sil_score:.4f}")
+            
+            # Check if Davies-Bouldin score increased (worse clustering)
+            if db_score < previous_db_score:
+                # Better score, reset counter and update optimal k
+                consecutive_increases = 0
+                optimal_k = k
+            else:
+                # Worse score, increment counter
+                consecutive_increases += 1
+                # Stop if we've seen 3 consecutive increases in DB index
+                if consecutive_increases >= 3:
+                    print(f"Davies-Bouldin Index has increased for 3 consecutive k values. Stopping search.")
+                    break
+            
+            previous_db_score = db_score
+        
+        print(f"Optimal number of clusters (lowest Davies-Bouldin Index): {optimal_k}")
         
         # Update n_clusters
         self.n_clusters = optimal_k
         
-        # Plot silhouette scores
-        plt.figure(figsize=(10, 6))
-        plt.plot(k_range, silhouette_scores, 'o-')
+        # Plot Davies-Bouldin scores
+        plt.figure(figsize=(12, 8))
+        
+        # First subplot for Davies-Bouldin Index
+        plt.subplot(2, 1, 1)
+        plt.plot(k_range[:len(davies_bouldin_scores)], davies_bouldin_scores, 'o-', color='red')
+        plt.axvline(x=optimal_k, color='green', linestyle='--')
+        plt.xlabel('Number of clusters (k)')
+        plt.ylabel('Davies-Bouldin Index')
+        plt.title('Davies-Bouldin Index For Optimal k (Lower is Better)')
+        plt.grid(True)
+        
+        # Second subplot for Silhouette Score
+        plt.subplot(2, 1, 2)
+        plt.plot(k_range[:len(silhouette_scores)], silhouette_scores, 'o-', color='blue')
+        plt.axvline(x=optimal_k, color='green', linestyle='--')
         plt.xlabel('Number of clusters (k)')
         plt.ylabel('Silhouette Score')
-        plt.title('Silhouette Method For Optimal k')
+        plt.title('Silhouette Score For Reference (Higher is Better)')
         plt.grid(True)
-        plt.savefig('optimal_k_silhouette.png')
+        
+        plt.tight_layout()
+        plt.savefig('optimal_k_davies_bouldin.png')
         plt.close()
         
         return optimal_k
-    
+
     def get_cluster_labels(self):
         """
         Get cluster labels for the data
@@ -523,8 +564,19 @@ class WeightedKMeans:
         if self.kmeans is None:
             raise ValueError("Model not fitted yet. Call fit() first.")
         
+        # Get the data and labels
+        X = self.scaler.inverse_transform(self.kmeans.cluster_centers_)
+        X_weighted = self.apply_weights(self.scaler.transform(X))
+        labels = self.kmeans.labels_
+        
         # Calculate silhouette score
         silhouette = self.silhouette_avg
+        
+        # Calculate Davies-Bouldin index
+        db_score = davies_bouldin_score(X_weighted, labels)
+        
+        # Calculate Calinski-Harabasz index
+        ch_score = calinski_harabasz_score(X_weighted, labels)
         
         # Calculate inertia (sum of squared distances)
         inertia = self.kmeans.inertia_
@@ -532,11 +584,15 @@ class WeightedKMeans:
         # Store results
         results = {
             'silhouette': silhouette,
+            'davies_bouldin': db_score,
+            'calinski_harabasz': ch_score,
             'inertia': inertia
         }
         
         print("\nCluster Evaluation Metrics:")
         print(f"Silhouette Score: {silhouette:.4f} (higher is better, range: -1 to 1)")
+        print(f"Davies-Bouldin Index: {db_score:.4f} (lower is better)")
+        print(f"Calinski-Harabasz Index: {ch_score:.4f} (higher is better)")
         print(f"Inertia: {inertia:.4f} (lower is better)")
         
         return results
@@ -836,19 +892,19 @@ def main():
     """Main function to run clustering"""
     parser = argparse.ArgumentParser(description='Run Weighted KMeans clustering on product data')
     parser.add_argument('--input', type=str, default='products_with_tfidf.csv',
-                        help='Path to input CSV file with processed product data')
-    parser.add_argument('--clusters', type=int, default=5,
-                        help='Number of clusters to create')
+                      help='Path to input CSV file with processed product data')
+    parser.add_argument('--clusters', type=int, default=10,
+                      help='Number of clusters to create (default is 10)')
     parser.add_argument('--find-optimal-k', action='store_true',
-                        help='Find optimal number of clusters')
-    parser.add_argument('--min-k', type=int, default=2,
-                        help='Minimum number of clusters to try when finding optimal k')
-    parser.add_argument('--max-k', type=int, default=15,
-                        help='Maximum number of clusters to try when finding optimal k')
+                      help='Find optimal number of clusters')
+    parser.add_argument('--min-k', type=int, default=10,
+                      help='Minimum number of clusters to try when finding optimal k (default is 10)')
+    parser.add_argument('--max-k', type=int, default=30,
+                      help='Maximum number of clusters to try when finding optimal k (default is 30)')
     parser.add_argument('--output-dir', type=str, default='results',
-                        help='Directory to save results')
+                      help='Directory to save results')
     parser.add_argument('--save-model', action='store_true',
-                        help='Save the model')
+                      help='Save the model')
     
     args = parser.parse_args()
     
@@ -862,7 +918,7 @@ def main():
     # Keep original data for reference
     orig_df = df.copy()
     
-    # Initialize model
+    # Initialize model with default 10 clusters
     model = WeightedKMeans(n_clusters=args.clusters)
     
     # Identify feature groups
@@ -914,7 +970,7 @@ def main():
     # Interpret clusters
     model.interpret_clusters(feature_df)
     
-    # Evaluate clusters
+    # Evaluate clusters with enhanced metrics
     model.evaluate_clusters()
     
     # Map products to clusters
