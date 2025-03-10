@@ -1,82 +1,3 @@
-def run_optimal_k_analysis(input_file, output_dir="results", min_k=2, max_k=30):
-    """
-    Run only the optimal k analysis without performing full clustering
-    
-    Args:
-        input_file: Path to the input CSV file with processed features
-        output_dir: Directory to save results
-        min_k: Minimum number of clusters to try
-        max_k: Maximum number of clusters to try
-        
-    Returns:
-        int: Optimal number of clusters
-    """
-    # Create output directory
-    os.makedirs(output_dir, exist_ok=True)
-    
-    # Load data
-    print(f"Loading data from {input_file}")
-    try:
-        df = pd.read_csv(input_file)
-    except Exception as e:
-        print(f"Error loading data: {str(e)}")
-        return None
-    
-    # Initialize model
-    model = WeightedKMeans()
-    
-    # Remove non-feature columns
-    non_feature_cols = ['product_id', 'product_title', 'handle']
-    feature_cols = [col for col in df.columns if col not in non_feature_cols]
-    feature_df = df[feature_cols]
-    
-    # Handle missing values
-    feature_df = model.handle_missing_values(feature_df)
-    
-    # Identify feature groups
-    try:
-        model.identify_feature_groups(feature_df)
-    except Exception as e:
-        print(f"Error identifying feature groups: {str(e)}")
-        return None
-    
-    # Set weights
-    try:
-        weights = {
-            'product_type': 1.8,
-            'tags': 1.8,
-            'description_tfidf': 1.0,
-            'metafield_data': 1.0,
-            'collections': 1.0,
-            'vendor': 1.0,
-            'variant_size': 1.0,
-            'variant_color': 1.0,
-            'variant_other': 1.0,
-            'numerical': 1.0
-        }
-        model.set_feature_weights(weights)
-    except Exception as e:
-        print(f"Error setting feature weights: {str(e)}")
-    
-    # Standardize data
-    print("Standardizing data...")
-    X = model.scaler.fit_transform(feature_df)
-    
-    # Apply weights
-    print("Applying feature weights...")
-    X_weighted = model.apply_weights(X)
-    
-    # Find optimal k
-    k_range = range(min_k, max_k + 1)
-    optimal_k = model.find_optimal_k(X_weighted, k_range, output_dir)
-    
-    print(f"\nOptimal number of clusters analysis complete!")
-    print(f"To use this optimal value ({optimal_k}), run clustering with:")
-    print(f"python main.py --clusters {optimal_k}")
-    
-    return optimal_k# weighted_kmeans.py
-# Modify the weighted_kmeans.py file to be imported as a module
-
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')  # Force non-interactive backend
@@ -90,14 +11,16 @@ from sklearn.manifold import TSNE
 import seaborn as sns
 import os
 import joblib
+import warnings
 from collections import defaultdict
 import re
 
 
-class WeightedKMeans:
+class _WeightedKMeans:
     """
-    Implements a weighted KMeans clustering algorithm for product data
+    Private implementation of weighted KMeans clustering algorithm for product data
     where different feature groups can be assigned different weights.
+    This class should NOT be instantiated directly outside of the run_clustering function.
     """
     def __init__(self, n_clusters=5, random_state=42, max_iter=300):
         """
@@ -204,17 +127,21 @@ class WeightedKMeans:
             
         return self.feature_groups
     
-    def set_feature_weights(self, weights=None):
+    def set_feature_weights(self, base_weights=None, normalize_by_count=True):
         """
-        Set weights for each feature group
+        Set weights for each feature group, with optional normalization by feature count
         
         Args:
-            weights: Dictionary mapping feature group names to weights
-                    If None, default weights will be used
+            base_weights: Dictionary mapping feature group names to base weights
+                        If None, default weights will be used
+            normalize_by_count: Whether to normalize weights by feature count
+        
+        Returns:
+            dict: The effective feature weights
         """
-        if weights is None:
-            # Default weights with higher weights for tags and product_type as requested
-            weights = {
+        if base_weights is None:
+            # Default base weights with higher weights for tags and product_type
+            base_weights = {
                 'tags': 1.8,                # Higher weight for tags
                 'product_type': 1.8,        # Higher weight for product types
                 'description_tfidf': 1.0,   # Standard weight for descriptive text
@@ -227,19 +154,47 @@ class WeightedKMeans:
                 'numerical': 1.0            # Standard weight for numerical data
             }
         
-        # Validate that weights exist for all feature groups
+        # Make sure weights exist for all feature groups
         for group in self.feature_groups:
-            if group not in weights:
-                weights[group] = 1.0  # Default weight if not specified
+            if group not in base_weights:
+                base_weights[group] = 1.0  # Default weight if not specified
         
-        self.feature_weights = weights
-        print("\nFeature Weights:")
+        # Count features in each group
+        feature_counts = {group: len(features) for group, features in self.feature_groups.items()}
+        
+        # Print feature counts
+        print("\nFeature Count per Group:")
+        for group, count in feature_counts.items():
+            print(f"{group}: {count} features")
+        
+        # Calculate effective weights based on feature counts
+        if normalize_by_count:
+            # Choose a target reference count (arbitrary but reasonable value)
+            target_count = 30  # This can be adjusted based on preference
+            
+            # Calculate normalization factor for each group
+            # Formula: effective_weight = base_weight * (target_count / feature_count)
+            self.feature_weights = {}
+            for group in self.feature_groups:
+                count = feature_counts.get(group, 1)  # Avoid division by zero
+                norm_factor = target_count / count
+                self.feature_weights[group] = base_weights[group] * norm_factor
+        else:
+            # Use base weights directly if not normalizing
+            self.feature_weights = base_weights
+        
+        # Print effective weights
+        print("\nEffective Feature Weights:")
         for group, weight in self.feature_weights.items():
             if group in self.feature_groups:
-                print(f"{group}: {weight}")
-                
-        return self.feature_weights
-    
+                base = base_weights[group]
+                count = feature_counts.get(group, 0)
+                print(f"{group}: {weight:.4f} (base: {base}, count: {count})")
+        
+        return self.feature_weights  
+
+
+
     def apply_weights(self, X):
         """
         Apply weights to the feature matrix
@@ -272,7 +227,7 @@ class WeightedKMeans:
             X_weighted[:, i] *= weight
             
         return X_weighted
-    
+        
     def handle_missing_values(self, df):
         """
         Handle missing values in the DataFrame
@@ -810,7 +765,7 @@ class WeightedKMeans:
                 labels_sample = self.kmeans.labels_[indices]
             else:
                 X_sample = X_weighted
-                labels_sample = self.kmeans.labels_
+                labels_sample = self.kmeans.labels_ 
             
             # Apply t-SNE
             print("Applying t-SNE dimensionality reduction (this may take a while)...")
@@ -832,7 +787,7 @@ class WeightedKMeans:
             print(f"t-SNE visualization saved to {output_file}")
         except Exception as e:
             print(f"Error during t-SNE visualization: {str(e)}")
-            print("Skipping t-SNE visualization and continuing with the rest of the analysis.")
+            print("Skipping t-SNE visualization and continuing with the analysis.")
     
     def get_top_features_per_cluster(self, feature_names, top_n=10):
         """
@@ -864,8 +819,9 @@ class WeightedKMeans:
             # Get index of top features
             top_indices = np.argsort(feature_importance)[-top_n:][::-1]
             
-            # Map indices to feature names
-            top_features[cluster_idx] = [(feature_names[i], feature_importance[i]) for i in top_indices]
+            # Map indices to feature names, with safety check for index out of bounds
+            top_features[cluster_idx] = [(feature_names[i], feature_importance[i]) for i in top_indices 
+                                         if i < len(feature_names)]
             
         return top_features
     
@@ -881,22 +837,11 @@ class WeightedKMeans:
                 print("Model not fitted yet. Skipping cluster evaluation.")
                 return {}
             
-            # Get original features and labels
-            X_weighted = self.apply_weights(self.scaler.transform(self.scaler.inverse_transform(self.kmeans.cluster_centers_)))
-            labels = self.kmeans.labels_
-            
             # Calculate silhouette score - we already have this from fitting
             silhouette = self.silhouette_avg
             
             # Calculate inertia (sum of squared distances)
             inertia = self.kmeans.inertia_
-            
-            # For Davies-Bouldin and Calinski-Harabasz, we need the actual data points
-            # not just the centers. So we'll use the original data that's already been
-            # scaled and weighted during model.fit()
-            # 
-            # Note: We can't compute these metrics on the cluster centers themselves,
-            # so we just report inertia and silhouette scores
             
             # Store results
             results = {
@@ -904,30 +849,8 @@ class WeightedKMeans:
                 'inertia': inertia
             }
             
-            # Try to compute other metrics if possible
-            try:
-                # This requires the original data (all points)
-                X_orig = self.apply_weights(self.scaler.transform(self.scaler.inverse_transform(self.kmeans.cluster_centers_)))
-                
-                # Check dimensions are compatible
-                if len(self.kmeans.labels_) == X_orig.shape[0]:
-                    # Calculate Davies-Bouldin index
-                    db_score = davies_bouldin_score(X_orig, self.kmeans.labels_)
-                    results['davies_bouldin'] = db_score
-                    
-                    # Calculate Calinski-Harabasz index
-                    ch_score = calinski_harabasz_score(X_orig, self.kmeans.labels_)
-                    results['calinski_harabasz'] = ch_score
-            except Exception as e:
-                print(f"Could not compute advanced metrics: {str(e)}")
-                print("This is normal and won't affect clustering quality")
-            
             print("\nCluster Evaluation Metrics:")
             print(f"Silhouette Score: {silhouette:.4f} (higher is better, range: -1 to 1)")
-            if 'davies_bouldin' in results:
-                print(f"Davies-Bouldin Index: {results['davies_bouldin']:.4f} (lower is better)")
-            if 'calinski_harabasz' in results:
-                print(f"Calinski-Harabasz Index: {results['calinski_harabasz']:.4f} (higher is better)")
             print(f"Inertia: {inertia:.4f} (lower is better)")
             
             return results
@@ -961,6 +884,9 @@ class WeightedKMeans:
         
         print("\nCluster Interpretations:")
         for cluster_idx in range(self.n_clusters):
+            if cluster_idx not in top_features:
+                continue
+                
             features = top_features[cluster_idx]
             feature_names_list = [f[0] for f in features]
             
@@ -1015,10 +941,18 @@ class WeightedKMeans:
         for group, features in self.feature_groups.items():
             feature_names.extend(features)
             
+        # Make sure we don't have more centroids columns than feature names
+        centers = self.kmeans.cluster_centers_
+        if centers.shape[1] > len(feature_names):
+            print(f"Warning: Centroid dimensions ({centers.shape[1]}) exceed feature names count ({len(feature_names)})")
+            # Extend feature names with generic names
+            additional_names = [f"feature_{i}" for i in range(len(feature_names), centers.shape[1])]
+            feature_names.extend(additional_names)
+        
         # Create DataFrame with centroids
         centroids_df = pd.DataFrame(
-            self.kmeans.cluster_centers_,
-            columns=feature_names
+            self.kmeans.cluster_centers_[:, :len(feature_names)],
+            columns=feature_names[:centers.shape[1]]
         )
         
         # Add cluster ID
@@ -1046,11 +980,27 @@ class WeightedKMeans:
         if self.kmeans is None:
             raise ValueError("Model not fitted yet. Call fit() first.")
             
+        # Check if we have product IDs
+        if self.product_ids is None:
+            print("Warning: No product IDs available. Using index as product identifier.")
+            product_ids = [f"product_{i}" for i in range(len(self.kmeans.labels_))]
+        else:
+            product_ids = self.product_ids
+            
+        # Check if we have product titles
+        if self.product_titles is None:
+            product_titles = [""] * len(self.kmeans.labels_)
+        else:
+            product_titles = self.product_titles
+        
+        # Ensure lengths match
+        min_length = min(len(product_ids), len(product_titles), len(self.kmeans.labels_))
+        
         # Create DataFrame with cluster assignments
         assignments_df = pd.DataFrame({
-            'product_id': self.product_ids,
-            'product_title': self.product_titles,
-            'cluster': self.kmeans.labels_
+            'product_id': product_ids[:min_length],
+            'product_title': product_titles[:min_length],
+            'cluster': self.kmeans.labels_[:min_length]
         })
         
         # Save to CSV
@@ -1058,32 +1008,6 @@ class WeightedKMeans:
         print(f"Cluster assignments exported to {output_file}")
         
         return assignments_df
-    
-    def predict(self, X):
-        """
-        Predict clusters for new data
-        
-        Args:
-            X: Feature matrix or DataFrame
-            
-        Returns:
-            numpy array: Cluster labels
-        """
-        if self.kmeans is None:
-            raise ValueError("Model not fitted yet. Call fit() first.")
-            
-        # Convert DataFrame to numpy array if needed
-        if isinstance(X, pd.DataFrame):
-            X = X.values
-            
-        # Standardize
-        X_scaled = self.scaler.transform(X)
-        
-        # Apply weights
-        X_weighted = self.apply_weights(X_scaled)
-        
-        # Predict
-        return self.kmeans.predict(X_weighted)
     
     def save_model(self, output_dir="models"):
         """
@@ -1120,48 +1044,6 @@ class WeightedKMeans:
         
         print(f"Model saved to {output_dir}")
     
-    @classmethod
-    def load_model(cls, model_dir="models"):
-        """
-        Load a saved model
-        
-        Args:
-            model_dir: Directory containing the saved model
-            
-        Returns:
-            WeightedKMeans: Loaded model
-        """
-        # Check if model exists
-        kmeans_path = f"{model_dir}/kmeans_model.pkl"
-        scaler_path = f"{model_dir}/scaler.pkl"
-        params_path = f"{model_dir}/model_params.pkl"
-        
-        if not (os.path.exists(kmeans_path) and os.path.exists(scaler_path) and os.path.exists(params_path)):
-            raise FileNotFoundError(f"Model files not found in {model_dir}")
-            
-        # Load files
-        kmeans = joblib.load(kmeans_path)
-        scaler = joblib.load(scaler_path)
-        params = joblib.load(params_path)
-        
-        # Create instance
-        instance = cls(
-            n_clusters=params['n_clusters'],
-            random_state=params['random_state'],
-            max_iter=params['max_iter']
-        )
-        
-        # Set attributes
-        instance.kmeans = kmeans
-        instance.scaler = scaler
-        instance.feature_weights = params['feature_weights']
-        instance.feature_groups = params['feature_groups']
-        instance.silhouette_avg = params['silhouette_avg']
-        instance.cluster_counts = np.array(params['cluster_counts']) if params['cluster_counts'] is not None else None
-        
-        print(f"Model loaded from {model_dir}")
-        return instance
-
 
 def map_products_to_clusters(products_df, clusters_df):
     """
@@ -1181,16 +1063,26 @@ def map_products_to_clusters(products_df, clusters_df):
         how='left'
     )
     
-    # Generate cluster stats
-    cluster_stats = merged_df.groupby('cluster').agg({
-        'product_title': 'count',
-        'min_price': 'mean',
-        'max_price': 'mean',
-        'has_discount': 'mean'
-    }).rename(columns={'product_title': 'product_count'})
+    # Check for products that weren't assigned to clusters
+    unassigned = merged_df['cluster'].isna().sum()
+    if unassigned > 0:
+        print(f"Warning: {unassigned} products were not assigned to any cluster")
     
-    print("\nCluster Statistics:")
-    print(cluster_stats)
+    # Generate cluster stats
+    try:
+        numeric_cols = ['min_price', 'max_price', 'has_discount']
+        stats_cols = [col for col in numeric_cols if col in merged_df.columns]
+        
+        if stats_cols:
+            cluster_stats = merged_df.groupby('cluster').agg({
+                **{'product_id': 'count'},
+                **{col: 'mean' for col in stats_cols}
+            }).rename(columns={'product_id': 'product_count'})
+            
+            print("\nCluster Statistics:")
+            print(cluster_stats)
+    except Exception as e:
+        print(f"Error generating cluster statistics: {str(e)}")
     
     return merged_df
 
@@ -1227,11 +1119,11 @@ def find_similar_products(product_id, products_df, clusters_df, top_n=5):
     return similar_products.head(top_n)
 
 
-# Create a function to run the clustering as part of the main script
-def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal_k=False,
-                  min_k=10, max_k=30, save_model=True):
+def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal_k=True,
+                   min_k=10, max_k=50, save_model=True):
     """
-    Run weighted KMeans clustering on processed product data
+    Main public interface for running weighted KMeans clustering on processed product data.
+    This is the ONLY function that should be called directly from outside this module.
     
     Args:
         input_file: Path to the input CSV file with processed features
@@ -1248,6 +1140,9 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
     
+    # Configure warnings to be more visible
+    warnings.filterwarnings('always', category=UserWarning)
+    
     # Load data
     print(f"Loading data from {input_file}")
     try:
@@ -1260,7 +1155,7 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
     orig_df = df.copy()
     
     # Initialize model
-    model = WeightedKMeans(n_clusters=n_clusters)
+    model = _WeightedKMeans(n_clusters=n_clusters)
     
     # Identify feature groups
     feature_df = df.copy()
@@ -1285,9 +1180,10 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
         print(f"Error identifying feature groups: {str(e)}")
         return pd.DataFrame()
     
-    # Set custom weights
+        # Set custom weights
+    # Set custom weights with normalization by feature count
     try:
-        weights = {
+        base_weights = {
             'product_type': 1.8,        # Higher weight for product types  
             'tags': 1.8,                # Higher weight for tags
             'description_tfidf': 1.0,   # Standard weight
@@ -1299,10 +1195,9 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
             'variant_other': 1.0,       # Standard weight
             'numerical': 1.0            # Standard weight
         }
-        model.set_feature_weights(weights)
+        model.set_feature_weights(base_weights, normalize_by_count=True)
     except Exception as e:
         print(f"Error setting feature weights: {str(e)}")
-        # Continue with default weights
     
     # Find optimal k if requested
     k_range = None
@@ -1321,66 +1216,94 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
         print("Model was not fitted successfully. Skipping visualizations and exports.")
         return pd.DataFrame()
     
-    # Create visualizations - wrap each in try/except to prevent one failure from stopping everything
+    # Track visualization success/failure
+    visualizations_successful = {
+        'clusters': False,
+        'feature_importance': False,
+        'tsne': False,
+        'centroids': False,
+        'assignments': False,
+        'interpretations': False,
+        'evaluation': False
+    }
+    
+    # Create visualizations - wrap each in try/except but always attempt all visualizations
+    print("\nGenerating visualizations and analysis...")
+    
+    # 1. Cluster visualization
     try:
         model.visualize_clusters(output_file=f"{output_dir}/clusters.png")
+        visualizations_successful['clusters'] = True
     except Exception as e:
         print(f"Error creating cluster visualization: {str(e)}")
     
+    # 2. Feature importance visualization
     try:
         model.visualize_feature_importance(feature_df.columns, output_file=f"{output_dir}/feature_importance.png")
+        visualizations_successful['feature_importance'] = True
     except Exception as e:
         print(f"Error creating feature importance visualization: {str(e)}")
     
-    # t-SNE visualization with extra safety
+    # 3. t-SNE visualization
     try:
         # Create a clean copy of the data for t-SNE
         tsne_data = model.scaler.transform(feature_df)
         # Replace any NaN or inf values
         tsne_data = np.nan_to_num(tsne_data, nan=0.0, posinf=1e9, neginf=-1e9)
         model.visualize_tsne(tsne_data, output_file=f"{output_dir}/tsne.png")
+        visualizations_successful['tsne'] = True
     except Exception as e:
         print(f"Error creating t-SNE visualization: {str(e)}")
     
-    # Export results - again with error handling
+    # 4. Export centroids
     centroids_df = None
-    assignments_df = None
-    
     try:
         centroids_df = model.export_centroids(output_file=f"{output_dir}/centroids.csv")
+        visualizations_successful['centroids'] = True
     except Exception as e:
         print(f"Error exporting centroids: {str(e)}")
     
+    # 5. Export cluster assignments
+    assignments_df = None
     try:
         assignments_df = model.export_cluster_assignments(output_file=f"{output_dir}/assignments.csv")
+        visualizations_successful['assignments'] = True
     except Exception as e:
         print(f"Error exporting cluster assignments: {str(e)}")
-        return pd.DataFrame()  # Can't continue without assignments
+        # Don't return early, try to generate other visualizations
     
-    # Interpret clusters
+    # 6. Interpret clusters
     try:
         model.interpret_clusters(feature_df)
+        visualizations_successful['interpretations'] = True
     except Exception as e:
         print(f"Error interpreting clusters: {str(e)}")
     
-    # Evaluate clusters
+    # 7. Evaluate clusters
     try:
         model.evaluate_clusters()
+        visualizations_successful['evaluation'] = True
     except Exception as e:
         print(f"Error evaluating clusters: {str(e)}")
     
+    # Check if we have any missing visualizations
+    missing_visualizations = [name for name, success in visualizations_successful.items() if not success]
+    if missing_visualizations:
+        print(f"\nWarning: The following visualizations could not be generated: {', '.join(missing_visualizations)}")
+    
     # Map products to clusters
     mapped_df = pd.DataFrame()
-    try:
-        if assignments_df is not None:
+    if assignments_df is not None:
+        try:
             mapped_df = map_products_to_clusters(orig_df, assignments_df)
             mapped_df.to_csv(f"{output_dir}/products_with_clusters.csv", index=False)
-    except Exception as e:
-        print(f"Error mapping products to clusters: {str(e)}")
+            print(f"Products with cluster assignments saved to {output_dir}/products_with_clusters.csv")
+        except Exception as e:
+            print(f"Error mapping products to clusters: {str(e)}")
     
-    # Example: Find similar products
-    try:
-        if len(df) > 0 and assignments_df is not None:
+    # Example: Find similar products for a sample product
+    if len(df) > 0 and assignments_df is not None:
+        try:
             sample_product_id = df['product_id'].iloc[0]
             similar_products = find_similar_products(sample_product_id, orig_df, assignments_df)
             
@@ -1389,8 +1312,12 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
             if not similar_products.empty:
                 for _, row in similar_products.iterrows():
                     print(f"- {row['product_title']}")
-    except Exception as e:
-        print(f"Error finding similar products: {str(e)}")
+                    
+                # Save similar products to CSV for the sample
+                similar_products.to_csv(f"{output_dir}/similar_products_example.csv", index=False)
+                print(f"Example similar products saved to {output_dir}/similar_products_example.csv")
+        except Exception as e:
+            print(f"Error generating similar products example: {str(e)}")
     
     # Save model if requested
     if save_model:
@@ -1399,283 +1326,30 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
         except Exception as e:
             print(f"Error saving model: {str(e)}")
     
+    # Generate summary report
+    try:
+        with open(f"{output_dir}/clustering_summary.txt", "w") as f:
+            f.write("=== Clustering Analysis Summary ===\n\n")
+            f.write(f"Input file: {input_file}\n")
+            f.write(f"Number of products: {len(df)}\n")
+            f.write(f"Number of features: {len(feature_cols)}\n")
+            f.write(f"Number of clusters: {model.n_clusters}\n\n")
+            
+            f.write("Cluster distribution:\n")
+            for i, count in enumerate(model.cluster_counts):
+                f.write(f"Cluster {i}: {count} products ({count/len(df)*100:.1f}%)\n")
+            
+            f.write("\nSilhouette Score: {:.4f}\n".format(model.silhouette_avg))
+            
+            f.write("\nFiles generated:\n")
+            for key, success in visualizations_successful.items():
+                status = "✓" if success else "✗"
+                f.write(f"{status} {key}\n")
+        
+        print(f"Clustering summary saved to {output_dir}/clustering_summary.txt")
+    except Exception as e:
+        print(f"Error generating summary report: {str(e)}")
+    
     print(f"\nClustering complete! Results saved to {output_dir}")
     
     return mapped_df
-
-
-# Now modify the main script to call the clustering
-from shopifyInfo.shopify_queries import get_all_products
-from preprocessing.tfidf_processor import process_descriptions_tfidf
-from preprocessing.collectionHandle_processor import process_collections
-from preprocessing.tags_processor import process_tags
-from preprocessing.variants_processor import process_variants
-from preprocessing.vendor_processor import process_vendors
-from preprocessing.metafields_processor import process_metafields, apply_tfidf_processing, save_color_similarity_data, remove_color_columns
-from preprocessing.isGiftCard_processor import process_gif_card
-from preprocessing.product_type_processor import process_product_type
-from preprocessing.availableForSale_processor import process_avaiable_for_sale
-import pandas as pd
-import argparse
-
-
-def export_sample(df, step_name):
-    """Export the first row of the DataFrame to a CSV for debugging"""
-    if len(df) > 0:
-        sample_df = df.head(1)
-        filename = f"sample_after_{step_name}.csv"
-        sample_df.to_csv(filename, index=False)
-        print(f"Exported sample to {filename}")
-
-
-def document_feature_sources(df, output_file="feature_sources.csv"):
-    """
-    Document the sources of all features in the processed DataFrame
-    """
-    feature_sources = []
-    
-    # Categorize columns by their prefixes
-    for column in df.columns:
-        if column.startswith('description_'):
-            source = 'TF-IDF from product descriptions'
-        elif column.startswith('metafield_'):
-            source = 'TF-IDF from product metafields'
-        elif column.startswith('tag_'):
-            source = 'Tag dummy variable'
-        elif column.startswith('product_type_'):
-            source = 'Product type dummy variable'
-        elif column.startswith('collections_'):
-            source = 'Collection dummy variable'
-        elif column.startswith('vendor_'):
-            source = 'Vendor dummy variable'
-        elif column.startswith('variant_'):
-            source = 'Variant option dummy variable'
-        elif column.startswith('price_'):
-            source = 'Price-related feature from variants'
-        elif column == 'product_id' or column == 'product_title' or column == 'handle':
-            source = 'Original product information'
-        else:
-            source = 'Other/Unknown'
-        
-        feature_sources.append({
-            'feature_name': column,
-            'source': source
-        })
-    
-    # Create DataFrame and save to CSV
-    sources_df = pd.DataFrame(feature_sources)
-    sources_df.to_csv(output_file, index=False)
-    print(f"Feature sources documented in {output_file}")
-    
-    return sources_df
-
-
-def main():
-    """Main function to process product data from Shopify store"""
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Process product data and perform clustering')
-    parser.add_argument('--clusters', type=int, default=10,
-                      help='Number of clusters for weighted KMeans (default: 10)')
-    parser.add_argument('--find-optimal-k', action='store_true',
-                      help='Find optimal number of clusters')
-    parser.add_argument('--optimal-k-only', action='store_true',
-                      help='Only run the optimal k analysis without performing clustering')
-    parser.add_argument('--min-k', type=int, default=2,
-                      help='Minimum number of clusters to try when finding optimal k (default: 2)')
-    parser.add_argument('--max-k', type=int, default=30,
-                      help='Maximum number of clusters to try when finding optimal k (default: 30)')
-    parser.add_argument('--skip-clustering', action='store_true',
-                      help='Skip the clustering step')
-    parser.add_argument('--output-dir', type=str, default='results',
-                      help='Directory to save clustering results (default: results)')
-    args = parser.parse_args()
-    
-    # If optimal-k-only is specified, just run that analysis and exit
-    if args.optimal_k_only:
-        # Check if the tfidf file exists already
-        if os.path.exists("products_with_tfidf.csv"):
-            print("Found existing processed data file. Using it for optimal k analysis.")
-            run_optimal_k_analysis(
-                input_file="products_with_tfidf.csv",
-                output_dir=args.output_dir,
-                min_k=args.min_k,
-                max_k=args.max_k
-            )
-            return
-        print("No existing processed data file found. Running full data processing first.")
-    
-    # Get shop ID from user input
-    shop_id = input("Shop ID: ")
-    
-    print("Fetching data from Shopify...")
-    raw_data = get_all_products(shop_id)
-    
-    if raw_data is None:
-        print("Failed to retrieve data from Shopify.")
-        return
-    
-    # Save raw data immediately after importing
-    raw_data.to_csv("products.csv", index=False)
-    print("Raw data saved to products.csv")
-    
-    # Export raw data sample
-    export_sample(raw_data, "raw_data")
-    
-    # Start with the raw data for processing
-    df = raw_data.copy()
-    
-    # Process the data through the pipeline
-    print("\nStarting data processing pipeline...")
-    
-    # 1. Process metafields
-    print("Processing metafields...")
-    all_processed_data = []
-    all_product_references = {}
-
-    for _, row in df.iterrows():
-        processed_data, product_refs = process_metafields(row, row.get('metafields_config', []))
-        all_processed_data.append(processed_data)
-        
-        # Collect product references
-        product_id = row.get('product_id', '')
-        for key, value in product_refs.items():
-            all_product_references[f"{product_id}_{key}"] = value
-
-    # Create DataFrame from processed metafields
-    metafields_processed = pd.DataFrame(all_processed_data, index=df.index)
-
-    # Save product references if any were found
-    if all_product_references:
-        from preprocessing.metafields_processor import save_product_references
-        save_product_references(all_product_references, "product_references.csv")
-        print("Product references saved to product_references.csv")
-    
-    # Calculate and save color similarity data before removing color columns
-    print("Calculating color similarities...")
-    color_similarity_df = save_color_similarity_data()
-    if not color_similarity_df.empty:
-        print(f"Color similarity data saved for {color_similarity_df['source_product_id'].nunique()} products")
-    
-    # Remove color columns after similarity calculation
-    print("Removing color columns after similarity calculation...")
-    metafields_processed = remove_color_columns(metafields_processed)
-
-    # Apply TF-IDF processing to the metafields data - this will also remove original text columns
-    metafields_processed = apply_tfidf_processing(metafields_processed)
-
-    # Add processed metafields to the dataframe
-    if 'metafields' in df.columns:
-        df = df.drop('metafields', axis=1)
-    if 'metafields_config' in df.columns:
-        df = df.drop('metafields_config', axis=1)
-
-    # Combine the processed metafields with the original dataframe
-    df = pd.concat([df, metafields_processed], axis=1)
-    export_sample(df, "metafields")
-    
-    # 2. Process is_gift_card
-    print("Processing is_gift_card...")
-    df = process_gif_card(df)
-    export_sample(df, "gift_card")
-
-    # 3. Process available_for_sale
-    print("Processing available_for_sale...")
-    df = process_avaiable_for_sale(df)
-    export_sample(df, "available_for_sale")
-
-    print("Processing product types...")
-    df = process_product_type(df)
-    export_sample(df, "product_type")
-    
-    # 4. Process tags
-    print("Processing tags...")
-    df = process_tags(df)
-    export_sample(df, "tags")
-    
-    # 5. Process collections
-    print("Processing collections...")
-    df = process_collections(df)
-    export_sample(df, "collections")
-
-    # 6. Process vendors
-    print("Processing vendors...")
-    df = process_vendors(df)
-    export_sample(df, "vendors")
-    
-    # 7. Process variants
-    print("Processing variants...")
-    df = process_variants(df)
-    export_sample(df, "variants")
-    
-    # 8. Process text with TF-IDF
-    print("Processing product descriptions with TF-IDF...")
-    tfidf_df, recommendation_df, _, similar_products = process_descriptions_tfidf(df)
-    export_sample(tfidf_df, "tfidf")
-    export_sample(recommendation_df, "recommendation")
-    
-    # Save the processed data
-    df.to_csv("products_with_variants.csv", index=False)
-    tfidf_df.to_csv("products_with_tfidf.csv", index=False)
-    recommendation_df.to_csv("products_recommendation.csv", index=False)
-    
-    # Document feature sources
-    document_feature_sources(tfidf_df, "feature_sources.csv")
-    
-    # Output completion message for data processing
-    print("\nData processing complete!")
-    print("\nProcessed files saved:")
-    print("- products.csv (raw data)")
-    print("- products_with_variants.csv (features before TF-IDF)")
-    print("- products_with_tfidf.csv (complete features)")
-    print("- products_recommendation.csv (ready for recommendation model)")
-    print("- products_tfidf_matrix.npy (TF-IDF vector representations)")
-    print("- products_tfidf_features.csv (TF-IDF feature names)")
-    print("- feature_sources.csv (documentation of feature sources)")
-    
-    if not color_similarity_df.empty:
-        print("- products_color_similarity.csv (similar products by color)")
-    
-    # If optimal-k-only is specified, run just that analysis and exit
-    if args.optimal_k_only:
-        run_optimal_k_analysis(
-            input_file="products_with_tfidf.csv",
-            output_dir=args.output_dir,
-            min_k=args.min_k,
-            max_k=args.max_k
-        )
-        return
-    
-    # Run clustering analysis if not skipped
-    if not args.skip_clustering:
-        print("\n" + "="*50)
-        print("Starting clustering analysis...")
-        print("="*50)
-        
-        try:
-            # Run the clustering function
-            clustered_df = run_clustering(
-                input_file="products_with_tfidf.csv",
-                output_dir=args.output_dir,
-                n_clusters=args.clusters,
-                find_optimal_k=args.find_optimal_k,
-                min_k=args.min_k,
-                max_k=args.max_k,
-                save_model=True
-            )
-            
-            if not clustered_df.empty:
-                print("\nClustering analysis complete!")
-                print(f"Cluster assignments and visualizations saved to {args.output_dir}")
-                print("- products_with_clusters.csv (products with cluster assignments)")
-            else:
-                print("\nClustering analysis did not produce results.")
-                print("Data processing completed successfully, but clustering was not successful.")
-        except Exception as e:
-            print(f"\nError during clustering analysis: {str(e)}")
-            print("Data processing completed successfully, but clustering encountered an error.")
-    else:
-        print("\nClustering analysis skipped. Use --skip-clustering=False to run clustering.")
-
-
-if __name__ == "__main__":
-    main()

@@ -217,12 +217,14 @@ def main():
         
         # Run the clustering function
         clustered_df = run_clustering(
-            input_file="products_with_tfidf.csv",
-            output_dir=args.output_dir,
-            n_clusters=args.clusters,
-            find_optimal_k=args.find_optimal_k,
-            save_model=True
-        )
+    input_file="products_with_tfidf.csv",
+    output_dir=args.output_dir,
+    n_clusters=args.clusters,
+    find_optimal_k=True,  # This needs to be explicitly set to True
+    min_k=10,             # Minimum number of clusters to try
+    max_k=50,             # Maximum number of clusters to try
+    save_model=True
+)
         
         print("\nClustering analysis complete!")
         print(f"Cluster assignments and visualizations saved to {args.output_dir}")

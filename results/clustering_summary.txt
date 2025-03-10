@@ -1,0 +1,33 @@
+=== Clustering Analysis Summary ===
+
+Input file: products_with_tfidf.csv
+Number of products: 282
+Number of features: 2798
+Number of clusters: 21
+
+Cluster distribution:
+Cluster 0: 4 products (1.4%)
+Cluster 1: 1 products (0.4%)
+Cluster 2: 243 products (86.2%)
+Cluster 3: 1 products (0.4%)
+Cluster 4: 6 products (2.1%)
+Cluster 5: 1 products (0.4%)
+Cluster 6: 7 products (2.5%)
+Cluster 7: 1 products (0.4%)
+Cluster 8: 3 products (1.1%)
+Cluster 9: 2 products (0.7%)
+Cluster 10: 1 products (0.4%)
+Cluster 11: 1 products (0.4%)
+Cluster 12: 1 products (0.4%)
+Cluster 13: 1 products (0.4%)
+Cluster 14: 3 products (1.1%)
+Cluster 15: 1 products (0.4%)
+Cluster 16: 1 products (0.4%)
+Cluster 17: 1 products (0.4%)
+Cluster 18: 1 products (0.4%)
+Cluster 19: 1 products (0.4%)
+Cluster 20: 1 products (0.4%)
+
+Silhouette Score: 0.6211
+
+Files generated:
