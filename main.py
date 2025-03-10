@@ -8,7 +8,9 @@ from preprocessing.metafields_processor import process_metafields, apply_tfidf_p
 from preprocessing.isGiftCard_processor import process_gif_card
 from preprocessing.product_type_processor import process_product_type
 from preprocessing.availableForSale_processor import process_avaiable_for_sale
+from training.weighted_kmeans import run_clustering
 import pandas as pd
+import argparse
 
 
 def export_sample(df, step_name):
@@ -64,6 +66,18 @@ def document_feature_sources(df, output_file="feature_sources.csv"):
 
 def main():
     """Main function to process product data from Shopify store"""
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Process product data and perform clustering')
+    parser.add_argument('--clusters', type=int, default=10,
+                      help='Number of clusters for weighted KMeans (default: 10)')
+    parser.add_argument('--find-optimal-k', action='store_true',
+                      help='Find optimal number of clusters')
+    parser.add_argument('--skip-clustering', action='store_true',
+                      help='Skip the clustering step')
+    parser.add_argument('--output-dir', type=str, default='results',
+                      help='Directory to save clustering results (default: results)')
+    args = parser.parse_args()
+    
     # Get shop ID from user input
     shop_id = input("Shop ID: ")
     
@@ -181,8 +195,8 @@ def main():
     # Document feature sources
     document_feature_sources(tfidf_df, "feature_sources.csv")
     
-    # Output completion message
-    print("\nProcessing complete!")
+    # Output completion message for data processing
+    print("\nData processing complete!")
     print("\nProcessed files saved:")
     print("- products.csv (raw data)")
     print("- products_with_variants.csv (features before TF-IDF)")
@@ -194,6 +208,27 @@ def main():
     
     if not color_similarity_df.empty:
         print("- products_color_similarity.csv (similar products by color)")
+    
+    # Run clustering analysis if not skipped
+    if not args.skip_clustering:
+        print("\n" + "="*50)
+        print("Starting clustering analysis...")
+        print("="*50)
+        
+        # Run the clustering function
+        clustered_df = run_clustering(
+            input_file="products_with_tfidf.csv",
+            output_dir=args.output_dir,
+            n_clusters=args.clusters,
+            find_optimal_k=args.find_optimal_k,
+            save_model=True
+        )
+        
+        print("\nClustering analysis complete!")
+        print(f"Cluster assignments and visualizations saved to {args.output_dir}")
+        print("- products_with_clusters.csv (products with cluster assignments)")
+    else:
+        print("\nClustering analysis skipped. Use --skip-clustering=False to run clustering.")
 
 
 if __name__ == "__main__":

@@ -60,23 +60,47 @@ max_price,Other/Unknown
 has_discount,Other/Unknown
 variant_size_L,Variant option dummy variable
 variant_size_L / L,Variant option dummy variable
+variant_size_L / L / Regular,Variant option dummy variable
+variant_size_L / L / Tanga,Variant option dummy variable
 variant_size_L / M,Variant option dummy variable
+variant_size_L / M / Regular,Variant option dummy variable
+variant_size_L / M / Tanga,Variant option dummy variable
 variant_size_L / S,Variant option dummy variable
+variant_size_L / S / Regular,Variant option dummy variable
+variant_size_L / S / Tanga,Variant option dummy variable
 variant_size_L / XL,Variant option dummy variable
 variant_size_L / XS,Variant option dummy variable
+variant_size_L / XS / Regular,Variant option dummy variable
+variant_size_L / XS / Tanga,Variant option dummy variable
 variant_size_M,Variant option dummy variable
 variant_size_M / L,Variant option dummy variable
+variant_size_M / L / Regular,Variant option dummy variable
+variant_size_M / L / Tanga,Variant option dummy variable
 variant_size_M / M,Variant option dummy variable
+variant_size_M / M / Regular,Variant option dummy variable
+variant_size_M / M / Tanga,Variant option dummy variable
 variant_size_M / S,Variant option dummy variable
+variant_size_M / S / Regular,Variant option dummy variable
+variant_size_M / S / Tanga,Variant option dummy variable
 variant_size_M / XL,Variant option dummy variable
 variant_size_M / XS,Variant option dummy variable
+variant_size_M / XS / Regular,Variant option dummy variable
+variant_size_M / XS / Tanga,Variant option dummy variable
 variant_size_M/L,Variant option dummy variable
 variant_size_S,Variant option dummy variable
 variant_size_S / L,Variant option dummy variable
+variant_size_S / L / Regular,Variant option dummy variable
+variant_size_S / L / Tanga,Variant option dummy variable
 variant_size_S / M,Variant option dummy variable
+variant_size_S / M / Regular,Variant option dummy variable
+variant_size_S / M / Tanga,Variant option dummy variable
 variant_size_S / S,Variant option dummy variable
+variant_size_S / S / Regular,Variant option dummy variable
+variant_size_S / S / Tanga,Variant option dummy variable
 variant_size_S / XL,Variant option dummy variable
 variant_size_S / XS,Variant option dummy variable
+variant_size_S / XS / Regular,Variant option dummy variable
+variant_size_S / XS / Tanga,Variant option dummy variable
 variant_size_S/M,Variant option dummy variable
 variant_size_XL,Variant option dummy variable
 variant_size_XL / L,Variant option dummy variable
@@ -86,10 +110,18 @@ variant_size_XL / XL,Variant option dummy variable
 variant_size_XL / XS,Variant option dummy variable
 variant_size_XS,Variant option dummy variable
 variant_size_XS / L,Variant option dummy variable
+variant_size_XS / L / Regular,Variant option dummy variable
+variant_size_XS / L / Tanga,Variant option dummy variable
 variant_size_XS / M,Variant option dummy variable
+variant_size_XS / M / Regular,Variant option dummy variable
+variant_size_XS / M / Tanga,Variant option dummy variable
 variant_size_XS / S,Variant option dummy variable
+variant_size_XS / S / Regular,Variant option dummy variable
+variant_size_XS / S / Tanga,Variant option dummy variable
 variant_size_XS / XL,Variant option dummy variable
 variant_size_XS / XS,Variant option dummy variable
+variant_size_XS / XS / Regular,Variant option dummy variable
+variant_size_XS / XS / Tanga,Variant option dummy variable
 variant_size_XS/S,Variant option dummy variable
 variant_color_AZUL CLARO,Variant option dummy variable
 variant_color_BRANCO SUJO,Variant option dummy variable
@@ -108,6 +140,458 @@ variant_color_TAUPE,Variant option dummy variable
 variant_color_VERDE MENTA,Variant option dummy variable
 variant_color_VERDE SECO,Variant option dummy variable
 variant_color_Warm-beige,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):L / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):L / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):L / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):L / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):L / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):L / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):L / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):L / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):M / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):M / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):M / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):M / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):M / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):M / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):M / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):M / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):S / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):S / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):S / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):S / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):S / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):S / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):S / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):S / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):XS / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):XS / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):XS / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):XS / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):XS / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):XS / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):XS / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi cueca (formato):XS / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):L / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):L / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):L / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):L / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):L / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):L / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):L / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):L / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):M / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):M / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):M / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):M / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):M / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):M / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):M / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):M / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):S / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):S / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):S / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):S / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):S / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):S / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):S / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):S / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):XS / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):XS / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):XS / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):XS / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):XS / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):XS / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):XS / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s1 cueca (formato):XS / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):L / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):L / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):L / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):L / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):L / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):L / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):L / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):L / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):M / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):M / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):M / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):M / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):M / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):M / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):M / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):M / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):S / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):S / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):S / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):S / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):S / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):S / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):S / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):S / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):XS / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):XS / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):XS / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):XS / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):XS / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):XS / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):XS / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s10 cueca (formato):XS / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):L / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):L / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):L / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):L / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):L / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):L / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):L / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):L / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):M / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):M / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):M / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):M / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):M / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):M / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):M / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):M / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):S / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):S / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):S / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):S / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):S / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):S / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):S / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):S / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):XS / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):XS / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):XS / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):XS / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):XS / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):XS / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):XS / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s3 cueca (formato):XS / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):L / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):L / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):L / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):L / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):L / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):L / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):L / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):L / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):M / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):M / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):M / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):M / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):M / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):M / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):M / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):M / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):S / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):S / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):S / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):S / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):S / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):S / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):S / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):S / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):XS / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):XS / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):XS / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):XS / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):XS / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):XS / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):XS / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s4 cueca (formato):XS / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):L / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):L / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):L / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):L / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):L / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):L / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):L / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):L / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):M / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):M / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):M / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):M / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):M / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):M / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):M / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):M / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):S / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):S / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):S / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):S / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):S / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):S / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):S / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):S / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):XS / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):XS / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):XS / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):XS / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):XS / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):XS / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):XS / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s5 cueca (formato):XS / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):L / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):L / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):L / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):L / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):L / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):L / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):L / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):L / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):M / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):M / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):M / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):M / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):M / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):M / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):M / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):M / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):S / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):S / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):S / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):S / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):S / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):S / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):S / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):S / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):XS / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):XS / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):XS / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):XS / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):XS / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):XS / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):XS / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s6 cueca (formato):XS / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):L / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):L / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):L / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):L / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):L / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):L / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):L / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):L / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):M / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):M / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):M / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):M / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):M / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):M / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):M / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):M / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):S / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):S / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):S / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):S / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):S / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):S / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):S / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):S / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):XS / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):XS / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):XS / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):XS / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):XS / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):XS / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):XS / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s7 cueca (formato):XS / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):L / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):L / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):L / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):L / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):L / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):L / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):L / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):L / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):M / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):M / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):M / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):M / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):M / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):M / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):M / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):M / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):S / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):S / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):S / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):S / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):S / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):S / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):S / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):S / XS / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):XS / L / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):XS / L / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):XS / M / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):XS / M / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):XS / S / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):XS / S / Tanga,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):XS / XS / Regular,Variant option dummy variable
+variant_other_biquíni hawi s9 cueca (formato):XS / XS / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):L / L / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):L / L / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):L / M / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):L / M / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):L / S / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):L / S / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):L / XS / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):L / XS / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):M / L / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):M / L / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):M / M / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):M / M / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):M / S / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):M / S / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):M / XS / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):M / XS / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):S / L / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):S / L / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):S / M / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):S / M / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):S / S / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):S / S / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):S / XS / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):S / XS / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):XS / L / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):XS / L / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):XS / M / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):XS / M / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):XS / S / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):XS / S / Tanga,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):XS / XS / Regular,Variant option dummy variable
+variant_other_biquíni lani s3 cueca (formato):XS / XS / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):L / L / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):L / L / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):L / M / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):L / M / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):L / S / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):L / S / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):L / XL / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):L / XL / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):L / XS / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):L / XS / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):M / L / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):M / L / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):M / M / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):M / M / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):M / S / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):M / S / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):M / XL / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):M / XL / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):M / XS / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):M / XS / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):S / L / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):S / L / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):S / M / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):S / M / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):S / S / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):S / S / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):S / XL / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):S / XL / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):S / XS / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):S / XS / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XL / L / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XL / L / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XL / M / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XL / M / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XL / S / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XL / S / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XL / XL / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XL / XL / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XL / XS / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XL / XS / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XS / L / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XS / L / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XS / M / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XS / M / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XS / S / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XS / S / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XS / XL / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XS / XL / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XS / XS / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s1 cueca (formato):XS / XS / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):L / L / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):L / L / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):L / M / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):L / M / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):L / S / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):L / S / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):L / XL / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):L / XL / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):L / XS / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):L / XS / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):M / L / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):M / L / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):M / M / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):M / M / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):M / S / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):M / S / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):M / XL / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):M / XL / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):M / XS / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):M / XS / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):S / L / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):S / L / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):S / M / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):S / M / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):S / S / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):S / S / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):S / XL / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):S / XL / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):S / XS / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):S / XS / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XL / L / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XL / L / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XL / M / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XL / M / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XL / S / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XL / S / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XL / XL / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XL / XL / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XL / XS / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XL / XS / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XS / L / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XS / L / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XS / M / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XS / M / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XS / S / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XS / S / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XS / XL / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XS / XL / Tanga,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XS / XS / Regular,Variant option dummy variable
+variant_other_biquíni lanikai s2 cueca (formato):XS / XS / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):L / L / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):L / L / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):L / M / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):L / M / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):L / S / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):L / S / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):L / XS / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):L / XS / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):M / L / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):M / L / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):M / M / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):M / M / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):M / S / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):M / S / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):M / XS / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):M / XS / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):S / L / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):S / L / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):S / M / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):S / M / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):S / S / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):S / S / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):S / XS / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):S / XS / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):XS / L / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):XS / L / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):XS / M / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):XS / M / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):XS / S / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):XS / S / Tanga,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):XS / XS / Regular,Variant option dummy variable
+variant_other_biquíni maui s2 cueca (formato):XS / XS / Tanga,Variant option dummy variable
 variant_other_folho:12 MESES / Amarelo,Variant option dummy variable
 variant_other_folho:12 MESES / Padrão,Variant option dummy variable
 variant_other_folho:12 MESES / Terracota,Variant option dummy variable
