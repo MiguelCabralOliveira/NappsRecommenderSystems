@@ -87,7 +87,10 @@ class _WeightedKMeans:
             'variant_size': [],
             'variant_color': [],
             'variant_other': [],
-            'numerical': []
+            'numerical': [],
+            'time_features': [],       # Basic time features
+            'release_quarter': [],     # Release quarter dummies
+            'seasons': []              # New group for seasonal features
         }
         
         # Pattern matching for feature groups based on column names
@@ -110,6 +113,15 @@ class _WeightedKMeans:
                 feature_groups['variant_color'].append(col)
             elif col.startswith('variant_other_'):
                 feature_groups['variant_other'].append(col)
+            # Seasonal feature
+            elif col == 'created_season':
+                feature_groups['seasons'].append(col)
+            # Time features from createdAt processor
+            elif (col.startswith('created_') and col != 'created_season') or col == 'days_since_first_product' or col == 'is_recent_product':
+                feature_groups['time_features'].append(col)
+            # Release quarter dummies
+            elif col.startswith('release_quarter_'):
+                feature_groups['release_quarter'].append(col)
             elif col in ['min_price', 'max_price', 'has_discount']:
                 feature_groups['numerical'].append(col)
             else:
@@ -151,7 +163,10 @@ class _WeightedKMeans:
                 'variant_size': 1.0,        # Standard weight for size variants
                 'variant_color': 1.0,       # Standard weight for color variants
                 'variant_other': 1.0,       # Standard weight for other variants
-                'numerical': 1.0            # Standard weight for numerical data
+                'numerical': 1.0,            # Standard weight for numerical data
+                'time_features' : 1.0,
+                'release_quarter': 1.5,
+                'seasons' : 1.4
             }
         
         # Make sure weights exist for all feature groups
@@ -791,14 +806,7 @@ class _WeightedKMeans:
     
     def get_top_features_per_cluster(self, feature_names, top_n=10):
         """
-        Get top features for each cluster
-        
-        Args:
-            feature_names: List of feature names
-            top_n: Number of top features to return per cluster
-            
-        Returns:
-            dict: Dictionary mapping clusters to their top features
+        Get top features for each cluster, accounting for feature weights
         """
         if self.kmeans is None:
             raise ValueError("Model not fitted yet. Call fit() first.")
@@ -810,21 +818,43 @@ class _WeightedKMeans:
         # Get cluster centers
         centers = self.kmeans.cluster_centers_
         
+        # Create a mapping from feature index to its group
+        feature_to_group = {}
+        idx = 0
+        for group, features in self.feature_groups.items():
+            for _ in features:
+                if idx < len(feature_names):
+                    feature_to_group[idx] = group
+                    idx += 1
+        
         top_features = {}
         
         for cluster_idx in range(self.n_clusters):
-            # Get importance of each feature for this cluster
-            feature_importance = centers[cluster_idx]
+            # Get raw importance of each feature for this cluster
+            raw_importance = centers[cluster_idx]
             
-            # Get index of top features
-            top_indices = np.argsort(feature_importance)[-top_n:][::-1]
+            # Adjust importance by feature weights for ranking purposes
+            weighted_importance = np.zeros_like(raw_importance)
+            for i, imp in enumerate(raw_importance):
+                if i < len(feature_names):  # Safety check
+                    group = feature_to_group.get(i, None)
+                    if group and group in self.feature_weights:
+                        # Apply weights to adjust importance
+                        weighted_importance[i] = imp * self.feature_weights[group]
+                    else:
+                        weighted_importance[i] = imp
             
-            # Map indices to feature names, with safety check for index out of bounds
-            top_features[cluster_idx] = [(feature_names[i], feature_importance[i]) for i in top_indices 
-                                         if i < len(feature_names)]
+            # Get index of top features based on weighted importance
+            top_indices = np.argsort(weighted_importance)[-top_n:][::-1]
             
+            # Map indices to feature names with their raw values
+            # We display raw values but sort by weighted importance
+            top_features[cluster_idx] = [(feature_names[i], raw_importance[i]) 
+                                        for i in top_indices 
+                                        if i < len(feature_names)]
+        
         return top_features
-    
+        
     def evaluate_clusters(self):
         """
         Evaluate the quality of clusters using multiple metrics
@@ -861,42 +891,85 @@ class _WeightedKMeans:
     
     def interpret_clusters(self, df, top_n=5):
         """
-        Interpret clusters by summarizing key characteristics
-        
-        Args:
-            df: Original DataFrame with features
-            top_n: Number of top features to show per cluster
-            
-        Returns:
-            dict: Dictionary of cluster interpretations
+        Interpret clusters with enforced diversity of feature types
         """
-        if self.kmeans is None:
-            raise ValueError("Model not fitted yet. Call fit() first.")
-            
-        # Get feature names
         feature_names = df.columns.tolist()
         
-        # Get top features per cluster
-        top_features = self.get_top_features_per_cluster(feature_names, top_n=top_n)
+        # Categorize all features
+        feature_categories = {
+            'description_tfidf': [],
+            'product_type': [],
+            'tags': [],
+            'collections': [],
+            'metafield_data': [],
+            'vendor': [],
+            'variant_size': [],
+            'variant_color': [],
+            'variant_other': [],
+            'numerical': []
+        }
         
-        # Create interpretations
+        for i, name in enumerate(feature_names):
+            if name.startswith('description_'):
+                feature_categories['description_tfidf'].append(i)
+            elif name.startswith('product_type_'):
+                feature_categories['product_type'].append(i)
+            elif name.startswith('tag_'):
+                feature_categories['tags'].append(i)
+            elif name.startswith('collections_'):
+                feature_categories['collections'].append(i)
+            elif name.startswith('metafield_'):
+                feature_categories['metafield_data'].append(i)
+            elif name.startswith('vendor_'):
+                feature_categories['vendor'].append(i)
+            elif name.startswith('variant_size_'):
+                feature_categories['variant_size'].append(i)
+            elif name.startswith('variant_color_'):
+                feature_categories['variant_color'].append(i)
+            elif name.startswith('variant_other_'):
+                feature_categories['variant_other'].append(i)
+            elif name in ['min_price', 'max_price', 'has_discount']:
+                feature_categories['numerical'].append(i)
+        
         interpretations = {}
-        
         print("\nCluster Interpretations:")
+        
         for cluster_idx in range(self.n_clusters):
-            if cluster_idx not in top_features:
-                continue
-                
-            features = top_features[cluster_idx]
-            feature_names_list = [f[0] for f in features]
+            # Get raw centroid values
+            centroid = self.kmeans.cluster_centers_[cluster_idx]
             
-            # Create a human-readable interpretation
+            # Create a balanced selection from different feature types
+            balanced_features = []
+            
+            # Limit description features to max 2
+            desc_indices = feature_categories['description_tfidf']
+            if desc_indices:
+                top_desc = sorted([(i, centroid[i]) for i in desc_indices], 
+                                key=lambda x: x[1], reverse=True)[:2]
+                balanced_features.extend(top_desc)
+            
+            # For each category, add the top feature if available
+            for category, indices in feature_categories.items():
+                if category == 'description_tfidf':
+                    continue  # Already handled
+                
+                if indices:
+                    top_feature = max([(i, centroid[i]) for i in indices], 
+                                    key=lambda x: x[1])
+                    if top_feature[1] > 0:  # Only add if value is positive
+                        balanced_features.append(top_feature)
+            
+            # Sort by value for display
+            balanced_features.sort(key=lambda x: x[1], reverse=True)
+            
+            # Format interpretation
             interpretation = f"Cluster {cluster_idx} ({self.cluster_counts[cluster_idx]} products):\n"
             interpretation += "Key characteristics:\n"
             
-            for name, value in features:
-                # Format feature name for readability
+            for idx, value in balanced_features[:top_n]:
+                name = feature_names[idx]
                 display_name = name
+                
                 if name.startswith('product_type_'):
                     display_name = f"Product Type: {name.replace('product_type_', '')}"
                 elif name.startswith('vendor_'):
@@ -922,7 +995,7 @@ class _WeightedKMeans:
             print(interpretation)
             
         return interpretations
-    
+
     def export_centroids(self, output_file="cluster_centroids.csv"):
         """
         Export cluster centroids for external visualization
@@ -1087,14 +1160,15 @@ def map_products_to_clusters(products_df, clusters_df):
     return merged_df
 
 
-def find_similar_products(product_id, products_df, clusters_df, top_n=5):
+def find_similar_products(product_id, products_df, clusters_df, similar_products_df=None, top_n=5):
     """
-    Find similar products based on cluster assignment
+    Find similar products based on cluster assignment, excluding too-similar variants
     
     Args:
         product_id: Product ID to find similar products for
         products_df: DataFrame with original product data
         clusters_df: DataFrame with cluster assignments
+        similar_products_df: DataFrame with pairs of too-similar products to exclude
         top_n: Number of similar products to return
         
     Returns:
@@ -1109,14 +1183,46 @@ def find_similar_products(product_id, products_df, clusters_df, top_n=5):
         
     product_cluster = product_cluster[0]
     
+    # Get the product title for filtering
+    product_title = products_df[products_df['product_id'] == product_id]['product_title'].iloc[0]
+    
     # Get products in the same cluster
     cluster_products = clusters_df[clusters_df['cluster'] == product_cluster]
     
     # Exclude the query product
     similar_products = cluster_products[cluster_products['product_id'] != product_id]
     
+    # Filter out too-similar products if we have similarity data
+    if similar_products_df is not None and not similar_products_df.empty:
+        # Get titles of all recommended products
+        recommended_titles = products_df.loc[products_df['product_id'].isin(similar_products['product_id']), 'product_title']
+        
+        # Find titles to exclude (too similar to the query product)
+        exclude_titles = []
+        
+        # Check if the product is in product1 column
+        matches1 = similar_products_df[similar_products_df['product1'] == product_title]
+        if not matches1.empty:
+            exclude_titles.extend(matches1['product2'].tolist())
+            
+        # Check if the product is in product2 column
+        matches2 = similar_products_df[similar_products_df['product2'] == product_title]
+        if not matches2.empty:
+            exclude_titles.extend(matches2['product1'].tolist())
+            
+        # Filter the recommendations to exclude too-similar products
+        if exclude_titles:
+            filtered_product_ids = []
+            for pid in similar_products['product_id']:
+                title = products_df[products_df['product_id'] == pid]['product_title'].iloc[0]
+                if title not in exclude_titles:
+                    filtered_product_ids.append(pid)
+            
+            similar_products = similar_products[similar_products['product_id'].isin(filtered_product_ids)]
+    
     # Return top N similar products
     return similar_products.head(top_n)
+
 
 
 def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal_k=True,
@@ -1154,6 +1260,21 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
     # Keep original data for reference
     orig_df = df.copy()
     
+    # Import or load similar products data 
+    try:
+        # Try to load the similarity data from CSV file
+        similar_products_file = "products_similar_products.csv"
+        if os.path.exists(similar_products_file):
+            similar_products_df = pd.read_csv(similar_products_file)
+            print(f"Loaded similarity data for {len(similar_products_df)} product pairs")
+        else:
+            # If file doesn't exist, create empty DataFrame
+            similar_products_df = pd.DataFrame(columns=['product1', 'product2', 'similarity'])
+            print("No similarity data found, recommendations won't filter variants")
+    except Exception as e:
+        print(f"Could not load similarity data: {e}")
+        similar_products_df = pd.DataFrame(columns=['product1', 'product2', 'similarity'])
+    
     # Initialize model
     model = _WeightedKMeans(n_clusters=n_clusters)
     
@@ -1180,8 +1301,7 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
         print(f"Error identifying feature groups: {str(e)}")
         return pd.DataFrame()
     
-        # Set custom weights
-    # Set custom weights with normalization by feature count
+    # Set custom weights
     try:
         base_weights = {
             'product_type': 1.8,        # Higher weight for product types  
@@ -1305,7 +1425,13 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
     if len(df) > 0 and assignments_df is not None:
         try:
             sample_product_id = df['product_id'].iloc[0]
-            similar_products = find_similar_products(sample_product_id, orig_df, assignments_df)
+            similar_products = find_similar_products(
+                sample_product_id, 
+                orig_df, 
+                assignments_df, 
+                similar_products_df,  # Pass the similar products DataFrame
+                top_n=5
+            )
             
             print("\nExample: Similar Products")
             print(f"For product: {df[df['product_id'] == sample_product_id]['product_title'].iloc[0]}")
@@ -1328,7 +1454,7 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
     
     # Generate summary report
     try:
-        with open(f"{output_dir}/clustering_summary.txt", "w") as f:
+        with open(f"{output_dir}/clustering_summary.txt", "w", encoding='utf-8') as f:
             f.write("=== Clustering Analysis Summary ===\n\n")
             f.write(f"Input file: {input_file}\n")
             f.write(f"Number of products: {len(df)}\n")

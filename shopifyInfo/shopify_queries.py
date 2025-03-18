@@ -55,6 +55,7 @@ def get_shopify_products(store_url: str, access_token: str, metafields_config: l
           id
           vendor
           title
+          createdAt
           tags
           handle
           metafields(identifiers: [{metafields_identifiers}]) {{

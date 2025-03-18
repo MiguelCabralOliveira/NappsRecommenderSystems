@@ -1,6 +1,5 @@
 description_100
 description_100 algodão
-description_105x150cm
 description_12
 description_12 meses
 description_12meses
@@ -32,14 +31,11 @@ description_2025 máscara
 description_2025 ss
 description_2025 sweatshirt
 description_2025 triquíni
-description_2025 vestido
 description_22
 description_22 23
 description_23
 description_23 24
-description_23 acessórios
 description_23 crop
-description_23 elástico
 description_23 satin
 description_23 sweatshirt
 description_24
@@ -60,7 +56,6 @@ description_25 crop
 description_25 hoodie
 description_25 shirt
 description_25 sweatshirt
-description_28
 description_300g
 description_300g disponível
 description_31
@@ -115,6 +110,7 @@ description_alças reguláveis
 description_amachucada
 description_amachucada entre
 description_amarelo
+description_amarelo fluo
 description_amovíveis
 description_amovíveis alça
 description_amovíveis alças
@@ -177,6 +173,8 @@ description_barco com
 description_bege
 description_bege com
 description_bege verde
+description_beges
+description_beges com
 description_bem
 description_bem estender
 description_biquíni
@@ -202,12 +200,20 @@ description_bolsos
 description_bolsos elástico
 description_boné
 description_boné azul
+description_boné bege
+description_boné bordeaux
+description_boné cinza
+description_boné verde
 description_bordado
+description_bordado amarelo
 description_bordado branco
 description_bordado disponível
 description_bordado inglês
-description_bordado na
+description_bordado rosa
 description_bordado veste
+description_bordeaux
+description_bordeaux com
+description_brancas
 description_branco
 description_branco com
 description_branco copas
@@ -222,6 +228,7 @@ description_cabelo
 description_cabelo aproveitamento
 description_cabelo larga
 description_calças
+description_calças brancas
 description_calças com
 description_calças corte
 description_calças wide
@@ -247,7 +254,6 @@ description_castanho com
 description_cavada
 description_cavada disponível
 description_cetim
-description_cetim com
 description_cetim tule
 description_christmas
 description_christmas collection
@@ -263,6 +269,9 @@ description_cintura médiaentrepernas
 description_cintura racha
 description_cintura subida
 description_cintura tornozelo
+description_cinza
+description_cinza claro
+description_cinzento
 description_claro
 description_claro com
 description_clássico
@@ -287,7 +296,6 @@ description_collection leggings
 description_collection lenço
 description_collection mixed
 description_collection modelo
-description_collection paréo
 description_collection saia
 description_collection tote
 description_com
@@ -395,15 +403,11 @@ description_decote assimétrico
 description_decote direito
 description_decote em
 description_decote redondo
-description_degradé rosa
 description_delta
 description_delta disponível
 description_desporto
 description_desporto soft
-description_dimensão
-description_dimensão das
 description_dimensões
-description_dimensões 105x150cm
 description_dimensões 47x35x15
 description_direito
 description_disponível
@@ -437,6 +441,7 @@ description_elástico confere
 description_elástico cós
 description_elástico disponível
 description_elástico folho
+description_elástico lavanda
 description_elástico na
 description_elástico nas
 description_elástico nos
@@ -467,14 +472,14 @@ description_entrega
 description_entrega estimada
 description_equivalente
 description_equivalente um
+description_escuro
+description_escuro com
 description_estampado
-description_estampado disponível
 description_estender
 description_estender logo
 description_esticar
 description_esticar bem
 description_estimada
-description_estimada semana
 description_estimada semanas
 description_estruturada
 description_estruturada disponível
@@ -516,6 +521,8 @@ description_floral azul
 description_floral bege
 description_floral com
 description_floral verde
+description_fluo
+description_fluo na
 description_fluorescente
 description_fluorescente com
 description_fluorescentes
@@ -598,6 +605,7 @@ description_lateral disponível
 description_lateral fecho
 description_lavanda
 description_lavanda com
+description_lavanda para
 description_lavar
 description_lavar mão
 description_lave
@@ -632,7 +640,6 @@ description_logótipo
 description_logótipo bordado
 description_longo
 description_longo crochet
-description_longo estampado
 description_luxuriously
 description_luxuriously soft
 description_macio
@@ -778,6 +785,7 @@ description_prender cabelo
 description_preservar
 description_preservar durabilidade
 description_preto
+description_preto com
 description_preto liso
 description_preto texturado
 description_primas
@@ -809,7 +817,6 @@ description_redondo com
 description_regular
 description_regular ajustável
 description_regular com
-description_regular disponível
 description_regular fit
 description_regular tanga
 description_reguláveis
@@ -837,8 +844,8 @@ description_robe mixed
 description_rolinho
 description_rolinho com
 description_rosa
-description_rosa claro
 description_rosa com
+description_rosa na
 description_rosa texturado
 description_rosa verde
 description_roxo
@@ -859,8 +866,6 @@ description_seguida
 description_seguida cores
 description_sem
 description_sem copas
-description_semana
-description_semana biquíni
 description_semanas
 description_semanas biquíni
 description_separately
@@ -958,19 +963,14 @@ description_uma palmeira
 description_utilizar
 description_utilizar tamanho
 description_verde
-description_verde bege
 description_verde branco
 description_verde com
 description_verde hardware
 description_verde seco
-description_versão mais
 description_veste
 description_veste oversized
 description_vestido
 description_vestido comprido
-description_vestido longo
-description_vichy
-description_vichy estampado
 description_wash
 description_wash inside
 description_wide

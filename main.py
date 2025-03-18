@@ -7,6 +7,7 @@ from preprocessing.vendor_processor import process_vendors
 from preprocessing.metafields_processor import process_metafields, apply_tfidf_processing, save_color_similarity_data, remove_color_columns
 from preprocessing.isGiftCard_processor import process_gif_card
 from preprocessing.product_type_processor import process_product_type
+from preprocessing.createdAt_processor import process_created_at
 from preprocessing.availableForSale_processor import process_avaiable_for_sale
 from training.weighted_kmeans import run_clustering
 import pandas as pd
@@ -180,12 +181,19 @@ def main():
     print("Processing variants...")
     df = process_variants(df)
     export_sample(df, "variants")
+
+    # 8. Process createdAt timestamps
+    print("Processing createdAt timestamps...")
+    df = process_created_at(df)
+    export_sample(df, "created_at")
     
-    # 8. Process text with TF-IDF
+    # 9. Process text with TF-IDF
     print("Processing product descriptions with TF-IDF...")
     tfidf_df, recommendation_df, _, similar_products = process_descriptions_tfidf(df)
     export_sample(tfidf_df, "tfidf")
     export_sample(recommendation_df, "recommendation")
+
+
     
     # Save the processed data
     df.to_csv("products_with_variants.csv", index=False)
@@ -217,13 +225,13 @@ def main():
         
         # Run the clustering function
         clustered_df = run_clustering(
-    input_file="products_with_tfidf.csv",
-    output_dir=args.output_dir,
-    n_clusters=args.clusters,
-    find_optimal_k=True,  # This needs to be explicitly set to True
-    min_k=10,             # Minimum number of clusters to try
-    max_k=50,             # Maximum number of clusters to try
-    save_model=True
+        input_file="products_with_tfidf.csv",
+        output_dir=args.output_dir,
+        n_clusters=args.clusters,
+        find_optimal_k=True,  
+        min_k=10,             
+        max_k=50,             
+        save_model=True
 )
         
         print("\nClustering analysis complete!")
