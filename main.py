@@ -9,7 +9,7 @@ from preprocessing.isGiftCard_processor import process_gif_card
 from preprocessing.product_type_processor import process_product_type
 from preprocessing.createdAt_processor import process_created_at
 from preprocessing.availableForSale_processor import process_avaiable_for_sale
-from training.weighted_kmeans import run_clustering
+from training.weighted_knn import run_knn
 import pandas as pd
 import argparse
 
@@ -72,15 +72,13 @@ def document_feature_sources(df, output_file="feature_sources.csv"):
 def main():
     """Main function to process product data from Shopify store"""
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Process product data and perform clustering')
-    parser.add_argument('--clusters', type=int, default=10,
-                      help='Number of clusters for weighted KMeans (default: 10)')
-    parser.add_argument('--find-optimal-k', action='store_true',
-                      help='Find optimal number of clusters')
-    parser.add_argument('--skip-clustering', action='store_true',
-                      help='Skip the clustering step')
+    parser = argparse.ArgumentParser(description='Process product data and generate recommendations')
+    parser.add_argument('--neighbors', type=int, default=12,
+                      help='Number of neighbors for KNN recommendations (default: 12)')
+    parser.add_argument('--skip-recommendations', action='store_true',
+                      help='Skip the recommendation generation step')
     parser.add_argument('--output-dir', type=str, default='results',
-                      help='Directory to save clustering results (default: results)')
+                      help='Directory to save recommendation results (default: results)')
     args = parser.parse_args()
     
     # Get shop ID from user input
@@ -196,8 +194,6 @@ def main():
     tfidf_df, recommendation_df, _, similar_products = process_descriptions_tfidf(df)
     export_sample(tfidf_df, "tfidf")
     export_sample(recommendation_df, "recommendation")
-
-
     
     # Save the processed data
     df.to_csv("products_with_variants.csv", index=False)
@@ -221,28 +217,27 @@ def main():
     if not color_similarity_df.empty:
         print("- products_color_similarity.csv (similar products by color)")
     
-    # Run clustering analysis if not skipped
-    if not args.skip_clustering:
+    # Run recommendation generation if not skipped
+    if not args.skip_recommendations:
         print("\n" + "="*200)
-        print("Starting clustering analysis...")
+        print("Starting recommendation generation...")
         print("="*200)
         
-        # Run the clustering function
-        clustered_df = run_clustering(
-        input_file="products_with_tfidf.csv",
-        output_dir=args.output_dir,
-        n_clusters=args.clusters,
-        find_optimal_k=True,  
-        min_k=10,             
-        max_k=200,             
-        save_model=True
-)
+        # Run the KNN function to generate recommendations
+        recommendations_df = run_knn(
+            input_file="products_with_tfidf.csv",
+            output_dir=args.output_dir,
+            n_neighbors=args.neighbors,
+            save_model=True,
+            similar_products_df=similar_products if not similar_products.empty else None
+        )
         
-        print("\nClustering analysis complete!")
-        print(f"Cluster assignments and visualizations saved to {args.output_dir}")
-        print("- products_with_clusters.csv (products with cluster assignments)")
+        print("\nRecommendation generation complete!")
+        print(f"Product recommendations and visualizations saved to {args.output_dir}")
+        print(f"- all_recommendations.csv (comprehensive recommendations for all products)")
+        print(f"- similar_products_example.csv (example recommendations for a sample product)")
     else:
-        print("\nClustering analysis skipped. Use --skip-clustering=False to run clustering.")
+        print("\nRecommendation generation skipped. Use --skip-recommendations=False to generate recommendations.")
 
 
 if __name__ == "__main__":

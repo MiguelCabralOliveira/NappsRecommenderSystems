@@ -1,13 +1,11 @@
-product_id,product_title,cluster
-gid://shopify/Product/7117678444731,Cinto Elástico verde,9
-gid://shopify/Product/7117778976955,Camisa algodão vermelho regular fit,9
-gid://shopify/Product/7117779370171,Camisa vermelha em algodão regular fit,9
-gid://shopify/Product/7117788512443,Máscara vermelha em algodão biodegradável,9
-gid://shopify/Product/7118001897659,Echarpe aos quadrados,9
-gid://shopify/Product/7249074454715,Gravata Linho Vermelha,9
-gid://shopify/Product/7396473209019,Camisola de Algodão Vermelha,9
-gid://shopify/Product/7766354165947,Gravata Vermelha,9
-gid://shopify/Product/8476307816777,Gravata Vermelha,9
-gid://shopify/Product/8476308635977,Gravata Vermelha,9
-gid://shopify/Product/8917559476553,Gravata Vermelha,9
-gid://shopify/Product/8917559574857,Gravata Vermelha,9
+product_id,similarity,product_title
+gid://shopify/Product/7830915875043,0.3107553754494559,CHLOÉ SATIN AND MESH BRIEF
+gid://shopify/Product/7830855254243,0.26892452354392804,ATHENA TRIANGLE LACE BRA
+gid://shopify/Product/7830915317987,0.17649981509562898,CHLOÉ SATIN AND MESH BRA
+gid://shopify/Product/7830974824675,0.16562602662070136,SOPHIA SATIN THONG
+gid://shopify/Product/9834749264213,0.01794559616346542,MAKANI TROUSERS
+gid://shopify/Product/9831543734613,0.01794539013408525,MAKANI SHORTS
+gid://shopify/Product/9822237720917,0.017945307139875733,WHITE HULA TROUSERS
+gid://shopify/Product/7953513775331,0.017945071798229635,BLACK LOUNGEWEAR SWEATSHIRT
+gid://shopify/Product/9571858612565,0.017944570795551854,BLUE LOUNGEWEAR SWEATSHIRT
+gid://shopify/Product/9571859530069,0.017944570795449116,SALMON LOUNGEWEAR SWEATSHIRT
