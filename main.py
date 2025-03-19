@@ -49,6 +49,10 @@ def document_feature_sources(df, output_file="feature_sources.csv"):
             source = 'Price-related feature from variants'
         elif column == 'product_id' or column == 'product_title' or column == 'handle':
             source = 'Original product information'
+        elif column.startswith('created_') or column == 'days_since_first_product' or column == 'is_recent_product':
+            source = 'Time-based features from createdAt timestamp'
+        elif column.startswith('release_quarter_'):
+            source = 'Release quarter features from createdAt timestamp'
         else:
             source = 'Other/Unknown'
         

@@ -88,9 +88,9 @@ class _WeightedKMeans:
             'variant_color': [],
             'variant_other': [],
             'numerical': [],
-            'time_features': [],       # Basic time features
-            'release_quarter': [],     # Release quarter dummies
-            'seasons': []              # New group for seasonal features
+            'time_features': [],      
+            'release_quarter': [],    
+            'seasons': []              
         }
         
         # Pattern matching for feature groups based on column names

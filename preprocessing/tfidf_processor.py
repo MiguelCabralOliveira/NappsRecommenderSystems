@@ -46,11 +46,15 @@ def process_descriptions_tfidf(df, output_prefix="products"):
     """
     Process descriptions with TF-IDF and save results
     """
+    # Store all non-description columns to preserve them later
+    preserve_cols = [col for col in df.columns if col != 'description']
+    
     # Clean HTML descriptions
     df['clean_text'] = df['description'].apply(clean_html)
     
     # Filter out empty descriptions
-    valid_descriptions = df[df['clean_text'].str.len() > 0]['clean_text']
+    mask_valid_descriptions = df['clean_text'].str.len() > 0
+    valid_descriptions = df.loc[mask_valid_descriptions, 'clean_text']
     
     # Create TF-IDF vectorizer
     tfidf = TfidfVectorizer(
@@ -63,7 +67,7 @@ def process_descriptions_tfidf(df, output_prefix="products"):
     tfidf_matrix = tfidf.fit_transform(valid_descriptions)
     
     # Analyze product similarities
-    similar_products = analyze_product_similarity(tfidf_matrix, df)
+    similar_products = analyze_product_similarity(tfidf_matrix, df.loc[mask_valid_descriptions])
     if not similar_products.empty:
         print("\nPotentially duplicate products (different colors/variants):")
         print(similar_products)
@@ -80,18 +84,18 @@ def process_descriptions_tfidf(df, output_prefix="products"):
     # Add TF-IDF vectors to original DataFrame with prefixed column names
     tfidf_df = pd.DataFrame(
         tfidf_matrix.toarray(),
-        columns=feature_names,  # Use prefixed feature names
+        columns=feature_names,
         index=valid_descriptions.index)
     
-    # Merge with original data
     final_df = df.copy()
     final_df = final_df.join(tfidf_df)
     
-    # Remove the original description column and clean_text
+    
     final_df = final_df.drop(['description', 'clean_text'], axis=1)
     
-    # Create a copy for recommendation without certain columns
-    recommendation_df = final_df.drop(['handle'], axis=1)
+    
+    recommendation_cols = [col for col in final_df.columns if col != 'handle']
+    recommendation_df = final_df[recommendation_cols].copy()
     
     # Save the recommendation DataFrame
     if output_prefix:

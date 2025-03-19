@@ -177,7 +177,8 @@ def get_shopify_products(store_url: str, access_token: str, metafields_config: l
                 'collections': collections,
                 'variants': [variant for variant in product['variants']['nodes']],
                 'metafields': [], 
-                'metafields_config': metafields_config  
+                'metafields_config': metafields_config,
+                'createdAt': product.get('createdAt', '')  # Add the createdAt field here
             }
             
             # Extract metafields from the product level
@@ -269,6 +270,12 @@ def get_all_products(shop_id: str) -> pd.DataFrame | None:
     if all_products:
         combined_df = pd.concat(all_products, ignore_index=True)
         print(f"Total products retrieved: {len(combined_df)}")
+        # Debug: Check if createdAt is in the combined dataframe
+        if 'createdAt' in combined_df.columns:
+            print("createdAt column is present in the combined dataframe")
+            print(f"Sample createdAt values: {combined_df['createdAt'].head()}")
+        else:
+            print("WARNING: createdAt column is MISSING from the combined dataframe")
         return combined_df
     
     print("No products retrieved")

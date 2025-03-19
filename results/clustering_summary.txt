@@ -2,62 +2,22 @@
 
 Input file: products_with_tfidf.csv
 Number of products: 291
-Number of features: 1407
-Number of clusters: 50
+Number of features: 1425
+Number of clusters: 10
 
 Cluster distribution:
 Cluster 0: 4 products (1.4%)
-Cluster 1: 34 products (11.7%)
-Cluster 2: 12 products (4.1%)
+Cluster 1: 234 products (80.4%)
+Cluster 2: 2 products (0.7%)
 Cluster 3: 2 products (0.7%)
-Cluster 4: 10 products (3.4%)
-Cluster 5: 1 products (0.3%)
-Cluster 6: 26 products (8.9%)
-Cluster 7: 3 products (1.0%)
-Cluster 8: 4 products (1.4%)
-Cluster 9: 7 products (2.4%)
-Cluster 10: 7 products (2.4%)
-Cluster 11: 2 products (0.7%)
-Cluster 12: 1 products (0.3%)
-Cluster 13: 2 products (0.7%)
-Cluster 14: 2 products (0.7%)
-Cluster 15: 13 products (4.5%)
-Cluster 16: 11 products (3.8%)
-Cluster 17: 2 products (0.7%)
-Cluster 18: 3 products (1.0%)
-Cluster 19: 3 products (1.0%)
-Cluster 20: 50 products (17.2%)
-Cluster 21: 4 products (1.4%)
-Cluster 22: 6 products (2.1%)
-Cluster 23: 2 products (0.7%)
-Cluster 24: 4 products (1.4%)
-Cluster 25: 8 products (2.7%)
-Cluster 26: 3 products (1.0%)
-Cluster 27: 5 products (1.7%)
-Cluster 28: 2 products (0.7%)
-Cluster 29: 2 products (0.7%)
-Cluster 30: 5 products (1.7%)
-Cluster 31: 2 products (0.7%)
-Cluster 32: 2 products (0.7%)
-Cluster 33: 3 products (1.0%)
-Cluster 34: 6 products (2.1%)
-Cluster 35: 1 products (0.3%)
-Cluster 36: 1 products (0.3%)
-Cluster 37: 3 products (1.0%)
-Cluster 38: 2 products (0.7%)
-Cluster 39: 1 products (0.3%)
-Cluster 40: 2 products (0.7%)
-Cluster 41: 7 products (2.4%)
-Cluster 42: 2 products (0.7%)
-Cluster 43: 2 products (0.7%)
-Cluster 44: 1 products (0.3%)
-Cluster 45: 6 products (2.1%)
-Cluster 46: 6 products (2.1%)
-Cluster 47: 1 products (0.3%)
-Cluster 48: 2 products (0.7%)
-Cluster 49: 1 products (0.3%)
+Cluster 4: 7 products (2.4%)
+Cluster 5: 5 products (1.7%)
+Cluster 6: 12 products (4.1%)
+Cluster 7: 12 products (4.1%)
+Cluster 8: 7 products (2.4%)
+Cluster 9: 6 products (2.1%)
 
-Silhouette Score: 0.6960
+Silhouette Score: 0.3645
 
 Files generated:
 ✓ clusters

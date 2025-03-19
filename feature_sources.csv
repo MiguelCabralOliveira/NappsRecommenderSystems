@@ -409,6 +409,24 @@ variant_other_tamanho:S/M,Variant option dummy variable
 variant_other_tamanho:XL,Variant option dummy variable
 variant_other_tamanho:XS,Variant option dummy variable
 variant_other_title:Default Title,Variant option dummy variable
+created_year,Time-based features from createdAt timestamp
+created_month,Time-based features from createdAt timestamp
+created_day,Time-based features from createdAt timestamp
+created_hour,Time-based features from createdAt timestamp
+days_since_first_product,Time-based features from createdAt timestamp
+created_season,Time-based features from createdAt timestamp
+is_recent_product,Time-based features from createdAt timestamp
+release_quarter_2022Q3,Release quarter features from createdAt timestamp
+release_quarter_2022Q4,Release quarter features from createdAt timestamp
+release_quarter_2023Q1,Release quarter features from createdAt timestamp
+release_quarter_2023Q2,Release quarter features from createdAt timestamp
+release_quarter_2023Q3,Release quarter features from createdAt timestamp
+release_quarter_2023Q4,Release quarter features from createdAt timestamp
+release_quarter_2024Q1,Release quarter features from createdAt timestamp
+release_quarter_2024Q2,Release quarter features from createdAt timestamp
+release_quarter_2024Q3,Release quarter features from createdAt timestamp
+release_quarter_2024Q4,Release quarter features from createdAt timestamp
+release_quarter_2025Q1,Release quarter features from createdAt timestamp
 description_100,TF-IDF from product descriptions
 description_100 algodão,TF-IDF from product descriptions
 description_12,TF-IDF from product descriptions
@@ -1342,6 +1360,7 @@ description_texturado,TF-IDF from product descriptions
 description_texturado aproveitamento,TF-IDF from product descriptions
 description_texturado com,TF-IDF from product descriptions
 description_texturado lavanda,TF-IDF from product descriptions
+description_texturado tem,TF-IDF from product descriptions
 description_tiras,TF-IDF from product descriptions
 description_tiras na,TF-IDF from product descriptions
 description_tons,TF-IDF from product descriptions
@@ -1400,7 +1419,6 @@ description_xs,TF-IDF from product descriptions
 description_xs material,TF-IDF from product descriptions
 description_xs modelo,TF-IDF from product descriptions
 description_xs xl,TF-IDF from product descriptions
-description_xxs,TF-IDF from product descriptions
 description_zipper,TF-IDF from product descriptions
 description_zipper mangas,TF-IDF from product descriptions
 description_único,TF-IDF from product descriptions
