@@ -223,9 +223,9 @@ def main():
     
     # Run clustering analysis if not skipped
     if not args.skip_clustering:
-        print("\n" + "="*50)
+        print("\n" + "="*200)
         print("Starting clustering analysis...")
-        print("="*50)
+        print("="*200)
         
         # Run the clustering function
         clustered_df = run_clustering(
@@ -234,7 +234,7 @@ def main():
         n_clusters=args.clusters,
         find_optimal_k=True,  
         min_k=10,             
-        max_k=50,             
+        max_k=200,             
         save_model=True
 )
         

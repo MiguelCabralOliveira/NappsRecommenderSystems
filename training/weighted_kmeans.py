@@ -47,8 +47,8 @@ class _WeightedKMeans:
         if not os.path.exists(data_file):
             raise FileNotFoundError(f"Data file not found: {data_file}")
             
-        print(f"Loading data from {data_file}...")
-        df = pd.read_csv(data_file)
+        print(f"Loading data from {data_file}")
+        df = pd.read_csv(data_file, low_memory=False)
         
         # Keep product ID and title for reference
         self.product_ids = df['product_id'].copy() if 'product_id' in df.columns else None
@@ -59,7 +59,23 @@ class _WeightedKMeans:
         feature_cols = [col for col in df.columns if col not in non_feature_cols]
         feature_df = df[feature_cols]
         
-        print(f"Loaded {len(df)} products with {len(feature_cols)} features")
+        # Filter out columns with non-numeric data
+        numeric_cols = []
+        for col in feature_df.columns:
+            try:
+                # Try to convert a sample to float
+                pd.to_numeric(feature_df[col].dropna().head(1))
+                numeric_cols.append(col)
+            except (ValueError, TypeError):
+                print(f"Skipping non-numeric column: {col}")
+        
+        # Keep only numeric columns for clustering
+        if len(numeric_cols) < len(feature_df.columns):
+            dropped_cols = [col for col in feature_df.columns if col not in numeric_cols]
+            print(f"Removed {len(dropped_cols)} non-numeric columns from clustering")
+            feature_df = feature_df[numeric_cols]
+        
+        print(f"Loaded {len(df)} products with {len(feature_df.columns)} usable numeric features")
         
         # Handle missing values
         feature_df = self.handle_missing_values(feature_df)
@@ -152,27 +168,26 @@ class _WeightedKMeans:
             dict: The effective feature weights
         """
         if base_weights is None:
-            # Default base weights with higher weights for tags and product_type
+            
             base_weights = {
-                'tags': 1.8,                # Higher weight for tags
-                'product_type': 1.8,        # Higher weight for product types
-                'description_tfidf': 1.0,   # Standard weight for descriptive text
-                'metafield_data': 1.0,      # Standard weight for metafield data
-                'collections': 1.0,         # Standard weight for collections
-                'vendor': 1.0,              # Standard weight for vendor
-                'variant_size': 1.0,        # Standard weight for size variants
-                'variant_color': 1.0,       # Standard weight for color variants
-                'variant_other': 1.0,       # Standard weight for other variants
-                'numerical': 1.0,            # Standard weight for numerical data
+                'tags': 1.8,          
+                'product_type': 1.8,        
+                'description_tfidf': 1.0,   
+                'metafield_data': 1.0,      
+                'collections': 1.4,         
+                'vendor': 1.0,              
+                'variant_size': 1.0,        
+                'variant_color': 1.0,       
+                'variant_other': 1.0,       
+                'numerical': 1.0,            
                 'time_features' : 1.0,
                 'release_quarter': 1.5,
                 'seasons' : 1.4
             }
         
-        # Make sure weights exist for all feature groups
         for group in self.feature_groups:
             if group not in base_weights:
-                base_weights[group] = 1.0  # Default weight if not specified
+                base_weights[group] = 1.0  
         
         # Count features in each group
         feature_counts = {group: len(features) for group, features in self.feature_groups.items()}
@@ -184,10 +199,10 @@ class _WeightedKMeans:
         
         # Calculate effective weights based on feature counts
         if normalize_by_count:
-            # Choose a target reference count (arbitrary but reasonable value)
-            target_count = 30  # This can be adjusted based on preference
+        
+            target_count = 30  
             
-            # Calculate normalization factor for each group
+            
             # Formula: effective_weight = base_weight * (target_count / feature_count)
             self.feature_weights = {}
             for group in self.feature_groups:
@@ -304,11 +319,25 @@ class _WeightedKMeans:
             if self.feature_weights is None:
                 self.set_feature_weights()
             
-            # Check for infinite values
-            inf_counts = np.isinf(df.values).sum()
-            if inf_counts > 0:
-                print(f"Warning: Found {inf_counts} infinite values in the dataset. Replacing with large values.")
-                df = df.replace([np.inf, -np.inf], [1e9, -1e9])
+            # Check for non-numeric values and convert columns to numeric if possible
+            for col in df.columns:
+                if not np.issubdtype(df[col].dtype, np.number):
+                    try:
+                        df[col] = pd.to_numeric(df[col], errors='coerce')
+                        df[col] = df[col].fillna(0)  # Replace NaNs from failed conversions with 0
+                    except:
+                        print(f"Warning: Could not convert column {col} to numeric type")
+            
+            # Check for infinite values in numeric columns
+            try:
+                numeric_cols = df.select_dtypes(include=np.number).columns
+                if len(numeric_cols) > 0:
+                    inf_counts = np.isinf(df[numeric_cols].values).sum()
+                    if inf_counts > 0:
+                        print(f"Warning: Found {inf_counts} infinite values in the dataset. Replacing with large values.")
+                        df[numeric_cols] = df[numeric_cols].replace([np.inf, -np.inf], [1e9, -1e9])
+            except Exception as e:
+                print(f"Warning when checking for infinities: {e}")
             
             # Standardize the data
             print("Standardizing data...")
@@ -371,9 +400,9 @@ class _WeightedKMeans:
             if k_range is None:
                 k_range = range(2, 31)  # Start from 2 clusters and go up to 30
                 
-            print("\n" + "="*50)
+            print("\n" + "="*200)
             print("FINDING OPTIMAL NUMBER OF CLUSTERS")
-            print("="*50)
+            print("="*200)
             print("\nAnalyzing cluster quality for k = %d to %d..." % (k_range[0], k_range[-1]))
             
             davies_bouldin_scores = []
@@ -457,16 +486,16 @@ class _WeightedKMeans:
             # Find elbow point for inertia
             elbow_k = self._find_elbow_point(k_range[:len(inertia_scores)], inertia_scores)
             
-            print("\n" + "="*50)
+            print("\n" + "="*200)
             print("OPTIMAL NUMBER OF CLUSTERS RESULTS")
-            print("="*50)
+            print("="*200)   
             print(f"Davies-Bouldin Index (lower is better): k = {best_k_db}")
             print(f"Silhouette Score (higher is better): k = {best_k_silhouette}")
             print(f"Calinski-Harabasz Index (higher is better): k = {best_k_ch}")
             print(f"Inertia Elbow Point: k = {elbow_k}")
             print("\nRecommended number of clusters: k = {optimal_k}")
             print("(Based on Davies-Bouldin with early stopping)")
-            print("="*50)
+            print("="*200)
             
             # Update n_clusters
             self.n_clusters = optimal_k
@@ -566,7 +595,7 @@ class _WeightedKMeans:
             if len(k_values) > 0:
                 return k_values[0]  # Default to first k
             else:
-                return 5  # Absolute default
+                return 12 # Absolute default
 
     def get_cluster_labels(self):
         """
@@ -889,7 +918,7 @@ class _WeightedKMeans:
             print(f"Error evaluating clusters: {str(e)}")
             return {}
     
-    def interpret_clusters(self, df, top_n=5):
+    def interpret_clusters(self, df, top_n=12):
         """
         Interpret clusters with enforced diversity of feature types
         """
@@ -1160,7 +1189,7 @@ def map_products_to_clusters(products_df, clusters_df):
     return merged_df
 
 
-def find_similar_products(product_id, products_df, clusters_df, similar_products_df=None, top_n=5):
+def find_similar_products(product_id, products_df, clusters_df, similar_products_df=None, top_n=12):
     """
     Find similar products based on cluster assignment, excluding too-similar variants
     
@@ -1226,7 +1255,7 @@ def find_similar_products(product_id, products_df, clusters_df, similar_products
 
 
 def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal_k=True,
-                   min_k=10, max_k=50, save_model=True):
+                   min_k=10, max_k=50, save_model=True, similar_products_df=None):
     """
     Main public interface for running weighted KMeans clustering on processed product data.
     This is the ONLY function that should be called directly from outside this module.
@@ -1239,6 +1268,7 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
         min_k: Minimum number of clusters to try
         max_k: Maximum number of clusters to try
         save_model: Whether to save the model
+        similar_products_df: DataFrame with pairs of similar products (directly passed)
         
     Returns:
         DataFrame: Product data with cluster assignments
@@ -1252,7 +1282,8 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
     # Load data
     print(f"Loading data from {input_file}")
     try:
-        df = pd.read_csv(input_file)
+        # Add low_memory=False to handle mixed types
+        df = pd.read_csv(input_file, low_memory=False)
     except Exception as e:
         print(f"Error loading data: {str(e)}")
         return pd.DataFrame()  # Return empty DataFrame on error
@@ -1260,39 +1291,19 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
     # Keep original data for reference
     orig_df = df.copy()
     
-    # Import or load similar products data 
-    try:
-        # Try to load the similarity data from CSV file
-        similar_products_file = "products_similar_products.csv"
-        if os.path.exists(similar_products_file):
-            similar_products_df = pd.read_csv(similar_products_file)
-            print(f"Loaded similarity data for {len(similar_products_df)} product pairs")
-        else:
-            # If file doesn't exist, create empty DataFrame
-            similar_products_df = pd.DataFrame(columns=['product1', 'product2', 'similarity'])
-            print("No similarity data found, recommendations won't filter variants")
-    except Exception as e:
-        print(f"Could not load similarity data: {e}")
+    # Handle the similar products dataframe
+    if similar_products_df is None or similar_products_df.empty:
+        # Create empty DataFrame if none provided
         similar_products_df = pd.DataFrame(columns=['product1', 'product2', 'similarity'])
+        print("No similarity data provided, recommendations won't filter variants")
+    else:
+        print(f"Using provided similarity data for {len(similar_products_df)} product pairs")
     
     # Initialize model
     model = _WeightedKMeans(n_clusters=n_clusters)
     
-    # Identify feature groups
-    feature_df = df.copy()
-    
-    # Save reference columns before removing them
-    product_ids = df['product_id'].copy() if 'product_id' in df.columns else None
-    product_titles = df['product_title'].copy() if 'product_title' in df.columns else None
-    
-    # Remove non-feature columns
-    non_feature_cols = ['product_id', 'product_title', 'handle']
-    feature_cols = [col for col in feature_df.columns if col not in non_feature_cols]
-    feature_df = feature_df[feature_cols]
-    
-    # Store reference columns in model for later use
-    model.product_ids = product_ids
-    model.product_titles = product_titles
+    # The load_data method will now automatically filter non-numeric columns
+    feature_df = model.load_data(input_file)
     
     # Identify feature groups
     try:
@@ -1313,7 +1324,43 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
             'variant_size': 1.0,        # Standard weight
             'variant_color': 1.0,       # Standard weight
             'variant_other': 1.0,       # Standard weight
-            'numerical': 1.0            # Standard weight
+            'numerical': 1.0,           # Standard weight
+            'time_features': 1.0,       # Standard weight
+            'release_quarter': 1.5,     # Higher weight for release quarters
+            'seasons': 1.4              # Higher weight for seasons
+        }
+        model.set_feature_weights(base_weights, normalize_by_count=True)
+    except Exception as e:
+        print(f"Error setting feature weights: {str(e)}")
+    
+    # Find optimal k if requested
+    k_range = None
+    if find_optimal_k:
+        k_range = range(min_k, max_k + 1)
+    
+    # Fit model
+    try:
+        model.fit(feature_df, find_optimal_k=find_optimal_k, k_range=k_range)
+    except Exception as e:
+        print(f"Error during model fitting: {str(e)}")
+        return pd.DataFrame()
+    
+    # Set custom weights
+    try:
+        base_weights = {
+            'product_type': 1.8,        # Higher weight for product types  
+            'tags': 1.8,                # Higher weight for tags
+            'description_tfidf': 1.0,   # Standard weight
+            'metafield_data': 1.0,      # Standard weight
+            'collections': 1.0,         # Standard weight
+            'vendor': 1.0,              # Standard weight
+            'variant_size': 1.0,        # Standard weight
+            'variant_color': 1.0,       # Standard weight
+            'variant_other': 1.0,       # Standard weight
+            'numerical': 1.0,           # Standard weight
+            'time_features': 1.0,       # Standard weight
+            'release_quarter': 1.5,     # Higher weight for release quarters
+            'seasons': 1.4              # Higher weight for seasons
         }
         model.set_feature_weights(base_weights, normalize_by_count=True)
     except Exception as e:
@@ -1429,8 +1476,8 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
                 sample_product_id, 
                 orig_df, 
                 assignments_df, 
-                similar_products_df,  # Pass the similar products DataFrame
-                top_n=5
+                similar_products_df,
+                top_n=12
             )
             
             print("\nExample: Similar Products")
@@ -1458,7 +1505,7 @@ def run_clustering(input_file, output_dir="results", n_clusters=10, find_optimal
             f.write("=== Clustering Analysis Summary ===\n\n")
             f.write(f"Input file: {input_file}\n")
             f.write(f"Number of products: {len(df)}\n")
-            f.write(f"Number of features: {len(feature_cols)}\n")
+            f.write(f"Number of features: {len(feature_df.columns)}\n")
             f.write(f"Number of clusters: {model.n_clusters}\n\n")
             
             f.write("Cluster distribution:\n")

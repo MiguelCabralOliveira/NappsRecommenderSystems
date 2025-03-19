@@ -45,6 +45,13 @@ def analyze_product_similarity(tfidf_matrix, df, similarity_threshold=0.85):
 def process_descriptions_tfidf(df, output_prefix="products"):
     """
     Process descriptions with TF-IDF and save results
+    
+    Returns:
+        tuple: (final_df, recommendation_df, tfidf, similar_products) where:
+            - final_df: DataFrame with TF-IDF features
+            - recommendation_df: DataFrame ready for recommendation model
+            - tfidf: The fitted TF-IDF vectorizer
+            - similar_products: DataFrame with pairs of similar products
     """
     # Store all non-description columns to preserve them later
     preserve_cols = [col for col in df.columns if col != 'description']
