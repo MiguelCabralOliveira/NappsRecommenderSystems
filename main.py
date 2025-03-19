@@ -1,4 +1,5 @@
 from shopifyInfo.shopify_queries import get_all_products
+from shopifyInfo.database_query import fetch_recent_order_items
 from preprocessing.tfidf_processor import process_descriptions_tfidf
 from preprocessing.collectionHandle_processor import process_collections
 from preprocessing.tags_processor import process_tags
@@ -9,9 +10,11 @@ from preprocessing.isGiftCard_processor import process_gif_card
 from preprocessing.product_type_processor import process_product_type
 from preprocessing.createdAt_processor import process_created_at
 from preprocessing.availableForSale_processor import process_avaiable_for_sale
+
 from training.weighted_knn import run_knn
 import pandas as pd
 import argparse
+import os
 
 
 def export_sample(df, step_name):
@@ -81,10 +84,31 @@ def main():
                       help='Directory to save recommendation results (default: results)')
     args = parser.parse_args()
     
+    # Create output directory if it doesn't exist
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
+    
     # Get shop ID from user input
     shop_id = input("Shop ID: ")
     
-    print("Fetching data from Shopify...")
+    # Fetch order data from database
+    print("\n=== Fetching recent order data from database ===")
+    order_items_df, popular_products_df, product_groups_df = fetch_recent_order_items(shop_id)
+    
+    # Save order data to CSV files
+    if not order_items_df.empty:
+        order_items_df.to_csv(f"{args.output_dir}/recent_order_items.csv", index=False)
+        print(f"Recent order items saved to {args.output_dir}/recent_order_items.csv")
+    
+    if not popular_products_df.empty:
+        popular_products_df.to_csv(f"{args.output_dir}/popular_products.csv", index=False)
+        print(f"Popular products saved to {args.output_dir}/popular_products.csv")
+    
+    if not product_groups_df.empty:
+        product_groups_df.to_csv(f"{args.output_dir}/product_groups.csv", index=False)
+        print(f"Product groups saved to {args.output_dir}/product_groups.csv")
+    
+    print("\n=== Fetching product data from Shopify ===")
     raw_data = get_all_products(shop_id)
     
     if raw_data is None:
@@ -92,8 +116,8 @@ def main():
         return
     
     # Save raw data immediately after importing
-    raw_data.to_csv("products.csv", index=False)
-    print("Raw data saved to products.csv")
+    raw_data.to_csv(f"{args.output_dir}/products.csv", index=False)
+    print(f"Raw data saved to {args.output_dir}/products.csv")
     
     # Export raw data sample
     export_sample(raw_data, "raw_data")
@@ -102,7 +126,7 @@ def main():
     df = raw_data.copy()
     
     # Process the data through the pipeline
-    print("\nStarting data processing pipeline...")
+    print("\n=== Starting data processing pipeline ===")
     
     # 1. Process metafields
     print("Processing metafields...")
@@ -124,12 +148,12 @@ def main():
     # Save product references if any were found
     if all_product_references:
         from preprocessing.metafields_processor import save_product_references
-        save_product_references(all_product_references, "product_references.csv")
-        print("Product references saved to product_references.csv")
+        save_product_references(all_product_references, f"{args.output_dir}/product_references.csv")
+        print(f"Product references saved to {args.output_dir}/product_references.csv")
     
     # Calculate and save color similarity data before removing color columns
     print("Calculating color similarities...")
-    color_similarity_df = save_color_similarity_data()
+    color_similarity_df = save_color_similarity_data(output_dir=args.output_dir)
     if not color_similarity_df.empty:
         print(f"Color similarity data saved for {color_similarity_df['source_product_id'].nunique()} products")
     
@@ -196,46 +220,50 @@ def main():
     export_sample(recommendation_df, "recommendation")
     
     # Save the processed data
-    df.to_csv("products_with_variants.csv", index=False)
-    tfidf_df.to_csv("products_with_tfidf.csv", index=False)
-    recommendation_df.to_csv("products_recommendation.csv", index=False)
+    df.to_csv(f"{args.output_dir}/products_with_variants.csv", index=False)
+    tfidf_df.to_csv(f"{args.output_dir}/products_with_tfidf.csv", index=False)
+    recommendation_df.to_csv(f"{args.output_dir}/products_recommendation.csv", index=False)
     
     # Document feature sources
-    document_feature_sources(tfidf_df, "feature_sources.csv")
+    document_feature_sources(tfidf_df, f"{args.output_dir}/feature_sources.csv")
     
     # Output completion message for data processing
-    print("\nData processing complete!")
+    print("\n=== Data processing complete! ===")
     print("\nProcessed files saved:")
-    print("- products.csv (raw data)")
-    print("- products_with_variants.csv (features before TF-IDF)")
-    print("- products_with_tfidf.csv (complete features)")
-    print("- products_recommendation.csv (ready for recommendation model)")
-    print("- products_tfidf_matrix.npy (TF-IDF vector representations)")
-    print("- products_tfidf_features.csv (TF-IDF feature names)")
-    print("- feature_sources.csv (documentation of feature sources)")
+    print(f"- {args.output_dir}/products.csv (raw data)")
+    print(f"- {args.output_dir}/products_with_variants.csv (features before TF-IDF)")
+    print(f"- {args.output_dir}/products_with_tfidf.csv (complete features)")
+    print(f"- {args.output_dir}/products_recommendation.csv (ready for recommendation model)")
+    print(f"- {args.output_dir}/products_tfidf_matrix.npy (TF-IDF vector representations)")
+    print(f"- {args.output_dir}/products_tfidf_features.csv (TF-IDF feature names)")
+    print(f"- {args.output_dir}/feature_sources.csv (documentation of feature sources)")
+    print(f"- {args.output_dir}/recent_order_items.csv (all recent order items)")
+    print(f"- {args.output_dir}/popular_products.csv (products ordered by popularity)")
+    print(f"- {args.output_dir}/product_groups.csv (products grouped by checkout)")
     
     if not color_similarity_df.empty:
-        print("- products_color_similarity.csv (similar products by color)")
+        print(f"- {args.output_dir}/products_color_similarity.csv (similar products by color)")
     
     # Run recommendation generation if not skipped
     if not args.skip_recommendations:
-        print("\n" + "="*200)
+        print("\n" + "="*80)
         print("Starting recommendation generation...")
-        print("="*200)
+        print("="*80)
         
         # Run the KNN function to generate recommendations
         recommendations_df = run_knn(
-            input_file="products_with_tfidf.csv",
+            input_file=f"{args.output_dir}/products_with_tfidf.csv",
             output_dir=args.output_dir,
             n_neighbors=args.neighbors,
             save_model=True,
-            similar_products_df=similar_products if not similar_products.empty else None
+            similar_products_df=similar_products if not similar_products.empty else None,
+            popular_products_df=popular_products_df if not popular_products_df.empty else None
         )
         
         print("\nRecommendation generation complete!")
         print(f"Product recommendations and visualizations saved to {args.output_dir}")
-        print(f"- all_recommendations.csv (comprehensive recommendations for all products)")
-        print(f"- similar_products_example.csv (example recommendations for a sample product)")
+        print(f"- {args.output_dir}/all_recommendations.csv (comprehensive recommendations for all products)")
+        print(f"- {args.output_dir}/similar_products_example.csv (example recommendations for a sample product)")
     else:
         print("\nRecommendation generation skipped. Use --skip-recommendations=False to generate recommendations.")
 
