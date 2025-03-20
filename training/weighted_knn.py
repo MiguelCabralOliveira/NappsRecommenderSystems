@@ -718,12 +718,14 @@ class _WeightedKNN:
         print(f"Model loaded from {input_dir}")
         return self
     
-    def export_recommendations(self, output_file="recommendations.csv", n_recommendations=None):
+    def export_recommendations(self, output_file="recommendations.csv", products_df=None, similar_products_df=None, n_recommendations=None):
         """
-        Export all product recommendations to a CSV file
+        Export all product recommendations to a CSV file, with optional filtering of too-similar products
         
         Args:
             output_file: Path to save the recommendations
+            products_df: DataFrame with original product data (needed for filtering)
+            similar_products_df: DataFrame with pairs of too-similar products to exclude
             n_recommendations: Number of recommendations to export per product
             
         Returns:
@@ -735,11 +737,41 @@ class _WeightedKNN:
         if n_recommendations is None:
             n_recommendations = self.n_neighbors
         
+        # Track total filtered products
+        total_filtered = 0
+        
         # Prepare data for export
         rows = []
         for product_id, recommendations in self.recommendation_matrix.items():
-            product_recommendations = recommendations[:n_recommendations]
-            for rank, (rec_id, similarity) in enumerate(product_recommendations):
+            # Apply filtering if similar_products_df is provided
+            filtered_recommendations = recommendations
+            
+            if similar_products_df is not None and not similar_products_df.empty:
+                # Find product IDs to exclude (too similar to the query product)
+                exclude_ids = set()
+                
+                # Check if the product is in product1_id column
+                matches1 = similar_products_df[similar_products_df['product1_id'] == product_id]
+                if not matches1.empty:
+                    exclude_ids.update(matches1['product2_id'].tolist())
+                    
+                # Check if the product is in product2_id column
+                matches2 = similar_products_df[similar_products_df['product2_id'] == product_id]
+                if not matches2.empty:
+                    exclude_ids.update(matches2['product1_id'].tolist())
+                
+                # Filter out too-similar products
+                if exclude_ids:
+                    before_count = len(filtered_recommendations)
+                    filtered_recommendations = [(rec_id, sim) for rec_id, sim in filtered_recommendations if rec_id not in exclude_ids]
+                    filtered_count = before_count - len(filtered_recommendations)
+                    total_filtered += filtered_count
+            
+            # Take only the top N after filtering
+            filtered_recommendations = filtered_recommendations[:n_recommendations]
+            
+            # Add to export rows
+            for rank, (rec_id, similarity) in enumerate(filtered_recommendations):
                 rows.append({
                     'source_product_id': product_id,
                     'recommended_product_id': rec_id,
@@ -753,6 +785,7 @@ class _WeightedKNN:
         # Save to CSV
         recommendations_df.to_csv(output_file, index=False)
         print(f"Recommendations exported to {output_file}")
+        print(f"Total products filtered due to similarity: {total_filtered}")
         
         return recommendations_df
 
@@ -779,9 +812,6 @@ def find_similar_products(product_id, knn_model, products_df, top_n=12, exclude_
         print(f"No recommendations found for product ID {product_id}")
         return pd.DataFrame()
     
-    # Get the product title for filtering
-    product_title = products_df[products_df['product_id'] == product_id]['product_title'].iloc[0] if 'product_title' in products_df.columns else None
-    
     # Extract product IDs and similarities
     similar_product_ids = [rec_id for rec_id, _ in recommendations]
     similarities = [sim for _, sim in recommendations]
@@ -805,23 +835,33 @@ def find_similar_products(product_id, knn_model, products_df, top_n=12, exclude_
         similar_products['product_title'] = similar_products['product_id'].map(product_titles)
     
     # Filter out too-similar products if requested and we have similarity data
-    if exclude_similar_variants and similar_products_df is not None and not similar_products_df.empty and product_title is not None:
-        # Find titles to exclude (too similar to the query product)
-        exclude_titles = []
+    if exclude_similar_variants and similar_products_df is not None and not similar_products_df.empty:
+        # Find product IDs to exclude (too similar to the query product)
+        exclude_ids = set()  # Use a set to avoid duplicates
         
-        # Check if the product is in product1 column
-        matches1 = similar_products_df[similar_products_df['product1'] == product_title]
+        # Check if the product is in product1_id column
+        matches1 = similar_products_df[similar_products_df['product1_id'] == product_id]
         if not matches1.empty:
-            exclude_titles.extend(matches1['product2'].tolist())
+            exclude_ids.update(matches1['product2_id'].tolist())
             
-        # Check if the product is in product2 column
-        matches2 = similar_products_df[similar_products_df['product2'] == product_title]
+        # Check if the product is in product2_id column
+        matches2 = similar_products_df[similar_products_df['product2_id'] == product_id]
         if not matches2.empty:
-            exclude_titles.extend(matches2['product1'].tolist())
+            exclude_ids.update(matches2['product1_id'].tolist())
             
+        # Count products before filtering
+        count_before = len(similar_products)
+        
+        # Convert set back to list for filtering
+        exclude_ids_list = list(exclude_ids)
+        
         # Filter the recommendations to exclude too-similar products
-        if exclude_titles and 'product_title' in similar_products.columns:
-            similar_products = similar_products[~similar_products['product_title'].isin(exclude_titles)]
+        if exclude_ids_list:
+            similar_products = similar_products[~similar_products['product_id'].isin(exclude_ids_list)]
+        
+        # Calculate how many were removed
+        removed_count = count_before - len(similar_products)
+        print(f"Removed {removed_count} similar variant products from recommendations for product {product_id}")
     
     # Return top N similar products
     return similar_products.head(top_n)
@@ -973,7 +1013,11 @@ def run_knn(df, output_dir="results", n_neighbors=12, save_model=True, similar_p
     # 4. Export recommendations
     all_recommendations_df = None
     try:
-        all_recommendations_df = model.export_recommendations(output_file=f"{output_dir}/all_recommendations.csv")
+        all_recommendations_df = model.export_recommendations(
+            output_file=f"{output_dir}/all_recommendations.csv",
+            products_df=orig_df,
+            similar_products_df=similar_products_df
+        )
         visualizations_successful['recommendations'] = True
     except Exception as e:
         print(f"Error exporting recommendations: {str(e)}")
