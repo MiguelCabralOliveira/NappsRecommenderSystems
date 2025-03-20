@@ -866,8 +866,38 @@ def run_knn(df, output_dir="results", n_neighbors=12, save_model=True, similar_p
     # Initialize model
     model = _WeightedKNN(n_neighbors=n_neighbors)
     
-    # Extract features for KNN (this replaces the load_data method call)
-    feature_df = model._prepare_features(df)
+    # Extract features for KNN (manualmente, substituindo _prepare_features)
+    # Extrair IDs e títulos de produtos
+    if 'product_id' in df.columns:
+        model.product_ids = df['product_id'].copy()
+    if 'product_title' in df.columns:
+        model.product_titles = df['product_title'].copy()
+    
+    # Remover colunas não-características
+    non_feature_cols = ['product_id', 'product_title', 'handle']
+    feature_cols = [col for col in df.columns if col not in non_feature_cols]
+    feature_df = df[feature_cols].copy()
+    
+    # Filtrar colunas não-numéricas
+    numeric_cols = []
+    for col in feature_df.columns:
+        try:
+            # Tentar converter uma amostra para float
+            pd.to_numeric(feature_df[col].dropna().head(1))
+            numeric_cols.append(col)
+        except (ValueError, TypeError):
+            print(f"Skipping non-numeric column: {col}")
+    
+    # Manter apenas colunas numéricas para cálculo de similaridade
+    if len(numeric_cols) < len(feature_df.columns):
+        dropped_cols = [col for col in feature_df.columns if col not in numeric_cols]
+        print(f"Removed {len(dropped_cols)} non-numeric columns from feature set")
+        feature_df = feature_df[numeric_cols]
+    
+    print(f"Using {len(feature_df.columns)} numeric features for {len(df)} products")
+    
+    # Lidar com valores ausentes
+    feature_df = model.handle_missing_values(feature_df)
     
     # Identify feature groups
     try:

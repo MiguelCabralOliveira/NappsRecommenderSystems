@@ -77,6 +77,7 @@ description_acesso quaisquer
 description_acessório
 description_acessório em
 description_acessórios
+description_acessórios fw
 description_acessórios rj
 description_acessórios ss
 description_acetinado
@@ -834,7 +835,6 @@ description_regulável na
 description_renda
 description_rendada
 description_rendada em
-description_rendada modelo
 description_reversível
 description_reversível em
 description_rj
@@ -888,6 +888,7 @@ description_soutien
 description_spring
 description_spring summer
 description_ss
+description_ss 23
 description_ss 24
 description_subida
 description_subida com
@@ -989,7 +990,6 @@ description_xs
 description_xs material
 description_xs modelo
 description_xs xl
-description_xxs xs
 description_zipper
 description_zipper mangas
 description_único

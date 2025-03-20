@@ -91,9 +91,11 @@ def main():
     # Get shop ID from user input
     shop_id = input("Shop ID: ")
     
+   
     # Fetch order data from database
     print("\n=== Fetching recent order data from database ===")
     order_items_df, popular_products_df, product_groups_df = fetch_recent_order_items(shop_id)
+    
     
     # Save order data to CSV files
     if not order_items_df.empty:
@@ -153,7 +155,7 @@ def main():
     
     # Calculate and save color similarity data before removing color columns
     print("Calculating color similarities...")
-    color_similarity_df = save_color_similarity_data(output_dir=args.output_dir)
+    color_similarity_df = save_color_similarity_data()
     if not color_similarity_df.empty:
         print(f"Color similarity data saved for {color_similarity_df['source_product_id'].nunique()} products")
     
@@ -252,12 +254,11 @@ def main():
         
         # Run the KNN function to generate recommendations
         recommendations_df = run_knn(
-            input_file=f"{args.output_dir}/products_with_tfidf.csv",
+            df = df,
             output_dir=args.output_dir,
             n_neighbors=args.neighbors,
             save_model=True,
             similar_products_df=similar_products if not similar_products.empty else None,
-            popular_products_df=popular_products_df if not popular_products_df.empty else None
         )
         
         print("\nRecommendation generation complete!")
