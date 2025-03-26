@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.feature_extraction.text import TfidfVectorizer
+import os
 from bs4 import BeautifulSoup
 from colormath.color_objects import sRGBColor, LabColor
 from colormath.color_conversions import convert_color
@@ -959,12 +960,13 @@ def apply_tfidf_processing(df):
     
     return result_df
 
-def calculate_color_similarities(top_n=10, output_file="color_similarity.csv"):
+def calculate_color_similarities(top_n=10, output_dir="results", output_file="color_similarity.csv"):
     """
     Calculate color similarities between all products and save to CSV
     
     Args:
         top_n: Number of similar products to keep for each product
+        output_dir: Output directory
         output_file: CSV filename to save the results
     
     Returns:
@@ -975,6 +977,10 @@ def calculate_color_similarities(top_n=10, output_file="color_similarity.csv"):
     if not ALL_PRODUCT_COLORS:
         print("No color data found. Skipping color similarity calculation.")
         return pd.DataFrame()
+    
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+    full_path = f"{output_dir}/{output_file}"
     
     print(f"Calculating color similarities for {len(ALL_PRODUCT_COLORS)} products...")
     
@@ -1016,15 +1022,15 @@ def calculate_color_similarities(top_n=10, output_file="color_similarity.csv"):
     
     # Save to CSV
     if not similarity_df.empty:
-        similarity_df.to_csv(output_file, index=False)
-        print(f"Color similarity data saved to {output_file}")
+        similarity_df.to_csv(full_path, index=False)
+        print(f"Color similarity data saved to {full_path}")
         print(f"Generated {len(similarity_df)} color similarity pairs")
     else:
         print("No color similarity data generated.")
     
     return similarity_df
 
-def save_color_similarity_data():
+def save_color_similarity_data(output_dir="results"):
     """
     Calculate and save color similarity data from global product colors
     
@@ -1038,8 +1044,11 @@ def save_color_similarity_data():
         print("No product color data found for similarity calculation")
         return pd.DataFrame()
     
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+    
     # Calculate color similarities
-    similarity_df = calculate_color_similarities(top_n=10, output_file="products_color_similarity.csv")
+    similarity_df = calculate_color_similarities(top_n=10, output_file=f"{output_dir}/products_color_similarity.csv")
     
     # Log the results
     if not similarity_df.empty:
@@ -1080,7 +1089,7 @@ def remove_color_columns(df):
     
     return df
 
-def save_product_references(product_references, output_file="product_references.csv"):
+def save_product_references(product_references, output_dir="results", output_file="product_references.csv"):
     """
     Save product references to a separate CSV file
     """
@@ -1102,22 +1111,27 @@ def save_product_references(product_references, output_file="product_references.
     if flat_references:
         df = pd.DataFrame(flat_references)
         
+        # Create output directory if it doesn't exist
+        os.makedirs(output_dir, exist_ok=True)
+        
         # Save to CSV
-        df.to_csv(output_file, index=False)
-        print(f"Product references saved to {output_file} ({len(flat_references)} relationships)")
+        full_path = f"{output_dir}/{output_file}"
+        df.to_csv(full_path, index=False)
+        print(f"Product references saved to {full_path} ({len(flat_references)} relationships)")
         
         return df
     else:
         print(f"No product references found, CSV not created")
         return pd.DataFrame()
-
-def process_all_products(products_data, metafields_config=None, output_prefix=None):
+    
+def process_all_products(products_data, metafields_config=None, output_dir="results", output_prefix=None):
     """
     Process all products in a dataset
     
     Args:
         products_data: List of product dictionaries or DataFrame
         metafields_config: Optional metafields configuration
+        output_dir: Directory for output files
         output_prefix: Prefix for output files
         
     Returns:
@@ -1128,6 +1142,9 @@ def process_all_products(products_data, metafields_config=None, output_prefix=No
     ALL_PRODUCT_COLORS.clear()
     TEXT_FIELD_COLUMNS.clear()
     COLOR_COLUMNS.clear()
+    
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
     
     all_processed_data = []
     all_product_references = {}
@@ -1169,7 +1186,7 @@ def process_all_products(products_data, metafields_config=None, output_prefix=No
     color_similarity_df = None
     if ALL_PRODUCT_COLORS:
         color_similarity_file = f"{output_prefix}_color_similarity.csv" if output_prefix else "products_color_similarity.csv"
-        color_similarity_df = calculate_color_similarities(output_file=color_similarity_file)
+        color_similarity_df = calculate_color_similarities(output_file=color_similarity_file, output_dir=output_dir)
     
     # After calculating color similarities, remove color columns
     processed_df = remove_color_columns(processed_df)
@@ -1181,11 +1198,11 @@ def process_all_products(products_data, metafields_config=None, output_prefix=No
     references_df = None
     if output_prefix and all_product_references:
         references_file = f"{output_prefix}_product_references.csv"
-        references_df = save_product_references(all_product_references, references_file)
+        references_df = save_product_references(all_product_references, output_dir, references_file)
     
     # Save processed data
     if output_prefix:
-        processed_df.to_csv(f"{output_prefix}_processed.csv", index=False)
-        print(f"Processed data saved to {output_prefix}_processed.csv")
+        processed_df.to_csv(f"{output_dir}/{output_prefix}_processed.csv", index=False)
+        print(f"Processed data saved to {output_dir}/{output_prefix}_processed.csv")
     
     return processed_df, references_df, color_similarity_df

@@ -17,16 +17,17 @@ import argparse
 import os
 
 
-def export_sample(df, step_name):
+def export_sample(df, step_name, output_dir="results"):
     """Export the first row of the DataFrame to a CSV for debugging"""
     if len(df) > 0:
         sample_df = df.head(1)
-        filename = f"sample_after_{step_name}.csv"
+        os.makedirs(output_dir, exist_ok=True)
+        filename = f"{output_dir}/sample_after_{step_name}.csv"
         sample_df.to_csv(filename, index=False)
         print(f"Exported sample to {filename}")
 
 
-def document_feature_sources(df, output_file="feature_sources.csv"):
+def document_feature_sources(df, output_dir="results", output_file="feature_sources.csv"):
     """
     Document the sources of all features in the processed DataFrame
     """
@@ -66,8 +67,10 @@ def document_feature_sources(df, output_file="feature_sources.csv"):
     
     # Create DataFrame and save to CSV
     sources_df = pd.DataFrame(feature_sources)
-    sources_df.to_csv(output_file, index=False)
-    print(f"Feature sources documented in {output_file}")
+    os.makedirs(output_dir, exist_ok=True)
+    full_path = f"{output_dir}/{output_file}"
+    sources_df.to_csv(full_path, index=False)
+    print(f"Feature sources documented in {full_path}")
     
     return sources_df
 
@@ -122,7 +125,7 @@ def main():
     print(f"Raw data saved to {args.output_dir}/products.csv")
     
     # Export raw data sample
-    export_sample(raw_data, "raw_data")
+    export_sample(raw_data, "raw_data", args.output_dir)
     
     # Start with the raw data for processing
     df = raw_data.copy()
@@ -150,12 +153,12 @@ def main():
     # Save product references if any were found
     if all_product_references:
         from preprocessing.metafields_processor import save_product_references
-        save_product_references(all_product_references, f"{args.output_dir}/product_references.csv")
+        save_product_references(all_product_references, args.output_dir, "product_references.csv")
         print(f"Product references saved to {args.output_dir}/product_references.csv")
     
     # Calculate and save color similarity data before removing color columns
     print("Calculating color similarities...")
-    color_similarity_df = save_color_similarity_data()
+    color_similarity_df = save_color_similarity_data(args.output_dir)
     if not color_similarity_df.empty:
         print(f"Color similarity data saved for {color_similarity_df['source_product_id'].nunique()} products")
     
@@ -174,52 +177,52 @@ def main():
 
     # Combine the processed metafields with the original dataframe
     df = pd.concat([df, metafields_processed], axis=1)
-    export_sample(df, "metafields")
+    export_sample(df, "metafields", args.output_dir)
     
     # 2. Process is_gift_card
     print("Processing is_gift_card...")
     df = process_gif_card(df)
-    export_sample(df, "gift_card")
+    export_sample(df, "gift_card", args.output_dir)
 
     # 3. Process available_for_sale
     print("Processing available_for_sale...")
     df = process_avaiable_for_sale(df)
-    export_sample(df, "available_for_sale")
+    export_sample(df, "available_for_sale", args.output_dir)
 
     print("Processing product types...")
     df = process_product_type(df)
-    export_sample(df, "product_type")
+    export_sample(df, "product_type", args.output_dir)
     
     # 4. Process tags
     print("Processing tags...")
     df = process_tags(df)
-    export_sample(df, "tags")
+    export_sample(df, "tags", args.output_dir)
     
     # 5. Process collections
     print("Processing collections...")
     df = process_collections(df)
-    export_sample(df, "collections")
+    export_sample(df, "collections", args.output_dir)
 
     # 6. Process vendors
     print("Processing vendors...")
     df = process_vendors(df)
-    export_sample(df, "vendors")
+    export_sample(df, "vendors", args.output_dir)
     
     # 7. Process variants
     print("Processing variants...")
     df = process_variants(df)
-    export_sample(df, "variants")
+    export_sample(df, "variants", args.output_dir)
 
     # 8. Process createdAt timestamps
     print("Processing createdAt timestamps...")
     df = process_created_at(df)
-    export_sample(df, "created_at")
+    export_sample(df, "created_at", args.output_dir)
     
     # 9. Process text with TF-IDF
     print("Processing product descriptions with TF-IDF...")
-    tfidf_df, recommendation_df, _, similar_products = process_descriptions_word2vec(df)
-    export_sample(tfidf_df, "tfidf")
-    export_sample(recommendation_df, "recommendation")
+    tfidf_df, recommendation_df, _, similar_products = process_descriptions_word2vec(df, args.output_dir)
+    export_sample(tfidf_df, "tfidf", args.output_dir)
+    export_sample(recommendation_df, "recommendation", args.output_dir)
     
     # Save the processed data
     df.to_csv(f"{args.output_dir}/products_with_variants.csv", index=False)
@@ -227,7 +230,7 @@ def main():
     recommendation_df.to_csv(f"{args.output_dir}/products_recommendation.csv", index=False)
     
     # Document feature sources
-    document_feature_sources(tfidf_df, f"{args.output_dir}/feature_sources.csv")
+    document_feature_sources(tfidf_df, args.output_dir, "feature_sources.csv")
     
     # Output completion message for data processing
     print("\n=== Data processing complete! ===")
@@ -267,7 +270,6 @@ def main():
         print(f"- {args.output_dir}/similar_products_example.csv (example recommendations for a sample product)")
     else:
         print("\nRecommendation generation skipped. Use --skip-recommendations=False to generate recommendations.")
-
 
 if __name__ == "__main__":
     main()

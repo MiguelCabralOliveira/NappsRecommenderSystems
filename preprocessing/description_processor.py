@@ -4,6 +4,7 @@ from gensim.models import Word2Vec
 from sklearn.metrics.pairwise import cosine_similarity
 from bs4 import BeautifulSoup
 import re
+import os
 import numpy as np
 import nltk
 from nltk.tokenize import word_tokenize
@@ -82,12 +83,13 @@ def analyze_product_similarity(product_vectors, df, similarity_threshold=0.85):
     
     return pd.DataFrame(similar_products)
 
-def process_descriptions_word2vec(df, output_prefix="products", vector_size=100, window=5, min_count=1):
+def process_descriptions_word2vec(df, output_dir="results", output_prefix="products", vector_size=100, window=5, min_count=1):
     """
     Process descriptions with Word2Vec and save results
     
     Args:
         df: DataFrame with product data including 'description' column
+        output_dir: Directory to save output files
         output_prefix: Prefix for output files
         vector_size: Dimensionality of the Word2Vec vectors
         window: Maximum distance between current and predicted word
@@ -100,6 +102,9 @@ def process_descriptions_word2vec(df, output_prefix="products", vector_size=100,
             - w2v_model: The trained Word2Vec model
             - similar_products: DataFrame with pairs of similar products
     """
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+    
     # Store all non-description columns to preserve them later
     preserve_cols = [col for col in df.columns if col != 'description']
     
@@ -146,7 +151,7 @@ def process_descriptions_word2vec(df, output_prefix="products", vector_size=100,
     if not similar_products.empty:
         print("\nPotentially duplicate products (different colors/variants):")
         print(similar_products)
-        similar_products.to_csv(f"{output_prefix}_similar_products.csv", index=False)
+        similar_products.to_csv(f"{output_dir}/{output_prefix}_similar_products.csv", index=False)
     
     # Create feature names with description_w2v_ prefix
     feature_names = [f"description_w2v_{i}" for i in range(vector_size)]
@@ -159,10 +164,10 @@ def process_descriptions_word2vec(df, output_prefix="products", vector_size=100,
     )
     
     # Save the Word2Vec model for later use
-    w2v_model.save(f"{output_prefix}_word2vec_model.model")
+    w2v_model.save(f"{output_dir}/{output_prefix}_word2vec_model.model")
     
     # Save product vectors
-    np.save(f"{output_prefix}_product_vectors.npy", product_vectors)
+    np.save(f"{output_dir}/{output_prefix}_product_vectors.npy", product_vectors)
     
     # Add Word2Vec vectors to original DataFrame
     final_df = df.copy()
@@ -181,8 +186,8 @@ def process_descriptions_word2vec(df, output_prefix="products", vector_size=100,
     
     # Save the recommendation DataFrame
     if output_prefix:
-        recommendation_df.to_csv(f"{output_prefix}_recommendation.csv", index=False)
-        final_df.to_csv(f"{output_prefix}_with_word2vec.csv", index=False)
+        recommendation_df.to_csv(f"{output_dir}/{output_prefix}_recommendation.csv", index=False)
+        final_df.to_csv(f"{output_dir}/{output_prefix}_with_word2vec.csv", index=False)
     
     return final_df, recommendation_df, w2v_model, similar_products
 
