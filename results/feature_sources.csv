@@ -14,17 +14,38 @@ metafield_shopify_accessory-size_one_size,TF-IDF from product metafields
 metafield_shopify_headwear-features_adjustable_fit,TF-IDF from product metafields
 metafield_shopify_size_one_size,TF-IDF from product metafields
 metafield_shopify_size_s_m_m_l,TF-IDF from product metafields
-metafield_shopify_size_xs_s_s_m_m_l,TF-IDF from product metafields
 metafield_shopify_size_xs_s_m_l_xl,TF-IDF from product metafields
 metafield_shopify_size_xs_s_m_l,TF-IDF from product metafields
+metafield_shopify_size_xs_s_s_m_m_l,TF-IDF from product metafields
 metafield_shopify_size_xxs_s_m_l,TF-IDF from product metafields
 metafield_shopify_neckline_round,TF-IDF from product metafields
 product_type_,Product type dummy variable
-product_type_bone,Product type dummy variable
-product_type_robe,Product type dummy variable
-product_type_scrunchie,Product type dummy variable
-product_type_slipsilk,Product type dummy variable
-product_type_trousers,Product type dummy variable
+product_type_Biquínis,Product type dummy variable
+product_type_Bonés,Product type dummy variable
+product_type_Colete,Product type dummy variable
+product_type_Crop Top,Product type dummy variable
+product_type_Dress,Product type dummy variable
+product_type_Fato de Banho,Product type dummy variable
+product_type_Hair Band,Product type dummy variable
+product_type_Hoodie,Product type dummy variable
+product_type_Jumpsuit,Product type dummy variable
+product_type_Kimono,Product type dummy variable
+product_type_Leggings,Product type dummy variable
+product_type_Lenços,Product type dummy variable
+product_type_Robe,Product type dummy variable
+product_type_Scrunchie,Product type dummy variable
+product_type_Shirt,Product type dummy variable
+product_type_Shorts,Product type dummy variable
+product_type_Skirt,Product type dummy variable
+product_type_Sleepsilk mask,Product type dummy variable
+product_type_Sweatpants,Product type dummy variable
+product_type_Sweatshirt,Product type dummy variable
+product_type_T-Shirt,Product type dummy variable
+product_type_Top,Product type dummy variable
+product_type_Tote Bag,Product type dummy variable
+product_type_Triquinis,Product type dummy variable
+product_type_Trousers,Product type dummy variable
+product_type_Zip-up hoodie,Product type dummy variable
 tag_satin_shirt,Tag dummy variable
 tag_satin_trousers,Tag dummy variable
 tag_sweatshirt_conj,Tag dummy variable
@@ -60,12 +81,22 @@ min_price,Other/Unknown
 max_price,Other/Unknown
 has_discount,Other/Unknown
 variant_size_L,Variant option dummy variable
+variant_size_L / Regular,Variant option dummy variable
+variant_size_L / Tanga,Variant option dummy variable
 variant_size_M,Variant option dummy variable
+variant_size_M / Regular,Variant option dummy variable
+variant_size_M / Tanga,Variant option dummy variable
 variant_size_M/L,Variant option dummy variable
 variant_size_S,Variant option dummy variable
+variant_size_S / Regular,Variant option dummy variable
+variant_size_S / Tanga,Variant option dummy variable
 variant_size_S/M,Variant option dummy variable
 variant_size_XL,Variant option dummy variable
+variant_size_XL / Regular,Variant option dummy variable
+variant_size_XL / Tanga,Variant option dummy variable
 variant_size_XS,Variant option dummy variable
+variant_size_XS / Regular,Variant option dummy variable
+variant_size_XS / Tanga,Variant option dummy variable
 variant_size_XS/S,Variant option dummy variable
 variant_color_AZUL CLARO,Variant option dummy variable
 variant_color_BRANCO SUJO,Variant option dummy variable
@@ -161,6 +192,16 @@ variant_other_formato cueca:XXS / XS / Regular,Variant option dummy variable
 variant_other_formato cueca:XXS / XS / Tanga,Variant option dummy variable
 variant_other_formato cueca:XXS / XXS / Regular,Variant option dummy variable
 variant_other_formato cueca:XXS / XXS / Tanga,Variant option dummy variable
+variant_other_formato:L / Regular,Variant option dummy variable
+variant_other_formato:L / Tanga,Variant option dummy variable
+variant_other_formato:M / Regular,Variant option dummy variable
+variant_other_formato:M / Tanga,Variant option dummy variable
+variant_other_formato:S / Regular,Variant option dummy variable
+variant_other_formato:S / Tanga,Variant option dummy variable
+variant_other_formato:XL / Regular,Variant option dummy variable
+variant_other_formato:XL / Tanga,Variant option dummy variable
+variant_other_formato:XS / Regular,Variant option dummy variable
+variant_other_formato:XS / Tanga,Variant option dummy variable
 variant_other_padrão:CINZA / L,Variant option dummy variable
 variant_other_padrão:CINZA / M,Variant option dummy variable
 variant_other_padrão:CINZA / S,Variant option dummy variable
@@ -425,1003 +466,103 @@ release_quarter_2024Q2,Release quarter features from createdAt timestamp
 release_quarter_2024Q3,Release quarter features from createdAt timestamp
 release_quarter_2024Q4,Release quarter features from createdAt timestamp
 release_quarter_2025Q1,Release quarter features from createdAt timestamp
-description_100,TF-IDF from product descriptions
-description_100 algodão,TF-IDF from product descriptions
-description_12,TF-IDF from product descriptions
-description_12 meses,TF-IDF from product descriptions
-description_12meses,TF-IDF from product descriptions
-description_12meses 24meses,TF-IDF from product descriptions
-description_15x15cm,TF-IDF from product descriptions
-description_2020,TF-IDF from product descriptions
-description_2020 cueca,TF-IDF from product descriptions
-description_2020 soutien,TF-IDF from product descriptions
-description_2020 tanga,TF-IDF from product descriptions
-description_2022,TF-IDF from product descriptions
-description_2022 23,TF-IDF from product descriptions
-description_2023,TF-IDF from product descriptions
-description_2023 24,TF-IDF from product descriptions
-description_2023 tapa,TF-IDF from product descriptions
-description_2024,TF-IDF from product descriptions
-description_2024 25,TF-IDF from product descriptions
-description_2025,TF-IDF from product descriptions
-description_2025 biquíni,TF-IDF from product descriptions
-description_2025 calções,TF-IDF from product descriptions
-description_2025 colecção,TF-IDF from product descriptions
-description_2025 colete,TF-IDF from product descriptions
-description_2025 coleção,TF-IDF from product descriptions
-description_2025 cueca,TF-IDF from product descriptions
-description_2025 fato,TF-IDF from product descriptions
-description_2025 fita,TF-IDF from product descriptions
-description_2025 kimono,TF-IDF from product descriptions
-description_2025 mix,TF-IDF from product descriptions
-description_2025 máscara,TF-IDF from product descriptions
-description_2025 ss,TF-IDF from product descriptions
-description_2025 sweatshirt,TF-IDF from product descriptions
-description_2025 triquíni,TF-IDF from product descriptions
-description_22,TF-IDF from product descriptions
-description_22 23,TF-IDF from product descriptions
-description_23,TF-IDF from product descriptions
-description_23 24,TF-IDF from product descriptions
-description_23 crop,TF-IDF from product descriptions
-description_23 satin,TF-IDF from product descriptions
-description_23 sweatshirt,TF-IDF from product descriptions
-description_24,TF-IDF from product descriptions
-description_24 25,TF-IDF from product descriptions
-description_24 acessórios,TF-IDF from product descriptions
-description_24 activewear,TF-IDF from product descriptions
-description_24 calças,TF-IDF from product descriptions
-description_24 elástico,TF-IDF from product descriptions
-description_24 fevereiro,TF-IDF from product descriptions
-description_24 meses,TF-IDF from product descriptions
-description_24 padel,TF-IDF from product descriptions
-description_24meses,TF-IDF from product descriptions
-description_24meses 48meses,TF-IDF from product descriptions
-description_25,TF-IDF from product descriptions
-description_25 calças,TF-IDF from product descriptions
-description_25 calções,TF-IDF from product descriptions
-description_25 crop,TF-IDF from product descriptions
-description_25 hoodie,TF-IDF from product descriptions
-description_25 shirt,TF-IDF from product descriptions
-description_25 sweatshirt,TF-IDF from product descriptions
-description_300g,TF-IDF from product descriptions
-description_300g disponível,TF-IDF from product descriptions
-description_31,TF-IDF from product descriptions
-description_31 março,TF-IDF from product descriptions
-description_32,TF-IDF from product descriptions
-description_32 polyester,TF-IDF from product descriptions
-description_47x35x15,TF-IDF from product descriptions
-description_47x35x15 nota,TF-IDF from product descriptions
-description_48,TF-IDF from product descriptions
-description_48 meses,TF-IDF from product descriptions
-description_48meses,TF-IDF from product descriptions
-description_64,TF-IDF from product descriptions
-description_64 cupro,TF-IDF from product descriptions
-description_70x70cm,TF-IDF from product descriptions
-description_aberto,TF-IDF from product descriptions
-description_aberto em,TF-IDF from product descriptions
-description_acesso,TF-IDF from product descriptions
-description_acesso quaisquer,TF-IDF from product descriptions
-description_acessório,TF-IDF from product descriptions
-description_acessório em,TF-IDF from product descriptions
-description_acessórios,TF-IDF from product descriptions
-description_acessórios fw,TF-IDF from product descriptions
-description_acessórios rj,TF-IDF from product descriptions
-description_acessórios ss,TF-IDF from product descriptions
-description_acetinado,TF-IDF from product descriptions
-description_acetinado disponível,TF-IDF from product descriptions
-description_acolchoado,TF-IDF from product descriptions
-description_acolchoado com,TF-IDF from product descriptions
-description_activewear,TF-IDF from product descriptions
-description_activewear collection,TF-IDF from product descriptions
-description_adaptável,TF-IDF from product descriptions
-description_adaptável ao,TF-IDF from product descriptions
-description_adaptável justo,TF-IDF from product descriptions
-description_ajustar,TF-IDF from product descriptions
-description_ajustar ao,TF-IDF from product descriptions
-description_ajustáveis,TF-IDF from product descriptions
-description_ajustáveis ao,TF-IDF from product descriptions
-description_ajustáveis aperta,TF-IDF from product descriptions
-description_ajustável,TF-IDF from product descriptions
-description_ajustável com,TF-IDF from product descriptions
-description_ajustável por,TF-IDF from product descriptions
-description_algodão,TF-IDF from product descriptions
-description_algodão 300g,TF-IDF from product descriptions
-description_algodão orgânico,TF-IDF from product descriptions
-description_almofadada,TF-IDF from product descriptions
-description_almofadada com,TF-IDF from product descriptions
-description_alça,TF-IDF from product descriptions
-description_alça com,TF-IDF from product descriptions
-description_alça regulável,TF-IDF from product descriptions
-description_alças,TF-IDF from product descriptions
-description_alças ajustáveis,TF-IDF from product descriptions
-description_alças reguláveis,TF-IDF from product descriptions
-description_amachucada,TF-IDF from product descriptions
-description_amachucada entre,TF-IDF from product descriptions
-description_amarelo,TF-IDF from product descriptions
-description_amarelo fluo,TF-IDF from product descriptions
-description_amovíveis,TF-IDF from product descriptions
-description_amovíveis alça,TF-IDF from product descriptions
-description_amovíveis alças,TF-IDF from product descriptions
-description_amovíveis aperta,TF-IDF from product descriptions
-description_amovíveis duas,TF-IDF from product descriptions
-description_amovíveis fecho,TF-IDF from product descriptions
-description_amovíveis fitas,TF-IDF from product descriptions
-description_amovível,TF-IDF from product descriptions
-description_amovível hardware,TF-IDF from product descriptions
-description_ao,TF-IDF from product descriptions
-description_ao corpo,TF-IDF from product descriptions
-description_ao mesmo,TF-IDF from product descriptions
-description_ao peito,TF-IDF from product descriptions
-description_ao toque,TF-IDF from product descriptions
-description_aperta,TF-IDF from product descriptions
-description_aperta com,TF-IDF from product descriptions
-description_aperta frente,TF-IDF from product descriptions
-description_aperta nas,TF-IDF from product descriptions
-description_apertar,TF-IDF from product descriptions
-description_apertar disponível,TF-IDF from product descriptions
-description_apertar nas,TF-IDF from product descriptions
-description_apertar tiras,TF-IDF from product descriptions
-description_aproveitamento,TF-IDF from product descriptions
-description_aproveitamento matérias,TF-IDF from product descriptions
-description_aro,TF-IDF from product descriptions
-description_aro alças,TF-IDF from product descriptions
-description_aro copas,TF-IDF from product descriptions
-description_artigo,TF-IDF from product descriptions
-description_artigo em,TF-IDF from product descriptions
-description_asa,TF-IDF from product descriptions
-description_asa delta,TF-IDF from product descriptions
-description_assimétrico,TF-IDF from product descriptions
-description_assimétrico copas,TF-IDF from product descriptions
-description_atar,TF-IDF from product descriptions
-description_atar material,TF-IDF from product descriptions
-description_atilho,TF-IDF from product descriptions
-description_atilho cintado,TF-IDF from product descriptions
-description_atilhos,TF-IDF from product descriptions
-description_atilhos nas,TF-IDF from product descriptions
-description_atilhos pescoço,TF-IDF from product descriptions
-description_através,TF-IDF from product descriptions
-description_através laço,TF-IDF from product descriptions
-description_azul,TF-IDF from product descriptions
-description_azul com,TF-IDF from product descriptions
-description_azul ganga,TF-IDF from product descriptions
-description_bag,TF-IDF from product descriptions
-description_bag missus,TF-IDF from product descriptions
-description_baixo,TF-IDF from product descriptions
-description_baixo aperta,TF-IDF from product descriptions
-description_baixo cintura,TF-IDF from product descriptions
-description_baixo contém,TF-IDF from product descriptions
-description_baixo em,TF-IDF from product descriptions
-description_baixo está,TF-IDF from product descriptions
-description_bandeau,TF-IDF from product descriptions
-description_bandeau com,TF-IDF from product descriptions
-description_bandeau copas,TF-IDF from product descriptions
-description_banho,TF-IDF from product descriptions
-description_barco,TF-IDF from product descriptions
-description_barco com,TF-IDF from product descriptions
-description_bege,TF-IDF from product descriptions
-description_bege com,TF-IDF from product descriptions
-description_bege verde,TF-IDF from product descriptions
-description_beges,TF-IDF from product descriptions
-description_beges com,TF-IDF from product descriptions
-description_bem,TF-IDF from product descriptions
-description_bem estender,TF-IDF from product descriptions
-description_biquíni,TF-IDF from product descriptions
-description_biquíni amarelo,TF-IDF from product descriptions
-description_biquíni azul,TF-IDF from product descriptions
-description_biquíni bordado,TF-IDF from product descriptions
-description_biquíni branco,TF-IDF from product descriptions
-description_biquíni com,TF-IDF from product descriptions
-description_biquíni coral,TF-IDF from product descriptions
-description_biquíni floral,TF-IDF from product descriptions
-description_biquíni lilás,TF-IDF from product descriptions
-description_biquíni preto,TF-IDF from product descriptions
-description_biquíni reversível,TF-IDF from product descriptions
-description_biquíni rosa,TF-IDF from product descriptions
-description_biquíni texturado,TF-IDF from product descriptions
-description_biquíni verde,TF-IDF from product descriptions
-description_bolas,TF-IDF from product descriptions
-description_bolas ténis,TF-IDF from product descriptions
-description_bolso,TF-IDF from product descriptions
-description_bolso interior,TF-IDF from product descriptions
-description_bolso na,TF-IDF from product descriptions
-description_bolsos,TF-IDF from product descriptions
-description_bolsos elástico,TF-IDF from product descriptions
-description_boné,TF-IDF from product descriptions
-description_boné azul,TF-IDF from product descriptions
-description_boné bege,TF-IDF from product descriptions
-description_boné bordeaux,TF-IDF from product descriptions
-description_boné cinza,TF-IDF from product descriptions
-description_boné verde,TF-IDF from product descriptions
-description_bordado,TF-IDF from product descriptions
-description_bordado amarelo,TF-IDF from product descriptions
-description_bordado branco,TF-IDF from product descriptions
-description_bordado disponível,TF-IDF from product descriptions
-description_bordado inglês,TF-IDF from product descriptions
-description_bordado rosa,TF-IDF from product descriptions
-description_bordado veste,TF-IDF from product descriptions
-description_bordeaux,TF-IDF from product descriptions
-description_bordeaux com,TF-IDF from product descriptions
-description_brancas,TF-IDF from product descriptions
-description_branco,TF-IDF from product descriptions
-description_branco com,TF-IDF from product descriptions
-description_branco copas,TF-IDF from product descriptions
-description_branco na,TF-IDF from product descriptions
-description_branco tem,TF-IDF from product descriptions
-description_branco texturado,TF-IDF from product descriptions
-description_brasileiro,TF-IDF from product descriptions
-description_brasileiro cintura,TF-IDF from product descriptions
-description_brilhante,TF-IDF from product descriptions
-description_brilhante com,TF-IDF from product descriptions
-description_cabelo,TF-IDF from product descriptions
-description_cabelo aproveitamento,TF-IDF from product descriptions
-description_cabelo larga,TF-IDF from product descriptions
-description_calças,TF-IDF from product descriptions
-description_calças brancas,TF-IDF from product descriptions
-description_calças com,TF-IDF from product descriptions
-description_calças corte,TF-IDF from product descriptions
-description_calças wide,TF-IDF from product descriptions
-description_calção,TF-IDF from product descriptions
-description_calção soft,TF-IDF from product descriptions
-description_calções,TF-IDF from product descriptions
-description_calções com,TF-IDF from product descriptions
-description_calções fluídos,TF-IDF from product descriptions
-description_calções interiores,TF-IDF from product descriptions
-description_calções malha,TF-IDF from product descriptions
-description_calções tecido,TF-IDF from product descriptions
-description_canelado,TF-IDF from product descriptions
-description_canelado com,TF-IDF from product descriptions
-description_capuz,TF-IDF from product descriptions
-description_capuz bolso,TF-IDF from product descriptions
-description_capuz fecho,TF-IDF from product descriptions
-description_cardado,TF-IDF from product descriptions
-description_cardado duplo,TF-IDF from product descriptions
-description_cardado interior,TF-IDF from product descriptions
-description_cardado logótipo,TF-IDF from product descriptions
-description_castanho,TF-IDF from product descriptions
-description_castanho com,TF-IDF from product descriptions
-description_cavada,TF-IDF from product descriptions
-description_cavada disponível,TF-IDF from product descriptions
-description_cetim,TF-IDF from product descriptions
-description_cetim tule,TF-IDF from product descriptions
-description_christmas,TF-IDF from product descriptions
-description_christmas collection,TF-IDF from product descriptions
-description_cintado,TF-IDF from product descriptions
-description_cintado ajustável,TF-IDF from product descriptions
-description_cinto,TF-IDF from product descriptions
-description_cinto amovível,TF-IDF from product descriptions
-description_cintura,TF-IDF from product descriptions
-description_cintura cordões,TF-IDF from product descriptions
-description_cintura disponível,TF-IDF from product descriptions
-description_cintura material,TF-IDF from product descriptions
-description_cintura médiaentrepernas,TF-IDF from product descriptions
-description_cintura racha,TF-IDF from product descriptions
-description_cintura subida,TF-IDF from product descriptions
-description_cintura tornozelo,TF-IDF from product descriptions
-description_cinza,TF-IDF from product descriptions
-description_cinza claro,TF-IDF from product descriptions
-description_cinzento,TF-IDF from product descriptions
-description_claro,TF-IDF from product descriptions
-description_claro com,TF-IDF from product descriptions
-description_clássico,TF-IDF from product descriptions
-description_clássico com,TF-IDF from product descriptions
-description_cobra,TF-IDF from product descriptions
-description_cold,TF-IDF from product descriptions
-description_cold hand,TF-IDF from product descriptions
-description_colecção,TF-IDF from product descriptions
-description_colecção lingerie,TF-IDF from product descriptions
-description_colecção sleepwear,TF-IDF from product descriptions
-description_colete,TF-IDF from product descriptions
-description_colete aberto,TF-IDF from product descriptions
-description_coleção,TF-IDF from product descriptions
-description_coleção acessórios,TF-IDF from product descriptions
-description_coleção fall,TF-IDF from product descriptions
-description_coleção spring,TF-IDF from product descriptions
-description_coleções,TF-IDF from product descriptions
-description_coleções passadas,TF-IDF from product descriptions
-description_collection,TF-IDF from product descriptions
-description_collection desporto,TF-IDF from product descriptions
-description_collection leggings,TF-IDF from product descriptions
-description_collection lenço,TF-IDF from product descriptions
-description_collection mixed,TF-IDF from product descriptions
-description_collection modelo,TF-IDF from product descriptions
-description_collection saia,TF-IDF from product descriptions
-description_collection tote,TF-IDF from product descriptions
-description_com,TF-IDF from product descriptions
-description_com acessório,TF-IDF from product descriptions
-description_com alças,TF-IDF from product descriptions
-description_com aro,TF-IDF from product descriptions
-description_com atilho,TF-IDF from product descriptions
-description_com atilhos,TF-IDF from product descriptions
-description_com bolso,TF-IDF from product descriptions
-description_com bolsos,TF-IDF from product descriptions
-description_com capuz,TF-IDF from product descriptions
-description_com contraste,TF-IDF from product descriptions
-description_com copas,TF-IDF from product descriptions
-description_com corte,TF-IDF from product descriptions
-description_com costura,TF-IDF from product descriptions
-description_com decote,TF-IDF from product descriptions
-description_com efeito,TF-IDF from product descriptions
-description_com elástico,TF-IDF from product descriptions
-description_com fecho,TF-IDF from product descriptions
-description_com fivela,TF-IDF from product descriptions
-description_com folho,TF-IDF from product descriptions
-description_com hardware,TF-IDF from product descriptions
-description_com laço,TF-IDF from product descriptions
-description_com logo,TF-IDF from product descriptions
-description_com nó,TF-IDF from product descriptions
-description_com padrão,TF-IDF from product descriptions
-description_com possibilidade,TF-IDF from product descriptions
-description_com traseira,TF-IDF from product descriptions
-description_comprida,TF-IDF from product descriptions
-description_comprida disponível,TF-IDF from product descriptions
-description_comprido,TF-IDF from product descriptions
-description_comprido com,TF-IDF from product descriptions
-description_comprido decote,TF-IDF from product descriptions
-description_comprido em,TF-IDF from product descriptions
-description_confere,TF-IDF from product descriptions
-description_confere conforto,TF-IDF from product descriptions
-description_conforto,TF-IDF from product descriptions
-description_conforto para,TF-IDF from product descriptions
-description_consoante,TF-IDF from product descriptions
-description_consoante normas,TF-IDF from product descriptions
-description_contraste,TF-IDF from product descriptions
-description_contraste bege,TF-IDF from product descriptions
-description_contraste branco,TF-IDF from product descriptions
-description_contraste coral,TF-IDF from product descriptions
-description_contraste laranja,TF-IDF from product descriptions
-description_contraste preto,TF-IDF from product descriptions
-description_contraste verde,TF-IDF from product descriptions
-description_contém,TF-IDF from product descriptions
-description_contém laterais,TF-IDF from product descriptions
-description_copa,TF-IDF from product descriptions
-description_copa para,TF-IDF from product descriptions
-description_copas,TF-IDF from product descriptions
-description_copas amovíveis,TF-IDF from product descriptions
-description_copas aperta,TF-IDF from product descriptions
-description_copas fixas,TF-IDF from product descriptions
-description_coral,TF-IDF from product descriptions
-description_coral texturado,TF-IDF from product descriptions
-description_cordões,TF-IDF from product descriptions
-description_cordões para,TF-IDF from product descriptions
-description_cores,TF-IDF from product descriptions
-description_cores 15x15cm,TF-IDF from product descriptions
-description_cores fluorescentes,TF-IDF from product descriptions
-description_cores modelo,TF-IDF from product descriptions
-description_corpo,TF-IDF from product descriptions
-description_corpo disponível,TF-IDF from product descriptions
-description_corte,TF-IDF from product descriptions
-description_corte brasileiro,TF-IDF from product descriptions
-description_corte clássico,TF-IDF from product descriptions
-description_corte em,TF-IDF from product descriptions
-description_costas,TF-IDF from product descriptions
-description_costas adaptável,TF-IDF from product descriptions
-description_costas com,TF-IDF from product descriptions
-description_costas disponível,TF-IDF from product descriptions
-description_costas manga,TF-IDF from product descriptions
-description_costas ou,TF-IDF from product descriptions
-description_costas para,TF-IDF from product descriptions
-description_costas parte,TF-IDF from product descriptions
-description_costura,TF-IDF from product descriptions
-description_costura elástico,TF-IDF from product descriptions
-description_crochet,TF-IDF from product descriptions
-description_crochet com,TF-IDF from product descriptions
-description_crop,TF-IDF from product descriptions
-description_crop com,TF-IDF from product descriptions
-description_crop perfurado,TF-IDF from product descriptions
-description_crop tecido,TF-IDF from product descriptions
-description_cruzada,TF-IDF from product descriptions
-description_cruzada disponível,TF-IDF from product descriptions
-description_cruzar,TF-IDF from product descriptions
-description_cruzar costas,TF-IDF from product descriptions
-description_cueca,TF-IDF from product descriptions
-description_cueca rendada,TF-IDF from product descriptions
-description_cupro,TF-IDF from product descriptions
-description_cupro 32,TF-IDF from product descriptions
-description_cós,TF-IDF from product descriptions
-description_cós forrado,TF-IDF from product descriptions
-description_cós material,TF-IDF from product descriptions
-description_data,TF-IDF from product descriptions
-description_data promoção,TF-IDF from product descriptions
-description_debaixo,TF-IDF from product descriptions
-description_debaixo dos,TF-IDF from product descriptions
-description_debotar,TF-IDF from product descriptions
-description_debotar na,TF-IDF from product descriptions
-description_decote,TF-IDF from product descriptions
-description_decote assimétrico,TF-IDF from product descriptions
-description_decote direito,TF-IDF from product descriptions
-description_decote em,TF-IDF from product descriptions
-description_decote redondo,TF-IDF from product descriptions
-description_delta,TF-IDF from product descriptions
-description_delta disponível,TF-IDF from product descriptions
-description_desporto,TF-IDF from product descriptions
-description_desporto soft,TF-IDF from product descriptions
-description_dimensões,TF-IDF from product descriptions
-description_dimensões 47x35x15,TF-IDF from product descriptions
-description_direito,TF-IDF from product descriptions
-description_disponível,TF-IDF from product descriptions
-description_disponível em,TF-IDF from product descriptions
-description_disponível nos,TF-IDF from product descriptions
-description_dobrada,TF-IDF from product descriptions
-description_dobrada amachucada,TF-IDF from product descriptions
-description_dois,TF-IDF from product descriptions
-description_dois formatos,TF-IDF from product descriptions
-description_dos,TF-IDF from product descriptions
-description_dos calções,TF-IDF from product descriptions
-description_dourado,TF-IDF from product descriptions
-description_dourado com,TF-IDF from product descriptions
-description_dourado em,TF-IDF from product descriptions
-description_dourado triangular,TF-IDF from product descriptions
-description_duas,TF-IDF from product descriptions
-description_duas alças,TF-IDF from product descriptions
-description_duas opções,TF-IDF from product descriptions
-description_duplo,TF-IDF from product descriptions
-description_duplo logótipo,TF-IDF from product descriptions
-description_durabilidade,TF-IDF from product descriptions
-description_durabilidade material,TF-IDF from product descriptions
-description_efeito,TF-IDF from product descriptions
-description_efeito franzido,TF-IDF from product descriptions
-description_elastane,TF-IDF from product descriptions
-description_elastane cold,TF-IDF from product descriptions
-description_elástico,TF-IDF from product descriptions
-description_elástico adaptável,TF-IDF from product descriptions
-description_elástico branco,TF-IDF from product descriptions
-description_elástico confere,TF-IDF from product descriptions
-description_elástico cós,TF-IDF from product descriptions
-description_elástico disponível,TF-IDF from product descriptions
-description_elástico folho,TF-IDF from product descriptions
-description_elástico lavanda,TF-IDF from product descriptions
-description_elástico na,TF-IDF from product descriptions
-description_elástico nas,TF-IDF from product descriptions
-description_elástico nos,TF-IDF from product descriptions
-description_elástico para,TF-IDF from product descriptions
-description_elástico regulável,TF-IDF from product descriptions
-description_em,TF-IDF from product descriptions
-description_em 100,TF-IDF from product descriptions
-description_em algodão,TF-IDF from product descriptions
-description_em barco,TF-IDF from product descriptions
-description_em cetim,TF-IDF from product descriptions
-description_em com,TF-IDF from product descriptions
-description_em copas,TF-IDF from product descriptions
-description_em cores,TF-IDF from product descriptions
-description_em dois,TF-IDF from product descriptions
-description_em dourado,TF-IDF from product descriptions
-description_em formato,TF-IDF from product descriptions
-description_em madeira,TF-IDF from product descriptions
-description_em malha,TF-IDF from product descriptions
-description_em padrão,TF-IDF from product descriptions
-description_em prateado,TF-IDF from product descriptions
-description_em produção,TF-IDF from product descriptions
-description_em rolinho,TF-IDF from product descriptions
-description_em tamanho,TF-IDF from product descriptions
-description_em tons,TF-IDF from product descriptions
-description_entre,TF-IDF from product descriptions
-description_entre si,TF-IDF from product descriptions
-description_entrega,TF-IDF from product descriptions
-description_entrega estimada,TF-IDF from product descriptions
-description_equivalente,TF-IDF from product descriptions
-description_equivalente um,TF-IDF from product descriptions
-description_escuro,TF-IDF from product descriptions
-description_escuro com,TF-IDF from product descriptions
-description_estampado,TF-IDF from product descriptions
-description_estender,TF-IDF from product descriptions
-description_estender logo,TF-IDF from product descriptions
-description_esticar,TF-IDF from product descriptions
-description_esticar bem,TF-IDF from product descriptions
-description_estimada,TF-IDF from product descriptions
-description_estimada semanas,TF-IDF from product descriptions
-description_estruturada,TF-IDF from product descriptions
-description_estruturada disponível,TF-IDF from product descriptions
-description_está,TF-IDF from product descriptions
-description_está disponível,TF-IDF from product descriptions
-description_está utilizar,TF-IDF from product descriptions
-description_fabrication,TF-IDF from product descriptions
-description_fabrication 64,TF-IDF from product descriptions
-description_fall,TF-IDF from product descriptions
-description_fall winter,TF-IDF from product descriptions
-description_fato,TF-IDF from product descriptions
-description_fato banho,TF-IDF from product descriptions
-description_fecho,TF-IDF from product descriptions
-description_fecho ajustável,TF-IDF from product descriptions
-description_fecho nas,TF-IDF from product descriptions
-description_fecho parte,TF-IDF from product descriptions
-description_fecho zipper,TF-IDF from product descriptions
-description_feel,TF-IDF from product descriptions
-description_feel fabrication,TF-IDF from product descriptions
-description_fevereiro,TF-IDF from product descriptions
-description_fevereiro 31,TF-IDF from product descriptions
-description_ficar,TF-IDF from product descriptions
-description_ficar dobrada,TF-IDF from product descriptions
-description_finish,TF-IDF from product descriptions
-description_finish regular,TF-IDF from product descriptions
-description_fit,TF-IDF from product descriptions
-description_fit soft,TF-IDF from product descriptions
-description_fita,TF-IDF from product descriptions
-description_fita cabelo,TF-IDF from product descriptions
-description_fitas,TF-IDF from product descriptions
-description_fitas para,TF-IDF from product descriptions
-description_fivela,TF-IDF from product descriptions
-description_fivela metal,TF-IDF from product descriptions
-description_fixas,TF-IDF from product descriptions
-description_fixas aro,TF-IDF from product descriptions
-description_fixas cinto,TF-IDF from product descriptions
-description_floral,TF-IDF from product descriptions
-description_floral azul,TF-IDF from product descriptions
-description_floral bege,TF-IDF from product descriptions
-description_floral com,TF-IDF from product descriptions
-description_floral verde,TF-IDF from product descriptions
-description_fluo,TF-IDF from product descriptions
-description_fluo na,TF-IDF from product descriptions
-description_fluorescente,TF-IDF from product descriptions
-description_fluorescente com,TF-IDF from product descriptions
-description_fluorescentes,TF-IDF from product descriptions
-description_fluorescentes podem,TF-IDF from product descriptions
-description_fluídos,TF-IDF from product descriptions
-description_fluídos com,TF-IDF from product descriptions
-description_folho,TF-IDF from product descriptions
-description_folho em,TF-IDF from product descriptions
-description_folho liso,TF-IDF from product descriptions
-description_folho nó,TF-IDF from product descriptions
-description_folho para,TF-IDF from product descriptions
-description_forma,TF-IDF from product descriptions
-description_forma promover,TF-IDF from product descriptions
-description_formato,TF-IDF from product descriptions
-description_formato asa,TF-IDF from product descriptions
-description_formato bandeau,TF-IDF from product descriptions
-description_formato corte,TF-IDF from product descriptions
-description_formato regular,TF-IDF from product descriptions
-description_formato tanga,TF-IDF from product descriptions
-description_formatos,TF-IDF from product descriptions
-description_formatos regular,TF-IDF from product descriptions
-description_forrado,TF-IDF from product descriptions
-description_forrado cardado,TF-IDF from product descriptions
-description_forrado logótipo,TF-IDF from product descriptions
-description_forrado material,TF-IDF from product descriptions
-description_fralda,TF-IDF from product descriptions
-description_fralda com,TF-IDF from product descriptions
-description_franzido,TF-IDF from product descriptions
-description_franzido disponível,TF-IDF from product descriptions
-description_frente,TF-IDF from product descriptions
-description_frente através,TF-IDF from product descriptions
-description_frente com,TF-IDF from product descriptions
-description_frente disponível,TF-IDF from product descriptions
-description_frente material,TF-IDF from product descriptions
-description_frente uma,TF-IDF from product descriptions
-description_fácil,TF-IDF from product descriptions
-description_fácil acesso,TF-IDF from product descriptions
-description_ganga,TF-IDF from product descriptions
-description_ganga com,TF-IDF from product descriptions
-description_gola,TF-IDF from product descriptions
-description_gola em,TF-IDF from product descriptions
-description_gola redonda,TF-IDF from product descriptions
-description_guardadas,TF-IDF from product descriptions
-description_guardadas debaixo,TF-IDF from product descriptions
-description_hand,TF-IDF from product descriptions
-description_hand wash,TF-IDF from product descriptions
-description_hardware,TF-IDF from product descriptions
-description_hardware dourado,TF-IDF from product descriptions
-description_hardware em,TF-IDF from product descriptions
-description_hardware prateado,TF-IDF from product descriptions
-description_hoodie,TF-IDF from product descriptions
-description_hoodie com,TF-IDF from product descriptions
-description_inglês,TF-IDF from product descriptions
-description_inside,TF-IDF from product descriptions
-description_inside separately,TF-IDF from product descriptions
-description_interior,TF-IDF from product descriptions
-description_interior ajustáveis,TF-IDF from product descriptions
-description_interior logótipo,TF-IDF from product descriptions
-description_interior veste,TF-IDF from product descriptions
-description_interiores,TF-IDF from product descriptions
-description_interiores disponível,TF-IDF from product descriptions
-description_jogar,TF-IDF from product descriptions
-description_jogar seu,TF-IDF from product descriptions
-description_justo,TF-IDF from product descriptions
-description_justo ao,TF-IDF from product descriptions
-description_kimono,TF-IDF from product descriptions
-description_kimono comprido,TF-IDF from product descriptions
-description_laranja,TF-IDF from product descriptions
-description_laranja com,TF-IDF from product descriptions
-description_laranja fluorescente,TF-IDF from product descriptions
-description_larga,TF-IDF from product descriptions
-description_larga cruzada,TF-IDF from product descriptions
-description_largas,TF-IDF from product descriptions
-description_largas elástico,TF-IDF from product descriptions
-description_laterais,TF-IDF from product descriptions
-description_laterais está,TF-IDF from product descriptions
-description_laterais reguláveis,TF-IDF from product descriptions
-description_lateral,TF-IDF from product descriptions
-description_lateral disponível,TF-IDF from product descriptions
-description_lateral fecho,TF-IDF from product descriptions
-description_lavanda,TF-IDF from product descriptions
-description_lavanda com,TF-IDF from product descriptions
-description_lavanda para,TF-IDF from product descriptions
-description_lavar,TF-IDF from product descriptions
-description_lavar mão,TF-IDF from product descriptions
-description_lave,TF-IDF from product descriptions
-description_lave consoante,TF-IDF from product descriptions
-description_laço,TF-IDF from product descriptions
-description_laço disponível,TF-IDF from product descriptions
-description_laço frente,TF-IDF from product descriptions
-description_laço nas,TF-IDF from product descriptions
-description_laços,TF-IDF from product descriptions
-description_laços disponível,TF-IDF from product descriptions
-description_leg,TF-IDF from product descriptions
-description_leg com,TF-IDF from product descriptions
-description_leggings,TF-IDF from product descriptions
-description_leggings desporto,TF-IDF from product descriptions
-description_lenço,TF-IDF from product descriptions
-description_lenço acetinado,TF-IDF from product descriptions
-description_leve,TF-IDF from product descriptions
-description_leve elástico,TF-IDF from product descriptions
-description_lilás,TF-IDF from product descriptions
-description_lilás com,TF-IDF from product descriptions
-description_lingerie,TF-IDF from product descriptions
-description_lingerie sleepwear,TF-IDF from product descriptions
-description_liso,TF-IDF from product descriptions
-description_liso com,TF-IDF from product descriptions
-description_liso ou,TF-IDF from product descriptions
-description_listado,TF-IDF from product descriptions
-description_listado texturado,TF-IDF from product descriptions
-description_logo,TF-IDF from product descriptions
-description_logo missus,TF-IDF from product descriptions
-description_logo seguida,TF-IDF from product descriptions
-description_logótipo,TF-IDF from product descriptions
-description_logótipo bordado,TF-IDF from product descriptions
-description_longo,TF-IDF from product descriptions
-description_longo crochet,TF-IDF from product descriptions
-description_luxuriously,TF-IDF from product descriptions
-description_luxuriously soft,TF-IDF from product descriptions
-description_macio,TF-IDF from product descriptions
-description_macio ao,TF-IDF from product descriptions
-description_madeira,TF-IDF from product descriptions
-description_madeira com,TF-IDF from product descriptions
-description_mais,TF-IDF from product descriptions
-description_mais cavada,TF-IDF from product descriptions
-description_malha,TF-IDF from product descriptions
-description_malha com,TF-IDF from product descriptions
-description_malha estruturada,TF-IDF from product descriptions
-description_manga,TF-IDF from product descriptions
-description_manga comprida,TF-IDF from product descriptions
-description_mangas,TF-IDF from product descriptions
-description_mangas largas,TF-IDF from product descriptions
-description_marcar,TF-IDF from product descriptions
-description_marcar cintura,TF-IDF from product descriptions
-description_março,TF-IDF from product descriptions
-description_março 2025,TF-IDF from product descriptions
-description_match,TF-IDF from product descriptions
-description_match calções,TF-IDF from product descriptions
-description_match crop,TF-IDF from product descriptions
-description_matched,TF-IDF from product descriptions
-description_matched products,TF-IDF from product descriptions
-description_material,TF-IDF from product descriptions
-description_material cardado,TF-IDF from product descriptions
-description_material forrado,TF-IDF from product descriptions
-description_material macio,TF-IDF from product descriptions
-description_material sustentável,TF-IDF from product descriptions
-description_matérias,TF-IDF from product descriptions
-description_matérias primas,TF-IDF from product descriptions
-description_melhor,TF-IDF from product descriptions
-description_melhor ao,TF-IDF from product descriptions
-description_meses,TF-IDF from product descriptions
-description_meses 24,TF-IDF from product descriptions
-description_meses 48,TF-IDF from product descriptions
-description_meses duas,TF-IDF from product descriptions
-description_mesmo,TF-IDF from product descriptions
-description_mesmo tempo,TF-IDF from product descriptions
-description_metal,TF-IDF from product descriptions
-description_metal tamanho,TF-IDF from product descriptions
-description_missus,TF-IDF from product descriptions
-description_missus bordado,TF-IDF from product descriptions
-description_missus em,TF-IDF from product descriptions
-description_mix,TF-IDF from product descriptions
-description_mix match,TF-IDF from product descriptions
-description_mixed,TF-IDF from product descriptions
-description_mixed matched,TF-IDF from product descriptions
-description_modelo,TF-IDF from product descriptions
-description_modelo está,TF-IDF from product descriptions
-description_máquina,TF-IDF from product descriptions
-description_máquina nomeadamente,TF-IDF from product descriptions
-description_máscara,TF-IDF from product descriptions
-description_máscara seda,TF-IDF from product descriptions
-description_mão,TF-IDF from product descriptions
-description_mão esticar,TF-IDF from product descriptions
-description_médiaentrepernas,TF-IDF from product descriptions
-description_médiaentrepernas em,TF-IDF from product descriptions
-description_na,TF-IDF from product descriptions
-description_na cintura,TF-IDF from product descriptions
-description_na copa,TF-IDF from product descriptions
-description_na frente,TF-IDF from product descriptions
-description_na lateral,TF-IDF from product descriptions
-description_na máquina,TF-IDF from product descriptions
-description_nas,TF-IDF from product descriptions
-description_nas costas,TF-IDF from product descriptions
-description_nas laterais,TF-IDF from product descriptions
-description_nomeadamente,TF-IDF from product descriptions
-description_nomeadamente se,TF-IDF from product descriptions
-description_normas,TF-IDF from product descriptions
-description_normas propostas,TF-IDF from product descriptions
-description_nos,TF-IDF from product descriptions
-description_nos ombros,TF-IDF from product descriptions
-description_nos tamanhos,TF-IDF from product descriptions
-description_nota,TF-IDF from product descriptions
-description_nota lavar,TF-IDF from product descriptions
-description_nó,TF-IDF from product descriptions
-description_nó na,TF-IDF from product descriptions
-description_nó nas,TF-IDF from product descriptions
-description_ombros,TF-IDF from product descriptions
-description_ombros cintura,TF-IDF from product descriptions
-description_opções,TF-IDF from product descriptions
-description_opções folho,TF-IDF from product descriptions
-description_orgânico,TF-IDF from product descriptions
-description_orgânico com,TF-IDF from product descriptions
-description_orgânico lave,TF-IDF from product descriptions
-description_ou,TF-IDF from product descriptions
-description_ou com,TF-IDF from product descriptions
-description_ou frente,TF-IDF from product descriptions
-description_ou pescoço,TF-IDF from product descriptions
-description_oversized,TF-IDF from product descriptions
-description_oversized disponível,TF-IDF from product descriptions
-description_padel,TF-IDF from product descriptions
-description_padel collection,TF-IDF from product descriptions
-description_padrão,TF-IDF from product descriptions
-description_padrão cobra,TF-IDF from product descriptions
-description_pajama,TF-IDF from product descriptions
-description_pajama mixed,TF-IDF from product descriptions
-description_pajama shirt,TF-IDF from product descriptions
-description_palmeira,TF-IDF from product descriptions
-description_palmeira na,TF-IDF from product descriptions
-description_para,TF-IDF from product descriptions
-description_para ajustar,TF-IDF from product descriptions
-description_para apertar,TF-IDF from product descriptions
-description_para atar,TF-IDF from product descriptions
-description_para jogar,TF-IDF from product descriptions
-description_para marcar,TF-IDF from product descriptions
-description_para praia,TF-IDF from product descriptions
-description_para prender,TF-IDF from product descriptions
-description_para preservar,TF-IDF from product descriptions
-description_parte,TF-IDF from product descriptions
-description_parte baixo,TF-IDF from product descriptions
-description_paréo,TF-IDF from product descriptions
-description_paréo longo,TF-IDF from product descriptions
-description_passadas,TF-IDF from product descriptions
-description_passadas forma,TF-IDF from product descriptions
-description_peito,TF-IDF from product descriptions
-description_peito com,TF-IDF from product descriptions
-description_perfurado,TF-IDF from product descriptions
-description_perfurado com,TF-IDF from product descriptions
-description_pescoço,TF-IDF from product descriptions
-description_pescoço costas,TF-IDF from product descriptions
-description_pescoço disponível,TF-IDF from product descriptions
-description_podem,TF-IDF from product descriptions
-description_podem debotar,TF-IDF from product descriptions
-description_polyester,TF-IDF from product descriptions
-description_polyester elastane,TF-IDF from product descriptions
-description_por,TF-IDF from product descriptions
-description_por laço,TF-IDF from product descriptions
-description_por laços,TF-IDF from product descriptions
-description_portugal,TF-IDF from product descriptions
-description_possibilidade,TF-IDF from product descriptions
-description_possibilidade apertar,TF-IDF from product descriptions
-description_praia,TF-IDF from product descriptions
-description_praia disponível,TF-IDF from product descriptions
-description_prateado,TF-IDF from product descriptions
-description_prateado com,TF-IDF from product descriptions
-description_prateado disponível,TF-IDF from product descriptions
-description_prateado em,TF-IDF from product descriptions
-description_prateado triangular,TF-IDF from product descriptions
-description_prender,TF-IDF from product descriptions
-description_prender cabelo,TF-IDF from product descriptions
-description_preservar,TF-IDF from product descriptions
-description_preservar durabilidade,TF-IDF from product descriptions
-description_preto,TF-IDF from product descriptions
-description_preto com,TF-IDF from product descriptions
-description_preto liso,TF-IDF from product descriptions
-description_preto texturado,TF-IDF from product descriptions
-description_primas,TF-IDF from product descriptions
-description_primas coleções,TF-IDF from product descriptions
-description_primas forma,TF-IDF from product descriptions
-description_products,TF-IDF from product descriptions
-description_products sleepwear,TF-IDF from product descriptions
-description_produção,TF-IDF from product descriptions
-description_produção entrega,TF-IDF from product descriptions
-description_promover,TF-IDF from product descriptions
-description_promover sustentabilidade,TF-IDF from product descriptions
-description_promoção,TF-IDF from product descriptions
-description_promoção 24,TF-IDF from product descriptions
-description_proporciona,TF-IDF from product descriptions
-description_proporciona fácil,TF-IDF from product descriptions
-description_propostas,TF-IDF from product descriptions
-description_propostas para,TF-IDF from product descriptions
-description_quaisquer,TF-IDF from product descriptions
-description_quaisquer bolas,TF-IDF from product descriptions
-description_que,TF-IDF from product descriptions
-description_que proporciona,TF-IDF from product descriptions
-description_racha,TF-IDF from product descriptions
-description_racha lateral,TF-IDF from product descriptions
-description_redonda,TF-IDF from product descriptions
-description_redonda com,TF-IDF from product descriptions
-description_redonda material,TF-IDF from product descriptions
-description_redondo,TF-IDF from product descriptions
-description_redondo com,TF-IDF from product descriptions
-description_regular,TF-IDF from product descriptions
-description_regular ajustável,TF-IDF from product descriptions
-description_regular com,TF-IDF from product descriptions
-description_regular fit,TF-IDF from product descriptions
-description_regular tanga,TF-IDF from product descriptions
-description_reguláveis,TF-IDF from product descriptions
-description_reguláveis aperta,TF-IDF from product descriptions
-description_reguláveis apertar,TF-IDF from product descriptions
-description_reguláveis com,TF-IDF from product descriptions
-description_reguláveis copas,TF-IDF from product descriptions
-description_reguláveis cruzar,TF-IDF from product descriptions
-description_reguláveis disponível,TF-IDF from product descriptions
-description_reguláveis está,TF-IDF from product descriptions
-description_reguláveis fecho,TF-IDF from product descriptions
-description_regulável,TF-IDF from product descriptions
-description_regulável com,TF-IDF from product descriptions
-description_regulável na,TF-IDF from product descriptions
-description_renda,TF-IDF from product descriptions
-description_rendada,TF-IDF from product descriptions
-description_rendada em,TF-IDF from product descriptions
-description_reversível,TF-IDF from product descriptions
-description_reversível em,TF-IDF from product descriptions
-description_rj,TF-IDF from product descriptions
-description_rj collection,TF-IDF from product descriptions
-description_robe,TF-IDF from product descriptions
-description_robe mixed,TF-IDF from product descriptions
-description_rolinho,TF-IDF from product descriptions
-description_rolinho com,TF-IDF from product descriptions
-description_rosa,TF-IDF from product descriptions
-description_rosa com,TF-IDF from product descriptions
-description_rosa na,TF-IDF from product descriptions
-description_rosa texturado,TF-IDF from product descriptions
-description_rosa verde,TF-IDF from product descriptions
-description_roxo,TF-IDF from product descriptions
-description_saia,TF-IDF from product descriptions
-description_saia calção,TF-IDF from product descriptions
-description_saia com,TF-IDF from product descriptions
-description_satin,TF-IDF from product descriptions
-description_satin pajama,TF-IDF from product descriptions
-description_satin robe,TF-IDF from product descriptions
-description_se,TF-IDF from product descriptions
-description_se tote,TF-IDF from product descriptions
-description_seco,TF-IDF from product descriptions
-description_seco em,TF-IDF from product descriptions
-description_seco texturado,TF-IDF from product descriptions
-description_seda,TF-IDF from product descriptions
-description_seda almofadada,TF-IDF from product descriptions
-description_seguida,TF-IDF from product descriptions
-description_seguida cores,TF-IDF from product descriptions
-description_sem,TF-IDF from product descriptions
-description_sem copas,TF-IDF from product descriptions
-description_semanas,TF-IDF from product descriptions
-description_semanas biquíni,TF-IDF from product descriptions
-description_separately,TF-IDF from product descriptions
-description_separately portugal,TF-IDF from product descriptions
-description_seu,TF-IDF from product descriptions
-description_seu melhor,TF-IDF from product descriptions
-description_shirt,TF-IDF from product descriptions
-description_shirt christmas,TF-IDF from product descriptions
-description_shirt gola,TF-IDF from product descriptions
-description_si,TF-IDF from product descriptions
-description_sleepwear,TF-IDF from product descriptions
-description_sleepwear collection,TF-IDF from product descriptions
-description_sleepwear fall,TF-IDF from product descriptions
-description_sleepwear winter,TF-IDF from product descriptions
-description_soft,TF-IDF from product descriptions
-description_soft feel,TF-IDF from product descriptions
-description_soft finish,TF-IDF from product descriptions
-description_soft touch,TF-IDF from product descriptions
-description_soutien,TF-IDF from product descriptions
-description_spring,TF-IDF from product descriptions
-description_spring summer,TF-IDF from product descriptions
-description_ss,TF-IDF from product descriptions
-description_ss 23,TF-IDF from product descriptions
-description_ss 24,TF-IDF from product descriptions
-description_subida,TF-IDF from product descriptions
-description_subida com,TF-IDF from product descriptions
-description_summer,TF-IDF from product descriptions
-description_summer 2023,TF-IDF from product descriptions
-description_sustentabilidade,TF-IDF from product descriptions
-description_sustentabilidade disponível,TF-IDF from product descriptions
-description_sustentabilidade triangular,TF-IDF from product descriptions
-description_sustentável,TF-IDF from product descriptions
-description_sustentável algodão,TF-IDF from product descriptions
-description_sweatshirt,TF-IDF from product descriptions
-description_sweatshirt em,TF-IDF from product descriptions
-description_sweatshirt gola,TF-IDF from product descriptions
-description_tamanho,TF-IDF from product descriptions
-description_tamanho equivalente,TF-IDF from product descriptions
-description_tamanho formato,TF-IDF from product descriptions
-description_tamanho lave,TF-IDF from product descriptions
-description_tamanho luxuriously,TF-IDF from product descriptions
-description_tamanho modelo,TF-IDF from product descriptions
-description_tamanho soft,TF-IDF from product descriptions
-description_tamanho xs,TF-IDF from product descriptions
-description_tamanho único,TF-IDF from product descriptions
-description_tamanhos,TF-IDF from product descriptions
-description_tamanhos 12,TF-IDF from product descriptions
-description_tamanhos 12meses,TF-IDF from product descriptions
-description_tamanhos modelo,TF-IDF from product descriptions
-description_tamanhos xs,TF-IDF from product descriptions
-description_tanga,TF-IDF from product descriptions
-description_tanga disponível,TF-IDF from product descriptions
-description_tanga hardware,TF-IDF from product descriptions
-description_tapa,TF-IDF from product descriptions
-description_tapa fralda,TF-IDF from product descriptions
-description_tecido,TF-IDF from product descriptions
-description_tecido acolchoado,TF-IDF from product descriptions
-description_tecido leve,TF-IDF from product descriptions
-description_tem,TF-IDF from product descriptions
-description_tem copas,TF-IDF from product descriptions
-description_tempo,TF-IDF from product descriptions
-description_tempo que,TF-IDF from product descriptions
-description_texturado,TF-IDF from product descriptions
-description_texturado aproveitamento,TF-IDF from product descriptions
-description_texturado com,TF-IDF from product descriptions
-description_texturado lavanda,TF-IDF from product descriptions
-description_tiras,TF-IDF from product descriptions
-description_tiras na,TF-IDF from product descriptions
-description_tons,TF-IDF from product descriptions
-description_toque,TF-IDF from product descriptions
-description_toque logótipo,TF-IDF from product descriptions
-description_tornozelo,TF-IDF from product descriptions
-description_tornozelo material,TF-IDF from product descriptions
-description_tote,TF-IDF from product descriptions
-description_tote bag,TF-IDF from product descriptions
-description_tote ficar,TF-IDF from product descriptions
-description_touch,TF-IDF from product descriptions
-description_touch com,TF-IDF from product descriptions
-description_touch comprido,TF-IDF from product descriptions
-description_touch decote,TF-IDF from product descriptions
-description_touch tecido,TF-IDF from product descriptions
-description_touch uma,TF-IDF from product descriptions
-description_traseira,TF-IDF from product descriptions
-description_traseira mais,TF-IDF from product descriptions
-description_triangular,TF-IDF from product descriptions
-description_triangular com,TF-IDF from product descriptions
-description_triangular sem,TF-IDF from product descriptions
-description_triquíni,TF-IDF from product descriptions
-description_tule,TF-IDF from product descriptions
-description_ténis,TF-IDF from product descriptions
-description_ténis guardadas,TF-IDF from product descriptions
-description_um,TF-IDF from product descriptions
-description_uma,TF-IDF from product descriptions
-description_uma alça,TF-IDF from product descriptions
-description_uma palmeira,TF-IDF from product descriptions
-description_utilizar,TF-IDF from product descriptions
-description_utilizar tamanho,TF-IDF from product descriptions
-description_verde,TF-IDF from product descriptions
-description_verde branco,TF-IDF from product descriptions
-description_verde com,TF-IDF from product descriptions
-description_verde hardware,TF-IDF from product descriptions
-description_verde seco,TF-IDF from product descriptions
-description_veste,TF-IDF from product descriptions
-description_veste oversized,TF-IDF from product descriptions
-description_vestido,TF-IDF from product descriptions
-description_vestido comprido,TF-IDF from product descriptions
-description_wash,TF-IDF from product descriptions
-description_wash inside,TF-IDF from product descriptions
-description_wide,TF-IDF from product descriptions
-description_wide leg,TF-IDF from product descriptions
-description_winter,TF-IDF from product descriptions
-description_winter 2020,TF-IDF from product descriptions
-description_winter 2022,TF-IDF from product descriptions
-description_winter 2023,TF-IDF from product descriptions
-description_winter 2024,TF-IDF from product descriptions
-description_winter 22,TF-IDF from product descriptions
-description_winter 23,TF-IDF from product descriptions
-description_winter 24,TF-IDF from product descriptions
-description_xl,TF-IDF from product descriptions
-description_xl modelo,TF-IDF from product descriptions
-description_xs,TF-IDF from product descriptions
-description_xs material,TF-IDF from product descriptions
-description_xs modelo,TF-IDF from product descriptions
-description_xs xl,TF-IDF from product descriptions
-description_zipper,TF-IDF from product descriptions
-description_zipper mangas,TF-IDF from product descriptions
-description_único,TF-IDF from product descriptions
-description_único 15x15cm,TF-IDF from product descriptions
-description_único 70x70cm,TF-IDF from product descriptions
-description_único cores,TF-IDF from product descriptions
-description_único dimensões,TF-IDF from product descriptions
-description_único soft,TF-IDF from product descriptions
+description_w2v_0,TF-IDF from product descriptions
+description_w2v_1,TF-IDF from product descriptions
+description_w2v_2,TF-IDF from product descriptions
+description_w2v_3,TF-IDF from product descriptions
+description_w2v_4,TF-IDF from product descriptions
+description_w2v_5,TF-IDF from product descriptions
+description_w2v_6,TF-IDF from product descriptions
+description_w2v_7,TF-IDF from product descriptions
+description_w2v_8,TF-IDF from product descriptions
+description_w2v_9,TF-IDF from product descriptions
+description_w2v_10,TF-IDF from product descriptions
+description_w2v_11,TF-IDF from product descriptions
+description_w2v_12,TF-IDF from product descriptions
+description_w2v_13,TF-IDF from product descriptions
+description_w2v_14,TF-IDF from product descriptions
+description_w2v_15,TF-IDF from product descriptions
+description_w2v_16,TF-IDF from product descriptions
+description_w2v_17,TF-IDF from product descriptions
+description_w2v_18,TF-IDF from product descriptions
+description_w2v_19,TF-IDF from product descriptions
+description_w2v_20,TF-IDF from product descriptions
+description_w2v_21,TF-IDF from product descriptions
+description_w2v_22,TF-IDF from product descriptions
+description_w2v_23,TF-IDF from product descriptions
+description_w2v_24,TF-IDF from product descriptions
+description_w2v_25,TF-IDF from product descriptions
+description_w2v_26,TF-IDF from product descriptions
+description_w2v_27,TF-IDF from product descriptions
+description_w2v_28,TF-IDF from product descriptions
+description_w2v_29,TF-IDF from product descriptions
+description_w2v_30,TF-IDF from product descriptions
+description_w2v_31,TF-IDF from product descriptions
+description_w2v_32,TF-IDF from product descriptions
+description_w2v_33,TF-IDF from product descriptions
+description_w2v_34,TF-IDF from product descriptions
+description_w2v_35,TF-IDF from product descriptions
+description_w2v_36,TF-IDF from product descriptions
+description_w2v_37,TF-IDF from product descriptions
+description_w2v_38,TF-IDF from product descriptions
+description_w2v_39,TF-IDF from product descriptions
+description_w2v_40,TF-IDF from product descriptions
+description_w2v_41,TF-IDF from product descriptions
+description_w2v_42,TF-IDF from product descriptions
+description_w2v_43,TF-IDF from product descriptions
+description_w2v_44,TF-IDF from product descriptions
+description_w2v_45,TF-IDF from product descriptions
+description_w2v_46,TF-IDF from product descriptions
+description_w2v_47,TF-IDF from product descriptions
+description_w2v_48,TF-IDF from product descriptions
+description_w2v_49,TF-IDF from product descriptions
+description_w2v_50,TF-IDF from product descriptions
+description_w2v_51,TF-IDF from product descriptions
+description_w2v_52,TF-IDF from product descriptions
+description_w2v_53,TF-IDF from product descriptions
+description_w2v_54,TF-IDF from product descriptions
+description_w2v_55,TF-IDF from product descriptions
+description_w2v_56,TF-IDF from product descriptions
+description_w2v_57,TF-IDF from product descriptions
+description_w2v_58,TF-IDF from product descriptions
+description_w2v_59,TF-IDF from product descriptions
+description_w2v_60,TF-IDF from product descriptions
+description_w2v_61,TF-IDF from product descriptions
+description_w2v_62,TF-IDF from product descriptions
+description_w2v_63,TF-IDF from product descriptions
+description_w2v_64,TF-IDF from product descriptions
+description_w2v_65,TF-IDF from product descriptions
+description_w2v_66,TF-IDF from product descriptions
+description_w2v_67,TF-IDF from product descriptions
+description_w2v_68,TF-IDF from product descriptions
+description_w2v_69,TF-IDF from product descriptions
+description_w2v_70,TF-IDF from product descriptions
+description_w2v_71,TF-IDF from product descriptions
+description_w2v_72,TF-IDF from product descriptions
+description_w2v_73,TF-IDF from product descriptions
+description_w2v_74,TF-IDF from product descriptions
+description_w2v_75,TF-IDF from product descriptions
+description_w2v_76,TF-IDF from product descriptions
+description_w2v_77,TF-IDF from product descriptions
+description_w2v_78,TF-IDF from product descriptions
+description_w2v_79,TF-IDF from product descriptions
+description_w2v_80,TF-IDF from product descriptions
+description_w2v_81,TF-IDF from product descriptions
+description_w2v_82,TF-IDF from product descriptions
+description_w2v_83,TF-IDF from product descriptions
+description_w2v_84,TF-IDF from product descriptions
+description_w2v_85,TF-IDF from product descriptions
+description_w2v_86,TF-IDF from product descriptions
+description_w2v_87,TF-IDF from product descriptions
+description_w2v_88,TF-IDF from product descriptions
+description_w2v_89,TF-IDF from product descriptions
+description_w2v_90,TF-IDF from product descriptions
+description_w2v_91,TF-IDF from product descriptions
+description_w2v_92,TF-IDF from product descriptions
+description_w2v_93,TF-IDF from product descriptions
+description_w2v_94,TF-IDF from product descriptions
+description_w2v_95,TF-IDF from product descriptions
+description_w2v_96,TF-IDF from product descriptions
+description_w2v_97,TF-IDF from product descriptions
+description_w2v_98,TF-IDF from product descriptions
+description_w2v_99,TF-IDF from product descriptions

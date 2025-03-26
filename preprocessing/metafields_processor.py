@@ -1048,7 +1048,7 @@ def save_color_similarity_data(output_dir="results"):
     os.makedirs(output_dir, exist_ok=True)
     
     # Calculate color similarities
-    similarity_df = calculate_color_similarities(top_n=10, output_file=f"{output_dir}/products_color_similarity.csv")
+    similarity_df = calculate_color_similarities(top_n=10, output_file="products_color_similarity.csv")
     
     # Log the results
     if not similarity_df.empty:

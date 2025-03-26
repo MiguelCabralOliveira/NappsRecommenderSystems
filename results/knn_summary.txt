@@ -1,19 +1,19 @@
 === KNN Recommendation Summary ===
 
-Number of products: 289
-Number of features: 423
+Number of products: 298
+Number of features: 463
 Number of neighbors per product: 12
 
 Feature Group Weights:
 metafield_data: 2.1429
 collections: 1.1538
 tags: 18.0000
-product_type: 9.0000
+product_type: 2.0000
 vendor: 15.0000
-variant_size: 3.7500
+variant_size: 1.6667
 variant_color: 1.7647
-variant_other: 0.0929
-numerical: 5.0000
+variant_other: 0.0901
+numerical: 6.0000
 time_features: 5.0000
 release_quarter: 4.0909
 seasons: 42.0000
