@@ -30,12 +30,20 @@ def combine_recommendations_adaptative(
             print(f"Aviso: Coluna 'source_product_id' não encontrada nas recomendações KNN para o produto {product_id}")
             return pd.DataFrame()
     
-    # Resto do código permanece o mesmo...
+    # Standardize product ID format
+    # Ensure product_id has the correct format before filtering
+    if not str(product_id).startswith('gid://shopify/Product/') and pd.notna(product_id):
+        standardized_product_id = f"gid://shopify/Product/{product_id}"
+    else:
+        standardized_product_id = product_id
+    
     filtered_knn = knn_recommendations[
-        (knn_recommendations['source_product_id'] == product_id) & 
+        (knn_recommendations['source_product_id'] == standardized_product_id) & 
         (knn_recommendations['similarity'] >= min_similarity_threshold) &
         (knn_recommendations['similarity'] < high_similarity_threshold)
     ].copy()
+    
+    print(f"DEBUG: Found {len(filtered_knn)} KNN recommendations for product {product_id} above threshold {min_similarity_threshold}")
     
     filtered_knn['source'] = 'similarity'
     
@@ -51,13 +59,23 @@ def combine_recommendations_adaptative(
         num_popular = remaining // 2
         num_groups = remaining - num_popular
     
+    print(f"DEBUG: Allocation plan - KNN: {num_knn}, Popular: {num_popular}, Groups: {num_groups}")
+    
     knn_recs = filtered_knn.head(num_knn)
     
     popular_recs = pd.DataFrame()
     if not popular_products_df.empty and num_popular > 0:
+        # Standardize product IDs in popular_products_df
+        if 'product_id' in popular_products_df.columns:
+            popular_products_df['product_id_standardized'] = popular_products_df['product_id'].apply(
+                lambda x: f"gid://shopify/Product/{x}" if pd.notna(x) and not str(x).startswith('gid://shopify/Product/') else x
+            )
+        else:
+            popular_products_df['product_id_standardized'] = popular_products_df.index
+        
         popular = popular_products_df[
-            (popular_products_df['product_id'] != product_id) & 
-            ~popular_products_df['product_id'].isin(knn_recs['recommended_product_id'])
+            (popular_products_df['product_id_standardized'] != standardized_product_id) & 
+            ~popular_products_df['product_id_standardized'].isin(knn_recs['recommended_product_id'])
         ].head(num_popular).copy()
         
         if not popular.empty:
@@ -68,14 +86,16 @@ def combine_recommendations_adaptative(
             popular['similarity'] = 0.2 + (0.3 * (popular['checkout_count'] - min_checkout) / range_checkout)
             popular['rank'] = popular.index + 1
             popular['source'] = 'popularity'
-            popular = popular.rename(columns={'product_id': 'recommended_product_id', 'product_name': 'product_title'})
-            popular['source_product_id'] = product_id
+            popular = popular.rename(columns={'product_id_standardized': 'recommended_product_id', 'product_name': 'product_title'})
+            popular['source_product_id'] = standardized_product_id
             
             columns_to_keep = ['source_product_id', 'recommended_product_id', 'similarity', 'rank', 'source']
             if 'product_title' in popular.columns:
                 columns_to_keep.append('product_title')
             
             popular_recs = popular[columns_to_keep]
+
+    print(f"DEBUG: Found {len(popular_recs)} popularity recommendations for product {product_id}")
     
     group_recs = pd.DataFrame()
     if not product_groups_df.empty and num_groups > 0:
@@ -91,12 +111,19 @@ def combine_recommendations_adaptative(
                 except:
                     product_ids = []
             
-            if product_id in product_ids:
+            # Check both standardized and raw format
+            if product_id in product_ids or standardized_product_id in product_ids:
                 for other_id in product_ids:
-                    if other_id != product_id:
+                    if other_id != product_id and other_id != standardized_product_id:
+                        # Standardize the ID
+                        if not str(other_id).startswith('gid://shopify/Product/') and pd.notna(other_id):
+                            standardized_other_id = f"gid://shopify/Product/{other_id}"
+                        else:
+                            standardized_other_id = other_id
+                            
                         product_in_groups.append({
                             'group_id': row.get('checkout_id', ''),
-                            'recommended_product_id': other_id,
+                            'recommended_product_id': standardized_other_id,
                             'item_count': row.get('item_count', 1)
                         })
         
@@ -106,7 +133,7 @@ def combine_recommendations_adaptative(
             product_frequency = groups_df['recommended_product_id'].value_counts().reset_index()
             product_frequency.columns = ['recommended_product_id', 'frequency']
             
-            already_recommended = pd.concat([knn_recs, popular_recs])['recommended_product_id'].unique()
+            already_recommended = pd.concat([knn_recs, popular_recs])['recommended_product_id'].unique() if not knn_recs.empty or not popular_recs.empty else []
             product_frequency = product_frequency[
                 ~product_frequency['recommended_product_id'].isin(already_recommended)
             ].head(num_groups)
@@ -119,7 +146,7 @@ def combine_recommendations_adaptative(
                 product_frequency['similarity'] = 0.15 + (0.3 * (product_frequency['frequency'] - min_freq) / range_freq)
                 product_frequency['rank'] = range(1, len(product_frequency) + 1)
                 product_frequency['source'] = 'frequently_bought_together'
-                product_frequency['source_product_id'] = product_id
+                product_frequency['source_product_id'] = standardized_product_id
                 
                 product_frequency['product_title'] = product_frequency['recommended_product_id']
                 
@@ -128,17 +155,30 @@ def combine_recommendations_adaptative(
                     columns_to_keep.append('product_title')
                 
                 group_recs = product_frequency[columns_to_keep]
+
+    print(f"DEBUG: Found {len(group_recs)} frequently bought together recommendations for product {product_id}")
     
     current_count = len(knn_recs) + len(popular_recs) + len(group_recs)
+    print(f"DEBUG: Current recommendation count: {current_count}/{total_recommendations}")
     
     if current_count < total_recommendations and not popular_products_df.empty:
-        already_recommended = pd.concat(
-            [knn_recs, popular_recs, group_recs], ignore_index=True
-        )['recommended_product_id'].unique()
+        # Use concat only if there are dataframes to concat
+        dfs_to_concat = [df for df in [knn_recs, popular_recs, group_recs] if not df.empty]
+        
+        if dfs_to_concat:
+            already_recommended = pd.concat(dfs_to_concat, ignore_index=True)['recommended_product_id'].unique()
+        else:
+            already_recommended = []
+        
+        # Standardize product IDs if not already done
+        if 'product_id_standardized' not in popular_products_df.columns:
+            popular_products_df['product_id_standardized'] = popular_products_df['product_id'].apply(
+                lambda x: f"gid://shopify/Product/{x}" if pd.notna(x) and not str(x).startswith('gid://shopify/Product/') else x
+            )
         
         more_popular = popular_products_df[
-            (popular_products_df['product_id'] != product_id) & 
-            ~popular_products_df['product_id'].isin(already_recommended)
+            (popular_products_df['product_id_standardized'] != standardized_product_id) & 
+            ~popular_products_df['product_id_standardized'].isin(already_recommended)
         ].head(total_recommendations - current_count).copy()
         
         if not more_popular.empty:
@@ -149,22 +189,41 @@ def combine_recommendations_adaptative(
             more_popular['similarity'] = 0.1 + (0.1 * (more_popular['checkout_count'] - min_checkout) / range_checkout)
             more_popular['rank'] = more_popular.index + 1
             more_popular['source'] = 'fallback_popularity'
-            more_popular = more_popular.rename(columns={'product_id': 'recommended_product_id', 'product_name': 'product_title'})
-            more_popular['source_product_id'] = product_id
+            more_popular = more_popular.rename(columns={'product_id_standardized': 'recommended_product_id', 'product_name': 'product_title'})
+            more_popular['source_product_id'] = standardized_product_id
             
             columns_to_keep = ['source_product_id', 'recommended_product_id', 'similarity', 'rank', 'source']
             if 'product_title' in more_popular.columns:
                 columns_to_keep.append('product_title')
             
-            popular_recs = pd.concat([popular_recs, more_popular[columns_to_keep]], ignore_index=True)
+            # If popular_recs is empty, just assign instead of concatenating
+            if popular_recs.empty:
+                popular_recs = more_popular[columns_to_keep].copy()
+            else:
+                popular_recs = pd.concat([popular_recs, more_popular[columns_to_keep]], ignore_index=True)
+                
+        print(f"DEBUG: Added {len(more_popular)} fallback popularity recommendations")
     
-    combined_recs = pd.concat([knn_recs, popular_recs, group_recs], ignore_index=True)
+    # Handle case where all recommendation sources are empty
+    if knn_recs.empty and popular_recs.empty and group_recs.empty:
+        print(f"WARNING: No recommendations found for product {product_id}")
+        return pd.DataFrame()
+    
+    # Use concat only if there are dataframes to concat
+    dfs_to_concat = [df for df in [knn_recs, popular_recs, group_recs] if not df.empty]
+    
+    if not dfs_to_concat:
+        return pd.DataFrame()
+    
+    combined_recs = pd.concat(dfs_to_concat, ignore_index=True)
     
     combined_recs = combined_recs.sort_values('similarity', ascending=False)
     combined_recs['rank'] = range(1, len(combined_recs) + 1)
     
-    return combined_recs.head(total_recommendations)
-
+    final_recommendations = combined_recs.head(total_recommendations)
+    print(f"DEBUG: Returning {len(final_recommendations)} total recommendations (requested {total_recommendations})")
+    
+    return final_recommendations
 
 def generate_hybrid_recommendations_adaptative(
     all_knn_recommendations: pd.DataFrame,
