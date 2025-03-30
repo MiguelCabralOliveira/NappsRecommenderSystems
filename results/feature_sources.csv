@@ -28,6 +28,7 @@ product_type_Dress,Product type dummy variable
 product_type_Fato de Banho,Product type dummy variable
 product_type_Hair Band,Product type dummy variable
 product_type_Hoodie,Product type dummy variable
+product_type_Iphone Case,Product type dummy variable
 product_type_Jumpsuit,Product type dummy variable
 product_type_Kimono,Product type dummy variable
 product_type_Leggings,Product type dummy variable
@@ -59,6 +60,7 @@ collections_FW'23 | SLEEPWEAR COLLECTION,Collection dummy variable
 collections_FW’24 | BOTTOMS,Collection dummy variable
 collections_FW’24 | TOPS,Collection dummy variable
 collections_FW’24 | TRACKSUIT COLLECTION,Collection dummy variable
+collections_IPHONE CASES,Collection dummy variable
 collections_KIDS,Collection dummy variable
 collections_LENÇOS,Collection dummy variable
 collections_LINGERIE COLLECTION,Collection dummy variable
@@ -202,6 +204,23 @@ variant_other_formato:XL / Regular,Variant option dummy variable
 variant_other_formato:XL / Tanga,Variant option dummy variable
 variant_other_formato:XS / Regular,Variant option dummy variable
 variant_other_formato:XS / Tanga,Variant option dummy variable
+variant_other_modelo:Iphone 11,Variant option dummy variable
+variant_other_modelo:Iphone 11/12 Pro,Variant option dummy variable
+variant_other_modelo:Iphone 12 Pro Max,Variant option dummy variable
+variant_other_modelo:Iphone 13,Variant option dummy variable
+variant_other_modelo:Iphone 13 Pro,Variant option dummy variable
+variant_other_modelo:Iphone 13 Pro Max,Variant option dummy variable
+variant_other_modelo:Iphone 14,Variant option dummy variable
+variant_other_modelo:Iphone 14 Pro,Variant option dummy variable
+variant_other_modelo:Iphone 14 Pro Max,Variant option dummy variable
+variant_other_modelo:Iphone 14/15 Plus,Variant option dummy variable
+variant_other_modelo:Iphone 15,Variant option dummy variable
+variant_other_modelo:Iphone 15 Pro,Variant option dummy variable
+variant_other_modelo:Iphone 15 Pro Max,Variant option dummy variable
+variant_other_modelo:Iphone 16,Variant option dummy variable
+variant_other_modelo:Iphone 16 Plus,Variant option dummy variable
+variant_other_modelo:Iphone 16 Pro,Variant option dummy variable
+variant_other_modelo:Iphone 16 Pro Max,Variant option dummy variable
 variant_other_padrão:CINZA / L,Variant option dummy variable
 variant_other_padrão:CINZA / M,Variant option dummy variable
 variant_other_padrão:CINZA / S,Variant option dummy variable
@@ -466,103 +485,103 @@ release_quarter_2024Q2,Release quarter features from createdAt timestamp
 release_quarter_2024Q3,Release quarter features from createdAt timestamp
 release_quarter_2024Q4,Release quarter features from createdAt timestamp
 release_quarter_2025Q1,Release quarter features from createdAt timestamp
-description_w2v_0,TF-IDF from product descriptions
-description_w2v_1,TF-IDF from product descriptions
-description_w2v_2,TF-IDF from product descriptions
-description_w2v_3,TF-IDF from product descriptions
-description_w2v_4,TF-IDF from product descriptions
-description_w2v_5,TF-IDF from product descriptions
-description_w2v_6,TF-IDF from product descriptions
-description_w2v_7,TF-IDF from product descriptions
-description_w2v_8,TF-IDF from product descriptions
-description_w2v_9,TF-IDF from product descriptions
-description_w2v_10,TF-IDF from product descriptions
-description_w2v_11,TF-IDF from product descriptions
-description_w2v_12,TF-IDF from product descriptions
-description_w2v_13,TF-IDF from product descriptions
-description_w2v_14,TF-IDF from product descriptions
-description_w2v_15,TF-IDF from product descriptions
-description_w2v_16,TF-IDF from product descriptions
-description_w2v_17,TF-IDF from product descriptions
-description_w2v_18,TF-IDF from product descriptions
-description_w2v_19,TF-IDF from product descriptions
-description_w2v_20,TF-IDF from product descriptions
-description_w2v_21,TF-IDF from product descriptions
-description_w2v_22,TF-IDF from product descriptions
-description_w2v_23,TF-IDF from product descriptions
-description_w2v_24,TF-IDF from product descriptions
-description_w2v_25,TF-IDF from product descriptions
-description_w2v_26,TF-IDF from product descriptions
-description_w2v_27,TF-IDF from product descriptions
-description_w2v_28,TF-IDF from product descriptions
-description_w2v_29,TF-IDF from product descriptions
-description_w2v_30,TF-IDF from product descriptions
-description_w2v_31,TF-IDF from product descriptions
-description_w2v_32,TF-IDF from product descriptions
-description_w2v_33,TF-IDF from product descriptions
-description_w2v_34,TF-IDF from product descriptions
-description_w2v_35,TF-IDF from product descriptions
-description_w2v_36,TF-IDF from product descriptions
-description_w2v_37,TF-IDF from product descriptions
-description_w2v_38,TF-IDF from product descriptions
-description_w2v_39,TF-IDF from product descriptions
-description_w2v_40,TF-IDF from product descriptions
-description_w2v_41,TF-IDF from product descriptions
-description_w2v_42,TF-IDF from product descriptions
-description_w2v_43,TF-IDF from product descriptions
-description_w2v_44,TF-IDF from product descriptions
-description_w2v_45,TF-IDF from product descriptions
-description_w2v_46,TF-IDF from product descriptions
-description_w2v_47,TF-IDF from product descriptions
-description_w2v_48,TF-IDF from product descriptions
-description_w2v_49,TF-IDF from product descriptions
-description_w2v_50,TF-IDF from product descriptions
-description_w2v_51,TF-IDF from product descriptions
-description_w2v_52,TF-IDF from product descriptions
-description_w2v_53,TF-IDF from product descriptions
-description_w2v_54,TF-IDF from product descriptions
-description_w2v_55,TF-IDF from product descriptions
-description_w2v_56,TF-IDF from product descriptions
-description_w2v_57,TF-IDF from product descriptions
-description_w2v_58,TF-IDF from product descriptions
-description_w2v_59,TF-IDF from product descriptions
-description_w2v_60,TF-IDF from product descriptions
-description_w2v_61,TF-IDF from product descriptions
-description_w2v_62,TF-IDF from product descriptions
-description_w2v_63,TF-IDF from product descriptions
-description_w2v_64,TF-IDF from product descriptions
-description_w2v_65,TF-IDF from product descriptions
-description_w2v_66,TF-IDF from product descriptions
-description_w2v_67,TF-IDF from product descriptions
-description_w2v_68,TF-IDF from product descriptions
-description_w2v_69,TF-IDF from product descriptions
-description_w2v_70,TF-IDF from product descriptions
-description_w2v_71,TF-IDF from product descriptions
-description_w2v_72,TF-IDF from product descriptions
-description_w2v_73,TF-IDF from product descriptions
-description_w2v_74,TF-IDF from product descriptions
-description_w2v_75,TF-IDF from product descriptions
-description_w2v_76,TF-IDF from product descriptions
-description_w2v_77,TF-IDF from product descriptions
-description_w2v_78,TF-IDF from product descriptions
-description_w2v_79,TF-IDF from product descriptions
-description_w2v_80,TF-IDF from product descriptions
-description_w2v_81,TF-IDF from product descriptions
-description_w2v_82,TF-IDF from product descriptions
-description_w2v_83,TF-IDF from product descriptions
-description_w2v_84,TF-IDF from product descriptions
-description_w2v_85,TF-IDF from product descriptions
-description_w2v_86,TF-IDF from product descriptions
-description_w2v_87,TF-IDF from product descriptions
-description_w2v_88,TF-IDF from product descriptions
-description_w2v_89,TF-IDF from product descriptions
-description_w2v_90,TF-IDF from product descriptions
-description_w2v_91,TF-IDF from product descriptions
-description_w2v_92,TF-IDF from product descriptions
-description_w2v_93,TF-IDF from product descriptions
-description_w2v_94,TF-IDF from product descriptions
-description_w2v_95,TF-IDF from product descriptions
-description_w2v_96,TF-IDF from product descriptions
-description_w2v_97,TF-IDF from product descriptions
-description_w2v_98,TF-IDF from product descriptions
-description_w2v_99,TF-IDF from product descriptions
+description_2025,TF-IDF from product descriptions
+description_2025 coleção,TF-IDF from product descriptions
+description_24,TF-IDF from product descriptions
+description_24 fevereiro,TF-IDF from product descriptions
+description_25,TF-IDF from product descriptions
+description_31,TF-IDF from product descriptions
+description_31 março,TF-IDF from product descriptions
+description_algodão,TF-IDF from product descriptions
+description_algodão orgânico,TF-IDF from product descriptions
+description_alças,TF-IDF from product descriptions
+description_alças reguláveis,TF-IDF from product descriptions
+description_amovíveis,TF-IDF from product descriptions
+description_ao,TF-IDF from product descriptions
+description_ao corpo,TF-IDF from product descriptions
+description_aperta,TF-IDF from product descriptions
+description_baixo,TF-IDF from product descriptions
+description_biquíni,TF-IDF from product descriptions
+description_bordado,TF-IDF from product descriptions
+description_cintura,TF-IDF from product descriptions
+description_coleção,TF-IDF from product descriptions
+description_coleção fall,TF-IDF from product descriptions
+description_collection,TF-IDF from product descriptions
+description_com,TF-IDF from product descriptions
+description_com copas,TF-IDF from product descriptions
+description_com elástico,TF-IDF from product descriptions
+description_consoante,TF-IDF from product descriptions
+description_consoante normas,TF-IDF from product descriptions
+description_copas,TF-IDF from product descriptions
+description_copas amovíveis,TF-IDF from product descriptions
+description_corpo,TF-IDF from product descriptions
+description_corpo disponível,TF-IDF from product descriptions
+description_costas,TF-IDF from product descriptions
+description_data,TF-IDF from product descriptions
+description_data promoção,TF-IDF from product descriptions
+description_disponível,TF-IDF from product descriptions
+description_disponível em,TF-IDF from product descriptions
+description_disponível nos,TF-IDF from product descriptions
+description_dois,TF-IDF from product descriptions
+description_dois formatos,TF-IDF from product descriptions
+description_durabilidade,TF-IDF from product descriptions
+description_durabilidade material,TF-IDF from product descriptions
+description_elástico,TF-IDF from product descriptions
+description_em,TF-IDF from product descriptions
+description_em dois,TF-IDF from product descriptions
+description_em tamanho,TF-IDF from product descriptions
+description_está,TF-IDF from product descriptions
+description_está disponível,TF-IDF from product descriptions
+description_está utilizar,TF-IDF from product descriptions
+description_fall,TF-IDF from product descriptions
+description_fall winter,TF-IDF from product descriptions
+description_fecho,TF-IDF from product descriptions
+description_fevereiro,TF-IDF from product descriptions
+description_fevereiro 31,TF-IDF from product descriptions
+description_formatos,TF-IDF from product descriptions
+description_formatos regular,TF-IDF from product descriptions
+description_lave,TF-IDF from product descriptions
+description_lave consoante,TF-IDF from product descriptions
+description_março,TF-IDF from product descriptions
+description_março 2025,TF-IDF from product descriptions
+description_material,TF-IDF from product descriptions
+description_modelo,TF-IDF from product descriptions
+description_modelo está,TF-IDF from product descriptions
+description_na,TF-IDF from product descriptions
+description_na cintura,TF-IDF from product descriptions
+description_nas,TF-IDF from product descriptions
+description_nas costas,TF-IDF from product descriptions
+description_normas,TF-IDF from product descriptions
+description_normas propostas,TF-IDF from product descriptions
+description_nos,TF-IDF from product descriptions
+description_nos tamanhos,TF-IDF from product descriptions
+description_para,TF-IDF from product descriptions
+description_para preservar,TF-IDF from product descriptions
+description_parte,TF-IDF from product descriptions
+description_parte baixo,TF-IDF from product descriptions
+description_preservar,TF-IDF from product descriptions
+description_preservar durabilidade,TF-IDF from product descriptions
+description_promoção,TF-IDF from product descriptions
+description_promoção 24,TF-IDF from product descriptions
+description_propostas,TF-IDF from product descriptions
+description_propostas para,TF-IDF from product descriptions
+description_regular,TF-IDF from product descriptions
+description_regular tanga,TF-IDF from product descriptions
+description_reguláveis,TF-IDF from product descriptions
+description_soft,TF-IDF from product descriptions
+description_tamanho,TF-IDF from product descriptions
+description_tamanho modelo,TF-IDF from product descriptions
+description_tamanho xs,TF-IDF from product descriptions
+description_tamanho único,TF-IDF from product descriptions
+description_tamanhos,TF-IDF from product descriptions
+description_tamanhos xs,TF-IDF from product descriptions
+description_tanga,TF-IDF from product descriptions
+description_utilizar,TF-IDF from product descriptions
+description_utilizar tamanho,TF-IDF from product descriptions
+description_winter,TF-IDF from product descriptions
+description_xl,TF-IDF from product descriptions
+description_xl modelo,TF-IDF from product descriptions
+description_xs,TF-IDF from product descriptions
+description_xs modelo,TF-IDF from product descriptions
+description_xs xl,TF-IDF from product descriptions
+description_único,TF-IDF from product descriptions

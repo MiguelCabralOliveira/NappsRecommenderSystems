@@ -11,7 +11,7 @@ def combine_recommendations_adaptative(
     total_recommendations: int = 12,
     strong_similarity_threshold: float = 0.3,
     high_similarity_threshold: float = 0.9,
-    min_similarity_threshold: float = 0.05
+    min_similarity_threshold: float = 0.0001
 ) -> pd.DataFrame:
     # Verificar se as colunas necessárias existem
     if 'similarity' not in knn_recommendations.columns:

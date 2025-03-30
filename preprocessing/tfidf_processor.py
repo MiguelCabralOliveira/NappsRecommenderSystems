@@ -24,18 +24,29 @@ def clean_html(html):
 def analyze_product_similarity(tfidf_matrix, df, similarity_threshold=0.85):
     """
     Analyze and identify products that are too similar (likely same product, different color) 
-    Returns DataFrame with similarity information
+    Returns DataFrame with similarity information including product IDs in both directions
     """
     # Calculate cosine similarity
     cosine_sim = cosine_similarity(tfidf_matrix)
     
     similar_products = []
     for i in range(len(cosine_sim)):
-        for j in range(i + 1, len(cosine_sim)):
+        for j in range(len(cosine_sim)):
+            # Skip self-comparisons
+            if i == j:
+                continue
+                
             similarity = cosine_sim[i][j]
+            # Fix floating point imprecisions - round values very close to 1.0
+            if similarity > 0.9999:
+                similarity = 1.0
+            
+            # Only add if above threshold
             if similarity > similarity_threshold:
                 similar_products.append({
+                    'product1_id': df.iloc[i]['product_id'],  
                     'product1': df.iloc[i]['product_title'],
+                    'product2_id': df.iloc[j]['product_id'], 
                     'product2': df.iloc[j]['product_title'],
                     'similarity': similarity
                 })
@@ -66,7 +77,7 @@ def process_descriptions_tfidf(df, output_prefix="products"):
     # Create TF-IDF vectorizer
     tfidf = TfidfVectorizer(
         stop_words='english',
-        max_features=1000,
+        max_features=100,
         ngram_range=(1, 2)
     )
     

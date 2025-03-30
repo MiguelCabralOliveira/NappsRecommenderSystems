@@ -1,6 +1,6 @@
 from shopifyInfo.shopify_queries import get_all_products
 from shopifyInfo.database_query import fetch_recent_order_items
-from preprocessing.description_processor import process_descriptions_word2vec
+from preprocessing.tfidf_processor import process_descriptions_tfidf  # Changed from Word2Vec to TF-IDF
 from preprocessing.collectionHandle_processor import process_collections
 from preprocessing.tags_processor import process_tags
 from preprocessing.variants_processor import process_variants
@@ -218,9 +218,9 @@ def main():
     df = process_created_at(df)
     export_sample(df, "created_at", args.output_dir)
     
-    # 9. Process text with TF-IDF
+    # 9. Process text with TF-IDF (Changed from Word2Vec to TF-IDF)
     print("Processing product descriptions with TF-IDF...")
-    tfidf_df, recommendation_df, _, similar_products = process_descriptions_word2vec(df, args.output_dir)
+    tfidf_df, recommendation_df, vectorizer, similar_products = process_descriptions_tfidf(df, args.output_dir)
     export_sample(tfidf_df, "tfidf", args.output_dir)
     export_sample(recommendation_df, "recommendation", args.output_dir)
     

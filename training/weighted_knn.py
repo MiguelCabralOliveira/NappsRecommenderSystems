@@ -179,8 +179,8 @@ class _WeightedKNN:
                 'variant_other': 1.0,       
                 'numerical': 1.0,            
                 'time_features': 1.0,
-                'release_quarter': 1.5,
-                'seasons': 1.4
+                'release_quarter': 1,
+                'seasons': 1
             }
         
         for group in self.feature_groups:
@@ -949,19 +949,19 @@ def run_knn(df, output_dir="results", n_neighbors=12, save_model=True, similar_p
     # Set custom weights
     try:
         base_weights = {
-            'product_type': 1.8,        # Higher weight for product types  
-            'tags': 1.8,                # Higher weight for tags
-            'description_tfidf': 1.0,   # Standard weight
-            'metafield_data': 1.0,      # Standard weight
-            'collections': 1.0,         # Standard weight
-            'vendor': 1.0,              # Standard weight
-            'variant_size': 1.0,        # Standard weight
-            'variant_color': 1.0,       # Standard weight
-            'variant_other': 1.0,       # Standard weight
-            'numerical': 1.0,           # Standard weight
-            'time_features': 1.0,       # Standard weight
-            'release_quarter': 1.5,     # Higher weight for release quarters
-            'seasons': 1.4              # Higher weight for seasons
+            'description_tfidf': 5.0,   # Aumente significativamente o peso das descrições
+            'product_type': 2.0,        # Aumente um pouco
+            'tags': 2.0,                # Aumente um pouco
+            'metafield_data': 1.5,      # Aumente ligeiramente
+            'collections': 1.2,         # Mantenha próximo do padrão
+            'vendor': 0.8,              # Diminua um pouco (menos relevante para similaridade)
+            'variant_size': 0.8,        # Diminua um pouco
+            'variant_color': 0.8,       # Diminua um pouco
+            'variant_other': 0.8,       # Diminua um pouco
+            'numerical': 0.7,           # Diminua (preço etc. não é tão relevante para similaridade)
+            'time_features': 0.5,       # Diminua bastante (tempo de criação não indica similaridade)
+            'release_quarter': 0.5,     # Diminua bastante
+            'seasons': 0.8              # Diminua um pouco
         }
         model.set_feature_weights(base_weights, normalize_by_count=True)
     except Exception as e:
