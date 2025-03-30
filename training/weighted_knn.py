@@ -8,10 +8,15 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 import seaborn as sns
 import os
+import json
 import joblib
 import warnings
 from collections import defaultdict
 import re
+import time
+from itertools import product
+from sklearn.model_selection import KFold
+
 
 class _WeightedKNN:
     """
@@ -431,6 +436,29 @@ class _WeightedKNN:
         # Return recommendations for all products, limited to n_recommendations
         return {product_id: recs[:n_recommendations] for product_id, recs in self.recommendation_matrix.items()}
     
+    def calculate_average_similarity(self):
+        """
+        Calculate the average similarity score across all recommendations
+        
+        Returns:
+            float: Average similarity score
+        """
+        if self.recommendation_matrix is None:
+            raise ValueError("Model not fitted yet. Call fit() first.")
+        
+        # Collect all similarity scores
+        all_similarities = []
+        for product_id, recommendations in self.recommendation_matrix.items():
+            similarities = [sim for _, sim in recommendations]
+            all_similarities.extend(similarities)
+        
+        # Calculate and return the average
+        if all_similarities:
+            avg_similarity = np.mean(all_similarities)
+            return avg_similarity
+        else:
+            return 0.0
+    
     def visualize_feature_importance(self, feature_names, output_file="feature_importance.png"):
         """
         Visualize feature importance based on feature weights
@@ -790,6 +818,530 @@ class _WeightedKNN:
         return recommendations_df
 
 
+class WeightOptimizer:
+    """
+    Weight optimizer for KNN recommendations to find optimal feature group weights
+    """
+    def __init__(self, df, n_neighbors=12, output_dir="weight_optimization_results", random_state=42):
+        """
+        Initialize the weight optimizer
+        
+        Args:
+            df: DataFrame with product features
+            n_neighbors: Number of neighbors for KNN
+            output_dir: Directory to save optimization results
+            random_state: Random seed for reproducibility
+        """
+        self.df = df.copy()
+        self.n_neighbors = n_neighbors
+        self.output_dir = output_dir
+        self.random_state = random_state
+        
+        # Create output directory
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Keep track of optimization runs
+        self.optimization_results = []
+        self.best_weights = None
+        self.best_score = 0
+        self.best_model = None
+        
+        # Keep non-feature columns
+        self.non_feature_cols = ['product_id', 'product_title', 'handle']
+        self.feature_cols = [col for col in df.columns if col not in self.non_feature_cols]
+        
+        # Initialize a base model to get feature groups
+        self._init_base_model()
+    
+    def _init_base_model(self):
+        """Initialize a base KNN model and identify feature groups"""
+        self.base_model = _WeightedKNN(n_neighbors=self.n_neighbors, random_state=self.random_state)
+        
+        # Extract features
+        feature_df = self.df[self.feature_cols].copy()
+        
+        # Filter out non-numeric columns
+        numeric_cols = []
+        for col in feature_df.columns:
+            try:
+                pd.to_numeric(feature_df[col].dropna().head(1))
+                numeric_cols.append(col)
+            except (ValueError, TypeError):
+                print(f"Skipping non-numeric column for optimization: {col}")
+        
+        # Use only numeric columns
+        self.feature_df = feature_df[numeric_cols].copy()
+        self.feature_df = self.base_model.handle_missing_values(self.feature_df)
+        
+        # Store product IDs and titles
+        if 'product_id' in self.df.columns:
+            self.base_model.product_ids = self.df['product_id'].copy()
+        if 'product_title' in self.df.columns:
+            self.base_model.product_titles = self.df['product_title'].copy()
+        
+        # Identify feature groups
+        self.feature_groups = self.base_model.identify_feature_groups(self.feature_df)
+        
+        # Default weights for baseline comparison
+        self.default_weights = {
+            'description_tfidf': 5.0,
+            'product_type': 2.0,
+            'tags': 2.0,
+            'metafield_data': 1.5,
+            'collections': 1.2,
+            'vendor': 0.8,
+            'variant_size': 0.8,
+            'variant_color': 0.8,
+            'variant_other': 0.8,
+            'numerical': 0.7,
+            'time_features': 0.5,
+            'release_quarter': 0.5,
+            'seasons': 0.8
+        }
+        
+        # Evaluate default weights as baseline
+        print("Evaluating default weights as baseline...")
+        self.evaluate_weights(self.default_weights, "default")
+    
+    def evaluate_weights(self, weights, weight_name="custom", save_model=False):
+        """
+        Evaluate a specific set of weights
+        
+        Args:
+            weights: Dictionary of weights for each feature group
+            weight_name: Name to identify this weight configuration
+            save_model: Whether to save the model if it's the best so far
+            
+        Returns:
+            float: Average similarity score
+        """
+        print(f"\nEvaluating weights configuration: {weight_name}")
+        
+        # Create a new model for this weight set
+        model = _WeightedKNN(n_neighbors=self.n_neighbors, random_state=self.random_state)
+        model.product_ids = self.base_model.product_ids
+        model.product_titles = self.base_model.product_titles
+        
+        # Use the feature groups from base model
+        model.feature_groups = self.feature_groups
+        
+        # Set the weights (with normalizing by count for evaluation)
+        model.set_feature_weights(weights, normalize_by_count=True)
+        
+        try:
+            # Fit the model
+            model.fit(self.feature_df)
+            
+            # Calculate average similarity score
+            avg_similarity = model.calculate_average_similarity()
+            
+            # Record the result
+            result = {
+                'weight_name': weight_name,
+                'weights': weights.copy(),
+                'avg_similarity': avg_similarity,
+                'timestamp': time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            self.optimization_results.append(result)
+            
+            # Update best if this is better
+            if avg_similarity > self.best_score:
+                self.best_score = avg_similarity
+                self.best_weights = weights.copy()
+                if save_model:
+                    self.best_model = model
+                print(f"New best weights found! Average similarity: {avg_similarity:.4f}")
+            
+            print(f"Weight configuration '{weight_name}' achieved average similarity: {avg_similarity:.4f}")
+            return avg_similarity
+            
+        except Exception as e:
+            print(f"Error evaluating weights {weight_name}: {str(e)}")
+            return 0.0
+    
+    def grid_search(self, weight_options={}, fixed_weights={}, save_results=True):
+        """
+        Perform grid search over different weight combinations
+        
+        Args:
+            weight_options: Dict of feature group to list of weight options to try
+            fixed_weights: Dict of feature group to fixed weight value
+            save_results: Whether to save results to CSV
+            
+        Returns:
+            DataFrame with grid search results
+        """
+        # Start with all feature groups
+        all_groups = list(self.feature_groups.keys())
+        
+        # Default range if no options provided
+        default_range = [0.5, 1.0, 2.0, 5.0]
+        
+        # Build the weight grid
+        weight_grid = {}
+        for group in all_groups:
+            if group in fixed_weights:
+                # Use the fixed weight (as a list for product)
+                weight_grid[group] = [fixed_weights[group]]
+            elif group in weight_options:
+                # Use the provided weight options
+                weight_grid[group] = weight_options[group]
+            else:
+                # Use default range
+                weight_grid[group] = default_range
+        
+        # Get all combinations of weights
+        weight_keys = list(weight_grid.keys())
+        weight_values = list(weight_grid.values())
+        
+        # Calculate total combinations
+        total_combinations = 1
+        for values in weight_values:
+            total_combinations *= len(values)
+        
+        print(f"Running grid search with {total_combinations} weight combinations...")
+        
+        # Track progress
+        combination_count = 0
+        start_time = time.time()
+        
+        # Generate all combinations of weights
+        for weight_combination in product(*weight_values):
+            combination_count += 1
+            
+            # Create weight dictionary for this combination
+            weights = dict(zip(weight_keys, weight_combination))
+            
+            # Set a unique name for this combination
+            combination_name = f"combination_{combination_count}"
+            
+            # Print progress
+            if combination_count % 10 == 0 or combination_count == 1:
+                elapsed = time.time() - start_time
+                estimated_total = (elapsed / combination_count) * total_combinations
+                remaining = estimated_total - elapsed
+                print(f"Evaluating combination {combination_count}/{total_combinations} - " + 
+                     f"Elapsed: {elapsed:.1f}s, Remaining: {remaining:.1f}s")
+            
+            # Evaluate this weight combination
+            _ = self.evaluate_weights(weights, combination_name)
+        
+        # Save results to CSV
+        if save_results:
+            self.save_optimization_results()
+        
+        # Return DataFrame with results
+        return self.get_optimization_results()
+    
+    def random_search(self, n_iterations=50, weight_range=(0.1, 10.0), save_results=True):
+        """
+        Perform random search over different weight combinations
+        
+        Args:
+            n_iterations: Number of random weight combinations to try
+            weight_range: Tuple with (min_weight, max_weight)
+            save_results: Whether to save results to CSV
+            
+        Returns:
+            DataFrame with random search results
+        """
+        all_groups = list(self.feature_groups.keys())
+        
+        print(f"Running random search with {n_iterations} random weight combinations...")
+        
+        # Track progress
+        start_time = time.time()
+        
+        for i in range(n_iterations):
+            # Generate random weights for each feature group
+            weights = {
+                group: np.random.uniform(weight_range[0], weight_range[1]) 
+                for group in all_groups
+            }
+            
+            # Set a unique name for this combination
+            combination_name = f"random_{i+1}"
+            
+            # Print progress
+            if (i+1) % 10 == 0 or i == 0:
+                elapsed = time.time() - start_time
+                estimated_total = (elapsed / (i+1)) * n_iterations
+                remaining = estimated_total - elapsed
+                print(f"Evaluating random combination {i+1}/{n_iterations} - " + 
+                     f"Elapsed: {elapsed:.1f}s, Remaining: {remaining:.1f}s")
+            
+            # Evaluate this weight combination
+            _ = self.evaluate_weights(weights, combination_name)
+        
+        # Save results to CSV
+        if save_results:
+            self.save_optimization_results()
+        
+        # Return DataFrame with results
+        return self.get_optimization_results()
+    
+    def evolutionary_search(self, population_size=10, generations=5, mutation_rate=0.2,
+                          weight_range=(0.1, 10.0), save_results=True):
+        """
+        Perform evolutionary search to find optimal weights
+        
+        Args:
+            population_size: Size of the population in each generation
+            generations: Number of generations to evolve
+            mutation_rate: Probability of mutation for each weight
+            weight_range: Tuple with (min_weight, max_weight)
+            save_results: Whether to save results to CSV
+            
+        Returns:
+            DataFrame with evolutionary search results
+        """
+        all_groups = list(self.feature_groups.keys())
+        
+        print(f"Running evolutionary search with {population_size} population size, {generations} generations")
+        
+        # Initialize random population
+        population = []
+        for i in range(population_size):
+            # Generate random weights for each feature group
+            weights = {
+                group: np.random.uniform(weight_range[0], weight_range[1]) 
+                for group in all_groups
+            }
+            
+            # Evaluate fitness (similarity score)
+            similarity = self.evaluate_weights(weights, f"gen0_ind{i}")
+            
+            # Store individual
+            population.append({
+                "weights": weights,
+                "fitness": similarity
+            })
+        
+        # Sort initial population by fitness
+        population.sort(key=lambda x: x["fitness"], reverse=True)
+        
+        # Evolution loop
+        for gen in range(1, generations + 1):
+            print(f"\nGeneration {gen} - Best fitness: {population[0]['fitness']:.4f}")
+            
+            # Create new generation
+            new_population = []
+            
+            # Elitism - keep the best individual
+            new_population.append(population[0])
+            
+            # Generate rest of population through crossover and mutation
+            while len(new_population) < population_size:
+                # Select parents (tournament selection)
+                parent1 = self._tournament_selection(population)
+                parent2 = self._tournament_selection(population)
+                
+                # Crossover
+                child_weights = self._crossover(parent1["weights"], parent2["weights"])
+                
+                # Mutation
+                self._mutate(child_weights, mutation_rate, weight_range)
+                
+                # Evaluate fitness
+                child_name = f"gen{gen}_ind{len(new_population)}"
+                similarity = self.evaluate_weights(child_weights, child_name)
+                
+                # Add to new population
+                new_population.append({
+                    "weights": child_weights,
+                    "fitness": similarity
+                })
+            
+            # Replace old population
+            population = new_population
+            
+            # Sort by fitness
+            population.sort(key=lambda x: x["fitness"], reverse=True)
+        
+        # Save results to CSV
+        if save_results:
+            self.save_optimization_results()
+        
+        # Return DataFrame with results
+        return self.get_optimization_results()
+    
+    def _tournament_selection(self, population, tournament_size=3):
+        """
+        Tournament selection for evolutionary algorithm
+        
+        Args:
+            population: List of individuals (dict with weights and fitness)
+            tournament_size: Number of individuals in each tournament
+            
+        Returns:
+            Selected individual
+        """
+        # Randomly select individuals for tournament
+        tournament = np.random.choice(population, size=min(tournament_size, len(population)), replace=False)
+        
+        # Return the best individual from tournament
+        return max(tournament, key=lambda x: x["fitness"])
+    
+    def _crossover(self, weights1, weights2):
+        """
+        Perform crossover between two weight sets
+        
+        Args:
+            weights1: First parent's weights
+            weights2: Second parent's weights
+            
+        Returns:
+            New weights from crossover
+        """
+        # Create child weights
+        child_weights = {}
+        
+        # For each feature group, randomly choose weights from either parent
+        for group in weights1.keys():
+            if np.random.random() < 0.5:
+                child_weights[group] = weights1[group]
+            else:
+                child_weights[group] = weights2[group]
+        
+        return child_weights
+    
+    def _mutate(self, weights, mutation_rate, weight_range):
+        """
+        Mutate weights in place
+        
+        Args:
+            weights: Dictionary of weights to mutate
+            mutation_rate: Probability of mutation for each weight
+            weight_range: Tuple with (min_weight, max_weight)
+        """
+        for group in weights:
+            # Decide whether to mutate this group
+            if np.random.random() < mutation_rate:
+                # Apply random mutation
+                weights[group] = np.random.uniform(weight_range[0], weight_range[1])
+    
+    def get_optimization_results(self):
+        """
+        Get results as DataFrame
+        
+        Returns:
+            DataFrame with all optimization results
+        """
+        # Convert results to DataFrame
+        results_df = pd.DataFrame([
+            {
+                'weight_name': result['weight_name'],
+                'avg_similarity': result['avg_similarity'],
+                'timestamp': result['timestamp'],
+                **{f"weight_{group}": result['weights'].get(group, 0) 
+                   for group in self.feature_groups.keys()}
+            }
+            for result in self.optimization_results
+        ])
+        
+        # Sort by average similarity (descending)
+        if not results_df.empty:
+            results_df = results_df.sort_values('avg_similarity', ascending=False)
+        
+        return results_df
+    
+    def save_optimization_results(self, filename=None):
+        """
+        Save optimization results to CSV
+        
+        Args:
+            filename: Custom filename (default: optimization_results.csv in output_dir)
+        """
+        results_df = self.get_optimization_results()
+        
+        if filename is None:
+            filename = os.path.join(self.output_dir, "optimization_results.csv")
+        
+        results_df.to_csv(filename, index=False)
+        print(f"Optimization results saved to {filename}")
+        
+        # Also save best weights
+        if self.best_weights:
+            best_weights_file = os.path.join(self.output_dir, "best_weights.json")
+            with open(best_weights_file, 'w') as f:
+                json.dump(self.best_weights, f, indent=2)
+            print(f"Best weights saved to {best_weights_file}")
+    
+    def visualize_optimization_results(self, top_n=20, filename=None):
+        """
+        Visualize optimization results
+        
+        Args:
+            top_n: Number of top results to show
+            filename: Custom filename for the plot
+        """
+        results_df = self.get_optimization_results()
+        
+        if results_df.empty:
+            print("No optimization results to visualize")
+            return
+        
+        # Get top N results
+        top_results = results_df.head(top_n)
+        
+        # Plot
+        plt.figure(figsize=(12, 8))
+        sns.barplot(x='avg_similarity', y='weight_name', data=top_results)
+        plt.title(f'Top {top_n} Weight Configurations by Average Similarity')
+        plt.xlabel('Average Similarity Score')
+        plt.ylabel('Weight Configuration')
+        plt.tight_layout()
+        
+        # Save plot
+        if filename is None:
+            filename = os.path.join(self.output_dir, "optimization_results.png")
+        
+        plt.savefig(filename)
+        plt.close()
+        print(f"Optimization results visualization saved to {filename}")
+    
+    def build_optimized_model(self, save_model=True):
+        """
+        Build a KNN model with the best weights
+        
+        Args:
+            save_model: Whether to save the model
+            
+        Returns:
+            Fitted _WeightedKNN model with best weights
+        """
+        if self.best_weights is None:
+            print("No best weights found. Using default weights.")
+            weights = self.default_weights
+        else:
+            weights = self.best_weights
+            print(f"Using best weights with avg similarity: {self.best_score:.4f}")
+        
+        # Create model with best weights
+        model = _WeightedKNN(n_neighbors=self.n_neighbors, random_state=self.random_state)
+        
+        # Use the feature DF and product info
+        model.product_ids = self.base_model.product_ids
+        model.product_titles = self.base_model.product_titles
+        
+        # Use the feature groups from base model
+        model.feature_groups = self.feature_groups
+        
+        # Set the weights
+        model.set_feature_weights(weights, normalize_by_count=True)
+        
+        # Fit the model
+        print("Building optimized model...")
+        model.fit(self.feature_df)
+        
+        # Save the model if requested
+        if save_model:
+            save_dir = os.path.join(self.output_dir, "optimized_model")
+            model.save_model(save_dir)
+        
+        return model
+
+
 def find_similar_products(product_id, knn_model, products_df, top_n=12, exclude_similar_variants=True, similar_products_df=None):
     """
     Find similar products using the KNN model
@@ -866,7 +1418,9 @@ def find_similar_products(product_id, knn_model, products_df, top_n=12, exclude_
     # Return top N similar products
     return similar_products.head(top_n)
 
-def run_knn(df, output_dir="results", n_neighbors=12, save_model=True, similar_products_df=None):
+
+def run_knn(df, output_dir="results", n_neighbors=12, save_model=True, similar_products_df=None, 
+          optimize_weights=False, optimization_method='grid', optimization_params=None):
     """
     Main public interface for running weighted KNN for product recommendations.
     This function should be called directly from outside this module.
@@ -877,6 +1431,9 @@ def run_knn(df, output_dir="results", n_neighbors=12, save_model=True, similar_p
         n_neighbors: Number of neighbors to find for each product
         save_model: Whether to save the model
         similar_products_df: DataFrame with pairs of similar products (directly passed)
+        optimize_weights: Whether to optimize feature weights
+        optimization_method: Method to use for weight optimization ('grid', 'random', 'evolutionary')
+        optimization_params: Dictionary with parameters for the optimization method
         
     Returns:
         DataFrame: DataFrame with all product recommendations
@@ -903,32 +1460,21 @@ def run_knn(df, output_dir="results", n_neighbors=12, save_model=True, similar_p
     else:
         print(f"Using provided similarity data for {len(similar_products_df)} product pairs")
     
-    # Initialize model
-    model = _WeightedKNN(n_neighbors=n_neighbors)
-    
-    # Extract features for KNN (manualmente, substituindo _prepare_features)
-    # Extrair IDs e títulos de produtos
-    if 'product_id' in df.columns:
-        model.product_ids = df['product_id'].copy()
-    if 'product_title' in df.columns:
-        model.product_titles = df['product_title'].copy()
-    
-    # Remover colunas não-características
+    # Extract features for KNN
     non_feature_cols = ['product_id', 'product_title', 'handle']
     feature_cols = [col for col in df.columns if col not in non_feature_cols]
     feature_df = df[feature_cols].copy()
     
-    # Filtrar colunas não-numéricas
+    # Filter out non-numeric columns
     numeric_cols = []
     for col in feature_df.columns:
         try:
-            # Tentar converter uma amostra para float
             pd.to_numeric(feature_df[col].dropna().head(1))
             numeric_cols.append(col)
         except (ValueError, TypeError):
             print(f"Skipping non-numeric column: {col}")
     
-    # Manter apenas colunas numéricas para cálculo de similaridade
+    # Keep only numeric columns for similarity computation
     if len(numeric_cols) < len(feature_df.columns):
         dropped_cols = [col for col in feature_df.columns if col not in numeric_cols]
         print(f"Removed {len(dropped_cols)} non-numeric columns from feature set")
@@ -936,43 +1482,135 @@ def run_knn(df, output_dir="results", n_neighbors=12, save_model=True, similar_p
     
     print(f"Using {len(feature_df.columns)} numeric features for {len(df)} products")
     
-    # Lidar com valores ausentes
-    feature_df = model.handle_missing_values(feature_df)
+    # Define the model variable outside the optimization condition scope
+    model = None
     
-    # Identify feature groups
-    try:
-        feature_groups = model.identify_feature_groups(feature_df)
-    except Exception as e:
-        print(f"Error identifying feature groups: {str(e)}")
-        return pd.DataFrame()
+    # If weight optimization is requested
+    if optimize_weights:
+        print(f"\n=== Starting Weight Optimization with {optimization_method} method ===")
+        
+        # Create optimization directory
+        opt_dir = os.path.join(output_dir, "weight_optimization")
+        
+        # Create weight optimizer
+        optimizer = WeightOptimizer(
+            df=df,
+            n_neighbors=n_neighbors,
+            output_dir=opt_dir,
+            random_state=42
+        )
+        
+        # Set default parameters if none provided
+        if optimization_params is None:
+            optimization_params = {}
+        
+        # Run the selected optimization method
+        if optimization_method == 'grid':
+            print("Running grid search for optimal weights...")
+            
+            # Default parameters for grid search
+            weight_options = optimization_params.get('weight_options', {})
+            fixed_weights = optimization_params.get('fixed_weights', {})
+            
+            # Run grid search
+            optimizer.grid_search(
+                weight_options=weight_options,
+                fixed_weights=fixed_weights,
+                save_results=True
+            )
+            
+        elif optimization_method == 'random':
+            print("Running random search for optimal weights...")
+            
+            # Default parameters for random search
+            n_iterations = optimization_params.get('n_iterations', 50)
+            weight_range = optimization_params.get('weight_range', (0.1, 10.0))
+            
+            # Run random search
+            optimizer.random_search(
+                n_iterations=n_iterations,
+                weight_range=weight_range,
+                save_results=True
+            )
+            
+        elif optimization_method == 'evolutionary':
+            print("Running evolutionary search for optimal weights...")
+            
+            # Default parameters for evolutionary search
+            population_size = optimization_params.get('population_size', 10)
+            generations = optimization_params.get('generations', 5)
+            mutation_rate = optimization_params.get('mutation_rate', 0.2)
+            weight_range = optimization_params.get('weight_range', (0.1, 10.0))
+            
+            # Run evolutionary search
+            optimizer.evolutionary_search(
+                population_size=population_size,
+                generations=generations,
+                mutation_rate=mutation_rate,
+                weight_range=weight_range,
+                save_results=True
+            )
+            
+        else:
+            print(f"Warning: Unknown optimization method '{optimization_method}'. Using grid search.")
+            optimizer.grid_search(save_results=True)
+        
+        # Visualize optimization results
+        optimizer.visualize_optimization_results()
+        
+        # Build the model with optimized weights
+        print("\n=== Building KNN model with optimized weights ===")
+        model = optimizer.build_optimized_model()
     
-    # Set custom weights
-    try:
-        base_weights = {
-            'description_tfidf': 5.0,   # Aumente significativamente o peso das descrições
-            'product_type': 2.0,        # Aumente um pouco
-            'tags': 2.0,                # Aumente um pouco
-            'metafield_data': 1.5,      # Aumente ligeiramente
-            'collections': 1.2,         # Mantenha próximo do padrão
-            'vendor': 0.8,              # Diminua um pouco (menos relevante para similaridade)
-            'variant_size': 0.8,        # Diminua um pouco
-            'variant_color': 0.8,       # Diminua um pouco
-            'variant_other': 0.8,       # Diminua um pouco
-            'numerical': 0.7,           # Diminua (preço etc. não é tão relevante para similaridade)
-            'time_features': 0.5,       # Diminua bastante (tempo de criação não indica similaridade)
-            'release_quarter': 0.5,     # Diminua bastante
-            'seasons': 0.8              # Diminua um pouco
-        }
-        model.set_feature_weights(base_weights, normalize_by_count=True)
-    except Exception as e:
-        print(f"Error setting feature weights: {str(e)}")
-    
-    # Fit the KNN model
-    try:
-        model.fit(feature_df)
-    except Exception as e:
-        print(f"Error during model fitting: {str(e)}")
-        return pd.DataFrame()
+    # If we're not optimizing weights or optimization failed
+    if model is None:
+        # Initialize standard KNN model with default weights
+        print("\n=== Building KNN model with default weights ===")
+        model = _WeightedKNN(n_neighbors=n_neighbors)
+        
+        # Set product IDs and titles
+        if 'product_id' in df.columns:
+            model.product_ids = df['product_id'].copy()
+        if 'product_title' in df.columns:
+            model.product_titles = df['product_title'].copy()
+            
+        # Process feature data
+        feature_df = model.handle_missing_values(feature_df)
+        
+        # Identify feature groups
+        try:
+            model.identify_feature_groups(feature_df)
+        except Exception as e:
+            print(f"Error identifying feature groups: {str(e)}")
+            return pd.DataFrame()
+        
+        # Set custom weights
+        try:
+            base_weights = {
+                'description_tfidf': 5.0,   # Significantly higher weight for descriptions
+                'product_type': 2.0,        # Increase slightly
+                'tags': 2.0,                # Increase slightly
+                'metafield_data': 1.5,      # Slight increase
+                'collections': 1.2,         # Keep close to standard
+                'vendor': 0.8,              # Decrease slightly (less relevant for similarity)
+                'variant_size': 0.8,        # Decrease slightly
+                'variant_color': 0.8,       # Decrease slightly
+                'variant_other': 0.8,       # Decrease slightly
+                'numerical': 0.7,           # Decrease (price etc. isn't as relevant for similarity)
+                'time_features': 0.5,       # Decrease significantly (creation time doesn't indicate similarity)
+                'release_quarter': 0.5,     # Decrease significantly
+                'seasons': 0.8              # Decrease slightly
+            }
+            model.set_feature_weights(base_weights, normalize_by_count=True)
+        except Exception as e:
+            print(f"Error setting feature weights: {str(e)}")
+        
+        # Fit the model
+        try:
+            model.fit(feature_df)
+        except Exception as e:
+            print(f"Error during model fitting: {str(e)}")
+            return pd.DataFrame()
     
     # Track visualization success/failure
     visualizations_successful = {
@@ -1021,6 +1659,7 @@ def run_knn(df, output_dir="results", n_neighbors=12, save_model=True, similar_p
         visualizations_successful['recommendations'] = True
     except Exception as e:
         print(f"Error exporting recommendations: {str(e)}")
+        all_recommendations_df = pd.DataFrame()  # Return empty DataFrame on error
     
     # Check if we have any missing visualizations
     missing_visualizations = [name for name, success in visualizations_successful.items() if not success]
@@ -1087,86 +1726,6 @@ def run_knn(df, output_dir="results", n_neighbors=12, save_model=True, similar_p
     
     print(f"\nKNN recommendation model complete! Results saved to {output_dir}")
     
+    # Return the recommendations DataFrame
     return all_recommendations_df
-
-def run_hybrid_recommendations(input_file, output_dir="results", method="knn", 
-                        n_neighbors=12, save_model=True, similar_products_df=None):
-    """
-    Main public interface for running KNN-based product recommendations.
-    This unified function exists for backward compatibility.
-    
-    Args:
-        input_file: Path to the input CSV file with processed features
-        output_dir: Directory to save results
-        method: Recommendation method (only "knn" is supported in this version)
-        n_neighbors: Number of neighbors to find for each product
-        save_model: Whether to save the model
-        similar_products_df: DataFrame with pairs of similar products (directly passed)
         
-    Returns:
-        DataFrame: Recommendations data
-    """
-    method = method.lower()
-    
-    if method == "knn" or method != "kmeans":  # Default to KNN if not kmeans
-        print(f"Running K-NN based recommendations with {n_neighbors} neighbors per product...")
-        return run_knn(
-            input_file=input_file, 
-            output_dir=output_dir, 
-            n_neighbors=n_neighbors, 
-            save_model=save_model, 
-            similar_products_df=similar_products_df
-        )
-    else:
-        raise ValueError("This version only supports KNN. The K-Means implementation has been removed.")
-
-# Extension to find_similar_products to work with product_id
-def get_product_recommendations(product_id, model, products_df, top_n=12, 
-                               exclude_similar_variants=True, similar_products_df=None):
-    """
-    Unified function to get product recommendations
-    
-    Args:
-        product_id: Product ID to find similar products for
-        model: Fitted _WeightedKNN model
-        products_df: DataFrame with original product data
-        top_n: Number of similar products to return
-        exclude_similar_variants: Whether to exclude products that are too similar
-        similar_products_df: DataFrame with pairs of too-similar products to exclude
-        
-    Returns:
-        DataFrame: Similar products with similarity scores
-    """
-    if hasattr(model, 'get_recommendations'):
-        return find_similar_products(
-            product_id=product_id,
-            knn_model=model,
-            products_df=products_df,
-            top_n=top_n,
-            exclude_similar_variants=exclude_similar_variants,
-            similar_products_df=similar_products_df
-        )
-    else:
-        raise ValueError("Model is not a valid KNN model")
-
-if __name__ == "__main__":
-    import argparse
-    
-    # Set up command line argument parsing
-    parser = argparse.ArgumentParser(description='Run product recommendations')
-    parser.add_argument('--input', type=str, required=True, help='Path to input CSV file with processed features')
-    parser.add_argument('--output-dir', type=str, default='results', help='Directory to save results')
-    parser.add_argument('--neighbors', type=int, default=12, help='Number of neighbors to find per product')
-    parser.add_argument('--skip-model-save', action='store_true', help='Skip saving the model')
-    
-    args = parser.parse_args()
-    
-    # Run the KNN model
-    recommendations_df = run_knn(
-        input_file=args.input,
-        output_dir=args.output_dir,
-        n_neighbors=args.neighbors,
-        save_model=not args.skip_model_save
-    )
-    
-    print(f"Finished generating recommendations for {len(recommendations_df['source_product_id'].unique())} products")

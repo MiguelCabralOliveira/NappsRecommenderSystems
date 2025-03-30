@@ -43,7 +43,7 @@ def combine_recommendations_adaptative(
         (knn_recommendations['similarity'] < high_similarity_threshold)
     ].copy()
     
-    print(f"DEBUG: Found {len(filtered_knn)} KNN recommendations for product {product_id} above threshold {min_similarity_threshold}")
+    
     
     filtered_knn['source'] = 'similarity'
     
@@ -59,7 +59,7 @@ def combine_recommendations_adaptative(
         num_popular = remaining // 2
         num_groups = remaining - num_popular
     
-    print(f"DEBUG: Allocation plan - KNN: {num_knn}, Popular: {num_popular}, Groups: {num_groups}")
+   
     
     knn_recs = filtered_knn.head(num_knn)
     
@@ -95,7 +95,7 @@ def combine_recommendations_adaptative(
             
             popular_recs = popular[columns_to_keep]
 
-    print(f"DEBUG: Found {len(popular_recs)} popularity recommendations for product {product_id}")
+    
     
     group_recs = pd.DataFrame()
     if not product_groups_df.empty and num_groups > 0:
@@ -156,10 +156,10 @@ def combine_recommendations_adaptative(
                 
                 group_recs = product_frequency[columns_to_keep]
 
-    print(f"DEBUG: Found {len(group_recs)} frequently bought together recommendations for product {product_id}")
+    
     
     current_count = len(knn_recs) + len(popular_recs) + len(group_recs)
-    print(f"DEBUG: Current recommendation count: {current_count}/{total_recommendations}")
+   
     
     if current_count < total_recommendations and not popular_products_df.empty:
         # Use concat only if there are dataframes to concat
@@ -202,7 +202,7 @@ def combine_recommendations_adaptative(
             else:
                 popular_recs = pd.concat([popular_recs, more_popular[columns_to_keep]], ignore_index=True)
                 
-        print(f"DEBUG: Added {len(more_popular)} fallback popularity recommendations")
+      #  print(f"DEBUG: Added {len(more_popular)} fallback popularity recommendations")
     
     # Handle case where all recommendation sources are empty
     if knn_recs.empty and popular_recs.empty and group_recs.empty:
@@ -221,7 +221,7 @@ def combine_recommendations_adaptative(
     combined_recs['rank'] = range(1, len(combined_recs) + 1)
     
     final_recommendations = combined_recs.head(total_recommendations)
-    print(f"DEBUG: Returning {len(final_recommendations)} total recommendations (requested {total_recommendations})")
+    # print(f"DEBUG: Returning {len(final_recommendations)} total recommendations (requested {total_recommendations})")
     
     return final_recommendations
 

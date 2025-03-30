@@ -1,6 +1,6 @@
 from shopifyInfo.shopify_queries import get_all_products
 from shopifyInfo.database_query import fetch_recent_order_items
-from preprocessing.tfidf_processor import process_descriptions_tfidf  # Changed from Word2Vec to TF-IDF
+from preprocessing.tfidf_processor import process_descriptions_tfidf
 from preprocessing.collectionHandle_processor import process_collections
 from preprocessing.tags_processor import process_tags
 from preprocessing.variants_processor import process_variants
@@ -85,6 +85,18 @@ def main():
                       help='Skip the recommendation generation step')
     parser.add_argument('--output-dir', type=str, default='results',
                       help='Directory to save recommendation results (default: results)')
+    # Add new arguments for weight optimization
+    parser.add_argument('--optimize-weights', action='store_true',
+                      help='Optimize feature weights for better recommendations')
+    parser.add_argument('--optimization-method', type=str, default='grid', choices=['grid', 'random', 'evolutionary'],
+                      help='Method to use for weight optimization (default: grid)')
+    parser.add_argument('--opt-iterations', type=int, default=50,
+                      help='Number of iterations for random search optimization (default: 50)')
+    parser.add_argument('--population-size', type=int, default=10,
+                      help='Population size for evolutionary optimization (default: 10)')
+    parser.add_argument('--generations', type=int, default=5,
+                      help='Number of generations for evolutionary optimization (default: 5)')
+    
     args = parser.parse_args()
     
     # Create output directory if it doesn't exist
@@ -255,55 +267,80 @@ def main():
         print("Starting recommendation generation...")
         print("="*80)
         
-        # Run the KNN function to generate recommendations
+        # Prepare optimization parameters
+        optimization_params = None
+        if args.optimize_weights:
+            if args.optimization_method == 'random':
+                optimization_params = {
+                    'n_iterations': args.opt_iterations,
+                    'weight_range': (0.1, 10.0)
+                }
+            elif args.optimization_method == 'evolutionary':
+                optimization_params = {
+                    'population_size': args.population_size,
+                    'generations': args.generations,
+                    'mutation_rate': 0.2,  # Default mutation rate
+                    'weight_range': (0.1, 10.0)
+                }
+        
+        # Run the KNN function to generate recommendations with optional weight optimization
         recommendations_df = run_knn(
-            df = df,
+            df=df,
             output_dir=args.output_dir,
             n_neighbors=args.neighbors,
             save_model=True,
             similar_products_df=similar_products if not similar_products.empty else None,
+            optimize_weights=args.optimize_weights,
+            optimization_method=args.optimization_method,
+            optimization_params=optimization_params
         )
         
         print("\nRecommendation generation complete!")
         print(f"Product recommendations and visualizations saved to {args.output_dir}")
         print(f"- {args.output_dir}/all_recommendations.csv (comprehensive recommendations for all products)")
         print(f"- {args.output_dir}/similar_products_example.csv (example recommendations for a sample product)")
+        
+        if args.optimize_weights:
+            print(f"- {args.output_dir}/weight_optimization/ (weight optimization results)")
 
-        # After running the KNN function in main.py, add the following code:
-    if not args.skip_recommendations and 'recommendations_df' in locals() and not recommendations_df.empty:
-        print("\n" + "="*80)
-        print("Combining recommendations with popularity and co-purchase data...")
-        print("="*80)
-        
-        from training.recommendation_combiner import generate_hybrid_recommendations_adaptative
-        
-        # Generate hybrid recommendations
-        hybrid_recommendations = generate_hybrid_recommendations_adaptative(
-            all_knn_recommendations=recommendations_df,
-            products_df=df,
-            popular_products_df=popular_products_df if not popular_products_df.empty else None,
-            product_groups_df=product_groups_df if not product_groups_df.empty else None,
-            total_recommendations=args.neighbors,
-            strong_similarity_threshold=0.3,
-            high_similarity_threshold=0.9,
-            min_similarity_threshold=0.05
-        )
-        
-        # Save the hybrid recommendations
-        if not hybrid_recommendations.empty:
-            hybrid_output_file = f"{args.output_dir}/hybrid_recommendations.csv"
-            hybrid_recommendations.to_csv(hybrid_output_file, index=False)
-            print(f"Hybrid recommendations saved to {hybrid_output_file}")
+        # After running the KNN function, combine with hybrid recommendations
+        if recommendations_df is not None and not isinstance(recommendations_df, type(None)):
+            print("\n" + "="*80)
+            print("Combining recommendations with popularity and co-purchase data...")
+            print("="*80)
             
-            # Calculate source distribution
-            if 'source' in hybrid_recommendations.columns:
-                source_counts = hybrid_recommendations['source'].value_counts()
-                print("\nRecommendation sources distribution:")
-                for source, count in source_counts.items():
-                    percentage = 100 * count / len(hybrid_recommendations)
-                    print(f"  - {source}: {count} ({percentage:.1f}%)")
+            from training.recommendation_combiner import generate_hybrid_recommendations_adaptative
+            
+            # Generate hybrid recommendations
+            hybrid_recommendations = generate_hybrid_recommendations_adaptative(
+                all_knn_recommendations=recommendations_df,
+                products_df=df,
+                popular_products_df=popular_products_df if not popular_products_df.empty else None,
+                product_groups_df=product_groups_df if not product_groups_df.empty else None,
+                total_recommendations=args.neighbors,
+                strong_similarity_threshold=0.3,
+                high_similarity_threshold=0.9,
+                min_similarity_threshold=0.05
+            )
+            
+            # Save the hybrid recommendations
+            if hybrid_recommendations is not None and not isinstance(hybrid_recommendations, type(None)) and not hybrid_recommendations.empty:
+                hybrid_output_file = f"{args.output_dir}/hybrid_recommendations.csv"
+                hybrid_recommendations.to_csv(hybrid_output_file, index=False)
+                print(f"Hybrid recommendations saved to {hybrid_output_file}")
+                
+                # Calculate source distribution
+                if 'source' in hybrid_recommendations.columns:
+                    source_counts = hybrid_recommendations['source'].value_counts()
+                    print("\nRecommendation sources distribution:")
+                    for source, count in source_counts.items():
+                        percentage = 100 * count / len(hybrid_recommendations)
+                        print(f"  - {source}: {count} ({percentage:.1f}%)")
+            else:
+                print("No hybrid recommendations generated.")
         else:
-            print("No hybrid recommendations generated.")
+            print("No recommendations data available for hybrid recommendation generation.")
+
 
 if __name__ == "__main__":
     main()

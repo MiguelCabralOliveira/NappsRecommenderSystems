@@ -5,18 +5,18 @@ Number of features: 482
 Number of neighbors per product: 12
 
 Feature Group Weights:
-metafield_data: 3.2143
-collections: 1.3333
-tags: 20.0000
-product_type: 2.1429
-vendor: 12.0000
-variant_size: 1.3333
-variant_color: 1.4118
-variant_other: 0.0686
-numerical: 4.2000
-time_features: 2.5000
-release_quarter: 1.3636
-seasons: 24.0000
+metafield_data: 4.6293
+collections: 0.9989
+tags: 45.3628
+product_type: 0.1940
+vendor: 129.0519
+variant_size: 1.4257
+variant_color: 4.8836
+variant_other: 0.0499
+numerical: 55.8613
+time_features: 1.0730
+release_quarter: 8.2160
+seasons: 295.5072
 
 Files generated:
 ✓ feature_importance
