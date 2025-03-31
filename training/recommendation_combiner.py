@@ -38,10 +38,11 @@ def combine_recommendations_adaptative(
         standardized_product_id = product_id
     
     filtered_knn = knn_recommendations[
-        (knn_recommendations['source_product_id'] == standardized_product_id) & 
-        (knn_recommendations['similarity'] >= min_similarity_threshold) &
-        (knn_recommendations['similarity'] < high_similarity_threshold)
-    ].copy()
+    (knn_recommendations['source_product_id'] == standardized_product_id) & 
+    (knn_recommendations['similarity'] >= min_similarity_threshold) &
+    (knn_recommendations['similarity'] < high_similarity_threshold) &
+    (knn_recommendations['recommended_product_id'] != standardized_product_id)  # Adicionar esta linha
+].copy()
     
     
     

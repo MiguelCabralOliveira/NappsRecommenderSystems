@@ -772,7 +772,8 @@ class _WeightedKNN:
         rows = []
         for product_id, recommendations in self.recommendation_matrix.items():
             # Apply filtering if similar_products_df is provided
-            filtered_recommendations = recommendations
+            filtered_recommendations = [(rec_id, sim) for rec_id, sim in recommendations 
+                                   if rec_id != product_id]
             
             if similar_products_df is not None and not similar_products_df.empty:
                 # Find product IDs to exclude (too similar to the query product)
