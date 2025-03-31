@@ -2,471 +2,618 @@ feature_name,source
 product_title,Original product information
 product_id,Original product information
 handle,Original product information
-reviews_rating,Other/Unknown
-reviews_rating_count,Other/Unknown
-custom_cor,Other/Unknown
-metafield_shopify--discovery--product_recommendation_related_products_display_ahead,TF-IDF from product metafields
-metafield_shopify--discovery--product_recommendation_related_products_display_only_manual,TF-IDF from product metafields
-metafield_shopify_fabric_angora_bamboo,TF-IDF from product metafields
-metafield_shopify_age-group_adults,TF-IDF from product metafields
-metafield_shopify_target-gender_unisex,TF-IDF from product metafields
-metafield_shopify_accessory-size_one_size,TF-IDF from product metafields
-metafield_shopify_headwear-features_adjustable_fit,TF-IDF from product metafields
-metafield_shopify_size_one_size,TF-IDF from product metafields
-metafield_shopify_size_s_m_m_l,TF-IDF from product metafields
-metafield_shopify_size_xs_s_m_l_xl,TF-IDF from product metafields
-metafield_shopify_size_xs_s_m_l,TF-IDF from product metafields
-metafield_shopify_size_xs_s_s_m_m_l,TF-IDF from product metafields
-metafield_shopify_size_xxs_s_m_l,TF-IDF from product metafields
-metafield_shopify_neckline_round,TF-IDF from product metafields
+reviews_rating,Other/Processed Feature
+reviews_rating_count,Other/Processed Feature
+mm-google-shopping_custom_product,Other/Processed Feature
+metafield_scx_composition_gáspea_lona_100_algodão_orgâni,TF-IDF from product metafields
+metafield_scx_composition_parte_superior_cordura_forro_m,TF-IDF from product metafields
+metafield_scx_composition_80_algodão_17_poliamida_3_elas,TF-IDF from product metafields
+metafield_scx_composition_parte_superior_burel_resistent,TF-IDF from product metafields
+metafield_scx_composition_parte_superior_100_suede_premi,TF-IDF from product metafields
+metafield_scx_composition_gáspea_suede_sola_100_tpr_vega,TF-IDF from product metafields
+metafield_scx_composition_parte_superior_100_pele_premiu,TF-IDF from product metafields
+metafield_scx_composition_parte_superior_bombazine_vegan,TF-IDF from product metafields
+metafield_scx_composition_pirâmide_olfativa_notas_de_top,TF-IDF from product metafields
+metafield_scx_composition_50_pre_consumer_recycle_cotton,TF-IDF from product metafields
+metafield_scx_composition_sola_tr_corte_leather_premium_,TF-IDF from product metafields
+metafield_scx_composition_gáspea_sola_100_tpr_vegan_palm,TF-IDF from product metafields
+metafield_scx_composition_parte_superior_100_pes_forro_m,TF-IDF from product metafields
+metafield_scx_composition_parte_superior_100_polyester_f,TF-IDF from product metafields
+metafield_scx_composition_50_preconsumed_recycled_cotton,TF-IDF from product metafields
+metafield_scx_composition_42_linen_10_polyester_31_recyc,TF-IDF from product metafields
+metafield_scx_composition_english_embroidery_watercolor_,TF-IDF from product metafields
+metafield_scx_composition_50_preconumed_recycled_cotton_,TF-IDF from product metafields
+metafield_scx_composition_29_algodão_reciclado_grs_29_al,TF-IDF from product metafields
+metafield_scx_composition_hairy_suede_premium_leather,TF-IDF from product metafields
+metafield_scx_composition_hairy_suede_premium_suede,TF-IDF from product metafields
+metafield_scx_composition_100_bci,TF-IDF from product metafields
+metafield_custom_certificao_certificado_gots_vegan_inescop,TF-IDF from product metafields
+metafield_custom_certificao_leather_working_group,TF-IDF from product metafields
+metafield_custom_certificao_peta_approved_vegan,TF-IDF from product metafields
+metafield_custom_certificao_better_cotton_initiative_globa,TF-IDF from product metafields
+metafield_custom_certificao_grs_recycled_cotton_line_globa,TF-IDF from product metafields
+metafield_custom_certificao_vegan,TF-IDF from product metafields
+metafield_custom_certificao_global_recycled_standard,TF-IDF from product metafields
+metafield_custom_manutencao_e_cuidados_o_nosso_calçado_é_concebido_pa,TF-IDF from product metafields
+metafield_shopify_footwear-material_linho,TF-IDF from product metafields
+metafield_shopify_closure-type_velcro,TF-IDF from product metafields
 product_type_,Product type dummy variable
-product_type_Biquínis,Product type dummy variable
-product_type_Bonés,Product type dummy variable
-product_type_Colete,Product type dummy variable
-product_type_Crop Top,Product type dummy variable
-product_type_Dress,Product type dummy variable
-product_type_Fato de Banho,Product type dummy variable
-product_type_Hair Band,Product type dummy variable
-product_type_Hoodie,Product type dummy variable
-product_type_Iphone Case,Product type dummy variable
-product_type_Jumpsuit,Product type dummy variable
-product_type_Kimono,Product type dummy variable
-product_type_Leggings,Product type dummy variable
-product_type_Lenços,Product type dummy variable
-product_type_Robe,Product type dummy variable
-product_type_Scrunchie,Product type dummy variable
-product_type_Shirt,Product type dummy variable
-product_type_Shorts,Product type dummy variable
-product_type_Skirt,Product type dummy variable
-product_type_Sleepsilk mask,Product type dummy variable
-product_type_Sweatpants,Product type dummy variable
-product_type_Sweatshirt,Product type dummy variable
-product_type_T-Shirt,Product type dummy variable
-product_type_Top,Product type dummy variable
-product_type_Tote Bag,Product type dummy variable
-product_type_Triquinis,Product type dummy variable
-product_type_Trousers,Product type dummy variable
-product_type_Zip-up hoodie,Product type dummy variable
-tag_satin_shirt,Tag dummy variable
-tag_satin_trousers,Tag dummy variable
-tag_sweatshirt_conj,Tag dummy variable
-collections_ACESSÓRIOS,Collection dummy variable
-collections_All,Collection dummy variable
-collections_BIQUÍNIS,Collection dummy variable
-collections_BONÉS E CHAPÉUS,Collection dummy variable
-collections_FW'23 | ACTIVEWEAR & PADEL COLLECTION 🎾,Collection dummy variable
-collections_FW'23 | LOUNGEWEAR COLLECTION,Collection dummy variable
-collections_FW'23 | SLEEPWEAR COLLECTION,Collection dummy variable
-collections_FW’24 | BOTTOMS,Collection dummy variable
-collections_FW’24 | TOPS,Collection dummy variable
-collections_FW’24 | TRACKSUIT COLLECTION,Collection dummy variable
-collections_IPHONE CASES,Collection dummy variable
-collections_KIDS,Collection dummy variable
-collections_LENÇOS,Collection dummy variable
-collections_LINGERIE COLLECTION,Collection dummy variable
-collections_OS MAIS PROCURADOS,Collection dummy variable
-collections_OS MAIS VENDIDOS,Collection dummy variable
+product_type_3,Product type dummy variable
+product_type_Calçado,Product type dummy variable
+product_type_Calças,Product type dummy variable
+product_type_Calções,Product type dummy variable
+product_type_Hat,Product type dummy variable
+product_type_Meias,Product type dummy variable
+product_type_Vestuário,Product type dummy variable
+product_type_hoodie,Product type dummy variable
+product_type_sweat,Product type dummy variable
+product_type_trousers,Product type dummy variable
+tag_25 ABRIL,Tag dummy variable
+tag_25ABRIL,Tag dummy variable
+tag_2SaldosSS22sapatilhas,Tag dummy variable
+tag_AW'21,Tag dummy variable
+tag_AW23all,Tag dummy variable
+tag_AW23hat,Tag dummy variable
+tag_AW23hoodie,Tag dummy variable
+tag_AW23sneakers,Tag dummy variable
+tag_AW23sweat,Tag dummy variable
+tag_AW23trousers,Tag dummy variable
+tag_AW23tshirt,Tag dummy variable
+tag_AW23workwear,Tag dummy variable
+tag_AW24,Tag dummy variable
+tag_AW24BSK33,Tag dummy variable
+tag_AW24Bombazine,Tag dummy variable
+tag_AW24Burel,Tag dummy variable
+tag_AW24CORDURA,Tag dummy variable
+tag_AW24DESERT,Tag dummy variable
+tag_AW24FUR,Tag dummy variable
+tag_AW24Hoodie,Tag dummy variable
+tag_AW24Jacket,Tag dummy variable
+tag_AW24POLO,Tag dummy variable
+tag_AW24Pants,Tag dummy variable
+tag_AW24S,Tag dummy variable
+tag_AW24STC,Tag dummy variable
+tag_AW24Sweat,Tag dummy variable
+tag_AW24TSHIRT,Tag dummy variable
+tag_AW24V,Tag dummy variable
+tag_All,Tag dummy variable
+tag_BF,Tag dummy variable
+tag_BF2022,Tag dummy variable
+tag_BS33SS24,Tag dummy variable
+tag_BSK 33 Low Permanent,Tag dummy variable
+tag_BSK33,Tag dummy variable
+tag_BSK33AW,Tag dummy variable
+tag_BSKPermanent,Tag dummy variable
+tag_Brezzecolors,Tag dummy variable
+tag_Cor:Amarelo,Tag dummy variable
+tag_Cor:Azul,Tag dummy variable
+tag_Cor:Black,Tag dummy variable
+tag_Cor:Black&White,Tag dummy variable
+tag_Cor:Blue,Tag dummy variable
+tag_Cor:Brown,Tag dummy variable
+tag_Cor:Ecru,Tag dummy variable
+tag_Cor:Green,Tag dummy variable
+tag_Cor:Green. AW23all,Tag dummy variable
+tag_Cor:Grey,Tag dummy variable
+tag_Cor:Kaki,Tag dummy variable
+tag_Cor:Lilac,Tag dummy variable
+tag_Cor:Lilac. AW23all,Tag dummy variable
+tag_Cor:Multicolor,Tag dummy variable
+tag_Cor:Mustard,Tag dummy variable
+tag_Cor:Navy,Tag dummy variable
+tag_Cor:Nude,Tag dummy variable
+tag_Cor:Red,Tag dummy variable
+tag_Cor:White,Tag dummy variable
+tag_Cor:White AW23all,Tag dummy variable
+tag_Cor:Yellow,Tag dummy variable
+tag_FTC86,Tag dummy variable
+tag_Homem,Tag dummy variable
+tag_K100,Tag dummy variable
+tag_K100 // New Collection,Tag dummy variable
+tag_K100BombAw24,Tag dummy variable
+tag_K100BurelAw24,Tag dummy variable
+tag_K100CorduraAW24,Tag dummy variable
+tag_K100FurAw24,Tag dummy variable
+tag_K100iconic,Tag dummy variable
+tag_K200,Tag dummy variable
+tag_K200 // New Collection,Tag dummy variable
+tag_K200sale,Tag dummy variable
+tag_KIDS,Tag dummy variable
+tag_KIDSSS25,Tag dummy variable
+tag_Mulher,Tag dummy variable
+tag_OGWashed,Tag dummy variable
+tag_PermanentCollection,Tag dummy variable
+tag_PermanentDesert,Tag dummy variable
+tag_Produtos Icónicos,Tag dummy variable
+tag_SALEAW24,Tag dummy variable
+tag_SKATEDAY,Tag dummy variable
+tag_SKEVO,Tag dummy variable
+tag_SS'22 Vestuário s/ saldos,Tag dummy variable
+tag_SS23,Tag dummy variable
+tag_SS23K100,Tag dummy variable
+tag_SS23K200,Tag dummy variable
+tag_SS23KIDS,Tag dummy variable
+tag_SS23Newin,Tag dummy variable
+tag_SS23Sapatilhas,Tag dummy variable
+tag_SS23Solid,Tag dummy variable
+tag_SS23SolidK100,Tag dummy variable
+tag_SS23SolidK200,Tag dummy variable
+tag_SS23Workwear,Tag dummy variable
+tag_SS24,Tag dummy variable
+tag_SS24SNEAKERS,Tag dummy variable
+tag_SS24Workwear,Tag dummy variable
+tag_SS24hoodie,Tag dummy variable
+tag_SS24jacket,Tag dummy variable
+tag_SS24polo,Tag dummy variable
+tag_SS24sweat,Tag dummy variable
+tag_SS24tshirt,Tag dummy variable
+tag_SS25,Tag dummy variable
+tag_SS25Apparel,Tag dummy variable
+tag_SS25BSK,Tag dummy variable
+tag_SS25KIDSMarine,Tag dummy variable
+tag_SS25Kids,Tag dummy variable
+tag_SS25Linen,Tag dummy variable
+tag_SS25Marine,Tag dummy variable
+tag_SS25Olymp,Tag dummy variable
+tag_SS25SLMarine,Tag dummy variable
+tag_SS25STC,Tag dummy variable
+tag_SS25Shoes,Tag dummy variable
+tag_SS25Tweed,Tag dummy variable
+tag_SS25Wild,Tag dummy variable
+tag_STC70,Tag dummy variable
+tag_SaldosSS22,Tag dummy variable
+tag_SaldosSS22sapatilhas,Tag dummy variable
+tag_Sapatilhas homem,Tag dummy variable
+tag_Todos os Produtos,Tag dummy variable
+tag_VIP20,Tag dummy variable
+tag_WashedK230,Tag dummy variable
+tag_allproducts,Tag dummy variable
+tag_arquivo,Tag dummy variable
+tag_aw'21,Tag dummy variable
+tag_aw23bombazine,Tag dummy variable
+tag_aw23burel,Tag dummy variable
+tag_aw23desert,Tag dummy variable
+tag_aw23permanente,Tag dummy variable
+tag_bombazinepermanente,Tag dummy variable
+tag_boness25,Tag dummy variable
+tag_bsk33sale,Tag dummy variable
+tag_bsk33ss25,Tag dummy variable
+tag_burel,Tag dummy variable
+tag_calças,Tag dummy variable
+tag_calções,Tag dummy variable
+tag_camisasSS25,Tag dummy variable
+tag_clássicos,Tag dummy variable
+tag_colab,Tag dummy variable
+tag_cordura,Tag dummy variable
+tag_diadopai1,Tag dummy variable
+tag_dp,Tag dummy variable
+tag_dq,Tag dummy variable
+tag_easter,Tag dummy variable
+tag_footballmania,Tag dummy variable
+tag_google,Tag dummy variable
+tag_hoodiesSS25,Tag dummy variable
+tag_hoodiesale,Tag dummy variable
+tag_hoodiess25,Tag dummy variable
+tag_icónicos,Tag dummy variable
+tag_if-non-returnable,Tag dummy variable
+tag_jacketsale,Tag dummy variable
+tag_jacketsss25,Tag dummy variable
+tag_k100,Tag dummy variable
+tag_k100-classicos,Tag dummy variable
+tag_k100bombazinepermanente,Tag dummy variable
+tag_k100permanente,Tag dummy variable
+tag_k100promo,Tag dummy variable
+tag_k100sale,Tag dummy variable
+tag_k200,Tag dummy variable
+tag_k200-classicos,Tag dummy variable
+tag_k200promo,Tag dummy variable
+tag_k230sale,Tag dummy variable
+tag_k330sale,Tag dummy variable
+tag_kidspermanente,Tag dummy variable
+tag_kidspromo,Tag dummy variable
+tag_kidssale,Tag dummy variable
+tag_kidssalev100,Tag dummy variable
+tag_kidssalev200,Tag dummy variable
+tag_mae,Tag dummy variable
+tag_meias,Tag dummy variable
+tag_modelo,Tag dummy variable
+tag_mulher,Tag dummy variable
+tag_newftc,Tag dummy variable
+tag_nova coleção,Tag dummy variable
+tag_novidades,Tag dummy variable
+tag_novos,Tag dummy variable
+tag_outletbsk33,Tag dummy variable
+tag_outletgeral,Tag dummy variable
+tag_outlethoodie,Tag dummy variable
+tag_outletjacket,Tag dummy variable
+tag_outletk100,Tag dummy variable
+tag_outletk200,Tag dummy variable
+tag_outletk230,Tag dummy variable
+tag_outletsapatilhas,Tag dummy variable
+tag_outletsl250,Tag dummy variable
+tag_outletstc70,Tag dummy variable
+tag_outletsweat,Tag dummy variable
+tag_outletsweats,Tag dummy variable
+tag_outlettshirt,Tag dummy variable
+tag_pantsSS25,Tag dummy variable
+tag_pantsss25,Tag dummy variable
+tag_perfume,Tag dummy variable
+tag_permamentehoodies,Tag dummy variable
+tag_permamenteshorts,Tag dummy variable
+tag_permanentehoodies,Tag dummy variable
+tag_permanentejackets,Tag dummy variable
+tag_permanentek100burel,Tag dummy variable
+tag_permanentek100canvas,Tag dummy variable
+tag_permanentek100cordura,Tag dummy variable
+tag_permanentek200canvas,Tag dummy variable
+tag_permanenteshorts,Tag dummy variable
+tag_permanentesocks,Tag dummy variable
+tag_permanentesweats,Tag dummy variable
+tag_permanentet-shirts,Tag dummy variable
+tag_permanentetrousers,Tag dummy variable
+tag_permanenteworkwear,Tag dummy variable
+tag_promosneakers,Tag dummy variable
+tag_promoworkwear,Tag dummy variable
+tag_s/saldo,Tag dummy variable
+tag_saldos,Tag dummy variable
+tag_saldos-vestuario,Tag dummy variable
+tag_saleaws,Tag dummy variable
+tag_saleawv,Tag dummy variable
+tag_saless24,Tag dummy variable
+tag_saless24a,Tag dummy variable
+tag_saless24s,Tag dummy variable
+tag_sanjoxsurge,Tag dummy variable
+tag_sapatilhasaw22,Tag dummy variable
+tag_shirtsss25,Tag dummy variable
+tag_shortsss25,Tag dummy variable
+tag_skate,Tag dummy variable
+tag_skateboarding,Tag dummy variable
+tag_skatepermanente,Tag dummy variable
+tag_sl250sale,Tag dummy variable
+tag_solid+washed,Tag dummy variable
+tag_solid20,Tag dummy variable
+tag_specialprices,Tag dummy variable
+tag_ss22,Tag dummy variable
+tag_ss23hoodies,Tag dummy variable
+tag_ss23ssaldo,Tag dummy variable
+tag_ss23sweats,Tag dummy variable
+tag_stripes,Tag dummy variable
+tag_sweatsale,Tag dummy variable
+tag_sweatsss25,Tag dummy variable
+tag_t-shirts,Tag dummy variable
+tag_teste,Tag dummy variable
+tag_tiedye,Tag dummy variable
+tag_tribe,Tag dummy variable
+tag_tshirtsale,Tag dummy variable
+tag_tshirtss25,Tag dummy variable
+tag_tshirtsss25,Tag dummy variable
+tag_v100wild,Tag dummy variable
+tag_v200linen,Tag dummy variable
+tag_vestuarioaw21,Tag dummy variable
+tag_vestuarioaw22,Tag dummy variable
+tag_vestuário,Tag dummy variable
+tag_vestuárioss22,Tag dummy variable
+tag_washedpermanente,Tag dummy variable
+collections_25 ABRIL,Collection dummy variable
+collections_25 de abril 2024,Collection dummy variable
+collections_AW 22'23 - Collection,Collection dummy variable
+collections_AW 22'23 - Vestuário,Collection dummy variable
+collections_AW 23//24 BOMBAZINE,Collection dummy variable
+collections_AW 23//24 BUREL,Collection dummy variable
+collections_AW 23//24 CORDURA,Collection dummy variable
+collections_AW 23//24 DESERT,Collection dummy variable
+collections_AW 23//24 HOODIES,Collection dummy variable
+collections_AW 23//24 SHORTS,Collection dummy variable
+collections_AW 23//24 SWEATS,Collection dummy variable
+collections_AW 23//24 T-SHIRT,Collection dummy variable
+collections_AW 23//24 TROUSERS,Collection dummy variable
+collections_AW'21 TIMELESS RESISTANCE,Collection dummy variable
+collections_AW'23 // Permanentes,Collection dummy variable
+collections_AW'23 || All Collection,Collection dummy variable
+collections_AW'23 || Workwear,Collection dummy variable
+collections_AW23 Sneakers,Collection dummy variable
+collections_Acessórios,Collection dummy variable
+collections_All products,Collection dummy variable
+collections_Apparel,Collection dummy variable
+collections_Apparel Outlet,Collection dummy variable
+collections_BSK 33,Collection dummy variable
+collections_BSK 33  Permanent Collection,Collection dummy variable
+collections_BSK 33 Permanent,Collection dummy variable
+collections_BSK33,Collection dummy variable
+collections_Best selling products,Collection dummy variable
+collections_Black Friday - WORKWEAR,Collection dummy variable
+collections_Black Friday 2023,Collection dummy variable
+collections_Bombazine,Collection dummy variable
+collections_Bombazine Permanente,Collection dummy variable
+collections_Bonés,Collection dummy variable
+collections_Bonés & Gorros,Collection dummy variable
+collections_Breeze Colors,Collection dummy variable
+collections_Bsk33 Low Club,Collection dummy variable
+collections_Burel,Collection dummy variable
+collections_Calçado,Collection dummy variable
+collections_Camisas,Collection dummy variable
+collections_Colaborações,Collection dummy variable
+collections_Cordura,Collection dummy variable
+collections_Desert,Collection dummy variable
+collections_Desert Permanent,Collection dummy variable
+collections_Dia Pt,Collection dummy variable
+collections_Dia da Mãe,Collection dummy variable
+collections_Dia da Mãe 2024,Collection dummy variable
+collections_Dia do Pai,Collection dummy variable
+collections_FTC 86,Collection dummy variable
+collections_Father's Day || Gift Guide,Collection dummy variable
+collections_Football Mania,Collection dummy variable
+collections_Football Mountaineering,Collection dummy variable
+collections_Fur,Collection dummy variable
+collections_Gardening Collection 2025,Collection dummy variable
+collections_Hoodie,Collection dummy variable
+collections_Hoodies,Collection dummy variable
+collections_Hoodies | Permanent Collection,Collection dummy variable
+collections_Iconic | Permanent Collection,Collection dummy variable
+collections_Jacket,Collection dummy variable
+collections_Jackets,Collection dummy variable
+collections_Jackets | Permanent Collection,Collection dummy variable
+collections_K100,Collection dummy variable
+collections_K100 & K200 Linen,Collection dummy variable
+collections_K100 & K200 Marine,Collection dummy variable
+collections_K100 & K200 Olympics,Collection dummy variable
+collections_K100 & K200 Wild Flowers,Collection dummy variable
+collections_K100 Burel | Permanent Collection,Collection dummy variable
+collections_K100 Canvas | Permanent Collection,Collection dummy variable
+collections_K100 Cordura | Permanent Collection,Collection dummy variable
+collections_K100 | Permanent Collection,Collection dummy variable
+collections_K200,Collection dummy variable
+collections_K200 Canvas | Permanent Collection,Collection dummy variable
+collections_K200 | Permanent Collection,Collection dummy variable
+collections_K230 Tweed,Collection dummy variable
+collections_K230 Washed,Collection dummy variable
+collections_KIDS || All Collection,Collection dummy variable
+collections_Kids,Collection dummy variable
+collections_Kids V100 & V200 Marine,Collection dummy variable
+collections_Kids V100 Wild Flowers,Collection dummy variable
+collections_Kids V200 Linen,Collection dummy variable
+collections_Meias,Collection dummy variable
+collections_Modelo,Collection dummy variable
+collections_Modelo K100,Collection dummy variable
+collections_NEW IN // AW23,Collection dummy variable
+collections_New In,Collection dummy variable
+collections_New products,Collection dummy variable
+collections_OG Washed,Collection dummy variable
 collections_OUTLET,Collection dummy variable
-collections_SCRUNCHIES,Collection dummy variable
-collections_SS'24 | EASYWEAR,Collection dummy variable
-collections_SS'24 | RJ COLLECTION 🇧🇷,Collection dummy variable
-collections_SS'25 | BIQUÍNIS,Collection dummy variable
-collections_SS'25 | EASYWEAR,Collection dummy variable
-collections_SS'25 | HAWAII COLLECTION | 1ST DROP 🇺🇸,Collection dummy variable
-collections_SS'25 | HAWAII COLLECTION 🇺🇸,Collection dummy variable
-collections_Smart Products Filter Index - Do not delete,Collection dummy variable
-collections_TRACKSUITS | LIMITED EDITION!,Collection dummy variable
-collections_TRIQUÍNIS & FATOS DE BANHO,Collection dummy variable
-vendor_Missus,Vendor dummy variable
-vendor_missusstore,Vendor dummy variable
-min_price,Other/Unknown
-max_price,Other/Unknown
-has_discount,Other/Unknown
-variant_size_L,Variant option dummy variable
-variant_size_L / Regular,Variant option dummy variable
-variant_size_L / Tanga,Variant option dummy variable
-variant_size_M,Variant option dummy variable
-variant_size_M / Regular,Variant option dummy variable
-variant_size_M / Tanga,Variant option dummy variable
-variant_size_M/L,Variant option dummy variable
-variant_size_S,Variant option dummy variable
-variant_size_S / Regular,Variant option dummy variable
-variant_size_S / Tanga,Variant option dummy variable
-variant_size_S/M,Variant option dummy variable
-variant_size_XL,Variant option dummy variable
-variant_size_XL / Regular,Variant option dummy variable
-variant_size_XL / Tanga,Variant option dummy variable
-variant_size_XS,Variant option dummy variable
-variant_size_XS / Regular,Variant option dummy variable
-variant_size_XS / Tanga,Variant option dummy variable
-variant_size_XS/S,Variant option dummy variable
-variant_color_AZUL CLARO,Variant option dummy variable
-variant_color_BRANCO SUJO,Variant option dummy variable
-variant_color_Black,Variant option dummy variable
-variant_color_Blue,Variant option dummy variable
-variant_color_CASTANHO,Variant option dummy variable
-variant_color_CINZA,Variant option dummy variable
-variant_color_CINZA CLARO,Variant option dummy variable
-variant_color_Off-white,Variant option dummy variable
-variant_color_PRETO,Variant option dummy variable
-variant_color_PRETO / L,Variant option dummy variable
-variant_color_PRETO / M,Variant option dummy variable
-variant_color_PRETO / S,Variant option dummy variable
-variant_color_ROSA,Variant option dummy variable
-variant_color_TAUPE,Variant option dummy variable
-variant_color_VERDE MENTA,Variant option dummy variable
-variant_color_VERDE SECO,Variant option dummy variable
-variant_color_Warm-beige,Variant option dummy variable
-variant_other_folho:12 MESES / Amarelo,Variant option dummy variable
-variant_other_folho:12 MESES / Padrão,Variant option dummy variable
-variant_other_folho:12 MESES / Terracota,Variant option dummy variable
-variant_other_folho:24 MESES / Amarelo,Variant option dummy variable
-variant_other_folho:24 MESES / Padrão,Variant option dummy variable
-variant_other_folho:24 MESES / Terracota,Variant option dummy variable
-variant_other_folho:48 MESES / Amarelo,Variant option dummy variable
-variant_other_folho:48 MESES / Padrão,Variant option dummy variable
-variant_other_folho:48 MESES / Terracota,Variant option dummy variable
-variant_other_formato cueca:L / L / Regular,Variant option dummy variable
-variant_other_formato cueca:L / L / Tanga,Variant option dummy variable
-variant_other_formato cueca:L / M / Regular,Variant option dummy variable
-variant_other_formato cueca:L / M / Tanga,Variant option dummy variable
-variant_other_formato cueca:L / S / Regular,Variant option dummy variable
-variant_other_formato cueca:L / S / Tanga,Variant option dummy variable
-variant_other_formato cueca:L / XL / Regular,Variant option dummy variable
-variant_other_formato cueca:L / XL / Tanga,Variant option dummy variable
-variant_other_formato cueca:L / XS / Regular,Variant option dummy variable
-variant_other_formato cueca:L / XS / Tanga,Variant option dummy variable
-variant_other_formato cueca:L / XXS / Regular,Variant option dummy variable
-variant_other_formato cueca:L / XXS / Tanga,Variant option dummy variable
-variant_other_formato cueca:M / L / Regular,Variant option dummy variable
-variant_other_formato cueca:M / L / Tanga,Variant option dummy variable
-variant_other_formato cueca:M / M / Regular,Variant option dummy variable
-variant_other_formato cueca:M / M / Tanga,Variant option dummy variable
-variant_other_formato cueca:M / S / Regular,Variant option dummy variable
-variant_other_formato cueca:M / S / Tanga,Variant option dummy variable
-variant_other_formato cueca:M / XL / Regular,Variant option dummy variable
-variant_other_formato cueca:M / XL / Tanga,Variant option dummy variable
-variant_other_formato cueca:M / XS / Regular,Variant option dummy variable
-variant_other_formato cueca:M / XS / Tanga,Variant option dummy variable
-variant_other_formato cueca:M / XXS / Regular,Variant option dummy variable
-variant_other_formato cueca:M / XXS / Tanga,Variant option dummy variable
-variant_other_formato cueca:S / L / Regular,Variant option dummy variable
-variant_other_formato cueca:S / L / Tanga,Variant option dummy variable
-variant_other_formato cueca:S / M / Regular,Variant option dummy variable
-variant_other_formato cueca:S / M / Tanga,Variant option dummy variable
-variant_other_formato cueca:S / S / Regular,Variant option dummy variable
-variant_other_formato cueca:S / S / Tanga,Variant option dummy variable
-variant_other_formato cueca:S / XL / Regular,Variant option dummy variable
-variant_other_formato cueca:S / XL / Tanga,Variant option dummy variable
-variant_other_formato cueca:S / XS / Regular,Variant option dummy variable
-variant_other_formato cueca:S / XS / Tanga,Variant option dummy variable
-variant_other_formato cueca:S / XXS / Regular,Variant option dummy variable
-variant_other_formato cueca:S / XXS / Tanga,Variant option dummy variable
-variant_other_formato cueca:XL / L / Regular,Variant option dummy variable
-variant_other_formato cueca:XL / L / Tanga,Variant option dummy variable
-variant_other_formato cueca:XL / M / Regular,Variant option dummy variable
-variant_other_formato cueca:XL / M / Tanga,Variant option dummy variable
-variant_other_formato cueca:XL / S / Regular,Variant option dummy variable
-variant_other_formato cueca:XL / S / Tanga,Variant option dummy variable
-variant_other_formato cueca:XL / XL / Regular,Variant option dummy variable
-variant_other_formato cueca:XL / XL / Tanga,Variant option dummy variable
-variant_other_formato cueca:XL / XS / Regular,Variant option dummy variable
-variant_other_formato cueca:XL / XS / Tanga,Variant option dummy variable
-variant_other_formato cueca:XS / L / Regular,Variant option dummy variable
-variant_other_formato cueca:XS / L / Tanga,Variant option dummy variable
-variant_other_formato cueca:XS / M / Regular,Variant option dummy variable
-variant_other_formato cueca:XS / M / Tanga,Variant option dummy variable
-variant_other_formato cueca:XS / S / Regular,Variant option dummy variable
-variant_other_formato cueca:XS / S / Tanga,Variant option dummy variable
-variant_other_formato cueca:XS / XL / Regular,Variant option dummy variable
-variant_other_formato cueca:XS / XL / Tanga,Variant option dummy variable
-variant_other_formato cueca:XS / XS / Regular,Variant option dummy variable
-variant_other_formato cueca:XS / XS / Tanga,Variant option dummy variable
-variant_other_formato cueca:XS / XXS / Regular,Variant option dummy variable
-variant_other_formato cueca:XS / XXS / Tanga,Variant option dummy variable
-variant_other_formato cueca:XXS / L / Regular,Variant option dummy variable
-variant_other_formato cueca:XXS / L / Tanga,Variant option dummy variable
-variant_other_formato cueca:XXS / M / Regular,Variant option dummy variable
-variant_other_formato cueca:XXS / M / Tanga,Variant option dummy variable
-variant_other_formato cueca:XXS / S / Regular,Variant option dummy variable
-variant_other_formato cueca:XXS / S / Tanga,Variant option dummy variable
-variant_other_formato cueca:XXS / XS / Regular,Variant option dummy variable
-variant_other_formato cueca:XXS / XS / Tanga,Variant option dummy variable
-variant_other_formato cueca:XXS / XXS / Regular,Variant option dummy variable
-variant_other_formato cueca:XXS / XXS / Tanga,Variant option dummy variable
-variant_other_formato:L / Regular,Variant option dummy variable
-variant_other_formato:L / Tanga,Variant option dummy variable
-variant_other_formato:M / Regular,Variant option dummy variable
-variant_other_formato:M / Tanga,Variant option dummy variable
-variant_other_formato:S / Regular,Variant option dummy variable
-variant_other_formato:S / Tanga,Variant option dummy variable
-variant_other_formato:XL / Regular,Variant option dummy variable
-variant_other_formato:XL / Tanga,Variant option dummy variable
-variant_other_formato:XS / Regular,Variant option dummy variable
-variant_other_formato:XS / Tanga,Variant option dummy variable
-variant_other_modelo:Iphone 11,Variant option dummy variable
-variant_other_modelo:Iphone 11/12 Pro,Variant option dummy variable
-variant_other_modelo:Iphone 12 Pro Max,Variant option dummy variable
-variant_other_modelo:Iphone 13,Variant option dummy variable
-variant_other_modelo:Iphone 13 Pro,Variant option dummy variable
-variant_other_modelo:Iphone 13 Pro Max,Variant option dummy variable
-variant_other_modelo:Iphone 14,Variant option dummy variable
-variant_other_modelo:Iphone 14 Pro,Variant option dummy variable
-variant_other_modelo:Iphone 14 Pro Max,Variant option dummy variable
-variant_other_modelo:Iphone 14/15 Plus,Variant option dummy variable
-variant_other_modelo:Iphone 15,Variant option dummy variable
-variant_other_modelo:Iphone 15 Pro,Variant option dummy variable
-variant_other_modelo:Iphone 15 Pro Max,Variant option dummy variable
-variant_other_modelo:Iphone 16,Variant option dummy variable
-variant_other_modelo:Iphone 16 Plus,Variant option dummy variable
-variant_other_modelo:Iphone 16 Pro,Variant option dummy variable
-variant_other_modelo:Iphone 16 Pro Max,Variant option dummy variable
-variant_other_padrão:CINZA / L,Variant option dummy variable
-variant_other_padrão:CINZA / M,Variant option dummy variable
-variant_other_padrão:CINZA / S,Variant option dummy variable
-variant_other_padrão:ROSA / L,Variant option dummy variable
-variant_other_padrão:ROSA / M,Variant option dummy variable
-variant_other_padrão:ROSA / S,Variant option dummy variable
-variant_other_tamanho cueca:L / L,Variant option dummy variable
-variant_other_tamanho cueca:L / L / Regular,Variant option dummy variable
-variant_other_tamanho cueca:L / L / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:L / M,Variant option dummy variable
-variant_other_tamanho cueca:L / M / Regular,Variant option dummy variable
-variant_other_tamanho cueca:L / M / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:L / S,Variant option dummy variable
-variant_other_tamanho cueca:L / S / Regular,Variant option dummy variable
-variant_other_tamanho cueca:L / S / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:L / XL,Variant option dummy variable
-variant_other_tamanho cueca:L / XL / Regular,Variant option dummy variable
-variant_other_tamanho cueca:L / XL / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:L / XS,Variant option dummy variable
-variant_other_tamanho cueca:L / XS / Regular,Variant option dummy variable
-variant_other_tamanho cueca:L / XS / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:L / XXS / Regular,Variant option dummy variable
-variant_other_tamanho cueca:L / XXS / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:M / L,Variant option dummy variable
-variant_other_tamanho cueca:M / L / Regular,Variant option dummy variable
-variant_other_tamanho cueca:M / L / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:M / M,Variant option dummy variable
-variant_other_tamanho cueca:M / M / Regular,Variant option dummy variable
-variant_other_tamanho cueca:M / M / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:M / S,Variant option dummy variable
-variant_other_tamanho cueca:M / S / Regular,Variant option dummy variable
-variant_other_tamanho cueca:M / S / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:M / XL,Variant option dummy variable
-variant_other_tamanho cueca:M / XL / Regular,Variant option dummy variable
-variant_other_tamanho cueca:M / XL / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:M / XS,Variant option dummy variable
-variant_other_tamanho cueca:M / XS / Regular,Variant option dummy variable
-variant_other_tamanho cueca:M / XS / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:M / XXS / Regular,Variant option dummy variable
-variant_other_tamanho cueca:M / XXS / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:S / L,Variant option dummy variable
-variant_other_tamanho cueca:S / L / Regular,Variant option dummy variable
-variant_other_tamanho cueca:S / L / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:S / M,Variant option dummy variable
-variant_other_tamanho cueca:S / M / Regular,Variant option dummy variable
-variant_other_tamanho cueca:S / M / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:S / S,Variant option dummy variable
-variant_other_tamanho cueca:S / S / Regular,Variant option dummy variable
-variant_other_tamanho cueca:S / S / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:S / XL,Variant option dummy variable
-variant_other_tamanho cueca:S / XL / Regular,Variant option dummy variable
-variant_other_tamanho cueca:S / XL / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:S / XS,Variant option dummy variable
-variant_other_tamanho cueca:S / XS / Regular,Variant option dummy variable
-variant_other_tamanho cueca:S / XS / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:S / XXS / Regular,Variant option dummy variable
-variant_other_tamanho cueca:S / XXS / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XL / L,Variant option dummy variable
-variant_other_tamanho cueca:XL / L / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XL / L / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XL / M,Variant option dummy variable
-variant_other_tamanho cueca:XL / M / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XL / M / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XL / S,Variant option dummy variable
-variant_other_tamanho cueca:XL / S / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XL / S / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XL / XL,Variant option dummy variable
-variant_other_tamanho cueca:XL / XL / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XL / XL / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XL / XS,Variant option dummy variable
-variant_other_tamanho cueca:XL / XS / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XL / XS / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XS / L,Variant option dummy variable
-variant_other_tamanho cueca:XS / L / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XS / L / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XS / M,Variant option dummy variable
-variant_other_tamanho cueca:XS / M / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XS / M / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XS / S,Variant option dummy variable
-variant_other_tamanho cueca:XS / S / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XS / S / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XS / XL,Variant option dummy variable
-variant_other_tamanho cueca:XS / XL / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XS / XL / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XS / XS,Variant option dummy variable
-variant_other_tamanho cueca:XS / XS / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XS / XS / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XS / XXS / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XS / XXS / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XXS / L / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XXS / L / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XXS / M / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XXS / M / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XXS / S / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XXS / S / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XXS / XS / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XXS / XS / Tanga,Variant option dummy variable
-variant_other_tamanho cueca:XXS / XXS / Regular,Variant option dummy variable
-variant_other_tamanho cueca:XXS / XXS / Tanga,Variant option dummy variable
-variant_other_tamanho tanga:L / L,Variant option dummy variable
-variant_other_tamanho tanga:L / M,Variant option dummy variable
-variant_other_tamanho tanga:L / S,Variant option dummy variable
-variant_other_tamanho tanga:L / XL,Variant option dummy variable
-variant_other_tamanho tanga:L / XS,Variant option dummy variable
-variant_other_tamanho tanga:M / L,Variant option dummy variable
-variant_other_tamanho tanga:M / M,Variant option dummy variable
-variant_other_tamanho tanga:M / S,Variant option dummy variable
-variant_other_tamanho tanga:M / XL,Variant option dummy variable
-variant_other_tamanho tanga:M / XS,Variant option dummy variable
-variant_other_tamanho tanga:S / L,Variant option dummy variable
-variant_other_tamanho tanga:S / M,Variant option dummy variable
-variant_other_tamanho tanga:S / S,Variant option dummy variable
-variant_other_tamanho tanga:S / XL,Variant option dummy variable
-variant_other_tamanho tanga:S / XS,Variant option dummy variable
-variant_other_tamanho tanga:XL / L,Variant option dummy variable
-variant_other_tamanho tanga:XL / M,Variant option dummy variable
-variant_other_tamanho tanga:XL / S,Variant option dummy variable
-variant_other_tamanho tanga:XL / XL,Variant option dummy variable
-variant_other_tamanho tanga:XL / XS,Variant option dummy variable
-variant_other_tamanho tanga:XS / L,Variant option dummy variable
-variant_other_tamanho tanga:XS / M,Variant option dummy variable
-variant_other_tamanho tanga:XS / S,Variant option dummy variable
-variant_other_tamanho tanga:XS / XL,Variant option dummy variable
-variant_other_tamanho tanga:XS / XS,Variant option dummy variable
-variant_other_tamanho top:L / L,Variant option dummy variable
-variant_other_tamanho top:L / L / Regular,Variant option dummy variable
-variant_other_tamanho top:L / L / Tanga,Variant option dummy variable
-variant_other_tamanho top:L / M,Variant option dummy variable
-variant_other_tamanho top:L / M / Regular,Variant option dummy variable
-variant_other_tamanho top:L / M / Tanga,Variant option dummy variable
-variant_other_tamanho top:L / S,Variant option dummy variable
-variant_other_tamanho top:L / S / Regular,Variant option dummy variable
-variant_other_tamanho top:L / S / Tanga,Variant option dummy variable
-variant_other_tamanho top:L / XL,Variant option dummy variable
-variant_other_tamanho top:L / XL / Regular,Variant option dummy variable
-variant_other_tamanho top:L / XL / Tanga,Variant option dummy variable
-variant_other_tamanho top:L / XS,Variant option dummy variable
-variant_other_tamanho top:L / XS / Regular,Variant option dummy variable
-variant_other_tamanho top:L / XS / Tanga,Variant option dummy variable
-variant_other_tamanho top:L / XXS / Regular,Variant option dummy variable
-variant_other_tamanho top:L / XXS / Tanga,Variant option dummy variable
-variant_other_tamanho top:M / L,Variant option dummy variable
-variant_other_tamanho top:M / L / Regular,Variant option dummy variable
-variant_other_tamanho top:M / L / Tanga,Variant option dummy variable
-variant_other_tamanho top:M / M,Variant option dummy variable
-variant_other_tamanho top:M / M / Regular,Variant option dummy variable
-variant_other_tamanho top:M / M / Tanga,Variant option dummy variable
-variant_other_tamanho top:M / S,Variant option dummy variable
-variant_other_tamanho top:M / S / Regular,Variant option dummy variable
-variant_other_tamanho top:M / S / Tanga,Variant option dummy variable
-variant_other_tamanho top:M / XL,Variant option dummy variable
-variant_other_tamanho top:M / XL / Regular,Variant option dummy variable
-variant_other_tamanho top:M / XL / Tanga,Variant option dummy variable
-variant_other_tamanho top:M / XS,Variant option dummy variable
-variant_other_tamanho top:M / XS / Regular,Variant option dummy variable
-variant_other_tamanho top:M / XS / Tanga,Variant option dummy variable
-variant_other_tamanho top:M / XXS / Regular,Variant option dummy variable
-variant_other_tamanho top:M / XXS / Tanga,Variant option dummy variable
-variant_other_tamanho top:S / L,Variant option dummy variable
-variant_other_tamanho top:S / L / Regular,Variant option dummy variable
-variant_other_tamanho top:S / L / Tanga,Variant option dummy variable
-variant_other_tamanho top:S / M,Variant option dummy variable
-variant_other_tamanho top:S / M / Regular,Variant option dummy variable
-variant_other_tamanho top:S / M / Tanga,Variant option dummy variable
-variant_other_tamanho top:S / S,Variant option dummy variable
-variant_other_tamanho top:S / S / Regular,Variant option dummy variable
-variant_other_tamanho top:S / S / Tanga,Variant option dummy variable
-variant_other_tamanho top:S / XL,Variant option dummy variable
-variant_other_tamanho top:S / XL / Regular,Variant option dummy variable
-variant_other_tamanho top:S / XL / Tanga,Variant option dummy variable
-variant_other_tamanho top:S / XS,Variant option dummy variable
-variant_other_tamanho top:S / XS / Regular,Variant option dummy variable
-variant_other_tamanho top:S / XS / Tanga,Variant option dummy variable
-variant_other_tamanho top:S / XXS / Regular,Variant option dummy variable
-variant_other_tamanho top:S / XXS / Tanga,Variant option dummy variable
-variant_other_tamanho top:XL / L,Variant option dummy variable
-variant_other_tamanho top:XL / L / Regular,Variant option dummy variable
-variant_other_tamanho top:XL / L / Tanga,Variant option dummy variable
-variant_other_tamanho top:XL / M,Variant option dummy variable
-variant_other_tamanho top:XL / M / Regular,Variant option dummy variable
-variant_other_tamanho top:XL / M / Tanga,Variant option dummy variable
-variant_other_tamanho top:XL / S,Variant option dummy variable
-variant_other_tamanho top:XL / S / Regular,Variant option dummy variable
-variant_other_tamanho top:XL / S / Tanga,Variant option dummy variable
-variant_other_tamanho top:XL / XL,Variant option dummy variable
-variant_other_tamanho top:XL / XL / Regular,Variant option dummy variable
-variant_other_tamanho top:XL / XL / Tanga,Variant option dummy variable
-variant_other_tamanho top:XL / XS,Variant option dummy variable
-variant_other_tamanho top:XL / XS / Regular,Variant option dummy variable
-variant_other_tamanho top:XL / XS / Tanga,Variant option dummy variable
-variant_other_tamanho top:XS / L,Variant option dummy variable
-variant_other_tamanho top:XS / L / Regular,Variant option dummy variable
-variant_other_tamanho top:XS / L / Tanga,Variant option dummy variable
-variant_other_tamanho top:XS / M,Variant option dummy variable
-variant_other_tamanho top:XS / M / Regular,Variant option dummy variable
-variant_other_tamanho top:XS / M / Tanga,Variant option dummy variable
-variant_other_tamanho top:XS / S,Variant option dummy variable
-variant_other_tamanho top:XS / S / Regular,Variant option dummy variable
-variant_other_tamanho top:XS / S / Tanga,Variant option dummy variable
-variant_other_tamanho top:XS / XL,Variant option dummy variable
-variant_other_tamanho top:XS / XL / Regular,Variant option dummy variable
-variant_other_tamanho top:XS / XL / Tanga,Variant option dummy variable
-variant_other_tamanho top:XS / XS,Variant option dummy variable
-variant_other_tamanho top:XS / XS / Regular,Variant option dummy variable
-variant_other_tamanho top:XS / XS / Tanga,Variant option dummy variable
-variant_other_tamanho top:XS / XXS / Regular,Variant option dummy variable
-variant_other_tamanho top:XS / XXS / Tanga,Variant option dummy variable
-variant_other_tamanho top:XXS / L / Regular,Variant option dummy variable
-variant_other_tamanho top:XXS / L / Tanga,Variant option dummy variable
-variant_other_tamanho top:XXS / M / Regular,Variant option dummy variable
-variant_other_tamanho top:XXS / M / Tanga,Variant option dummy variable
-variant_other_tamanho top:XXS / S / Regular,Variant option dummy variable
-variant_other_tamanho top:XXS / S / Tanga,Variant option dummy variable
-variant_other_tamanho top:XXS / XS / Regular,Variant option dummy variable
-variant_other_tamanho top:XXS / XS / Tanga,Variant option dummy variable
-variant_other_tamanho top:XXS / XXS / Regular,Variant option dummy variable
-variant_other_tamanho top:XXS / XXS / Tanga,Variant option dummy variable
-variant_other_tamanho:12 MESES,Variant option dummy variable
-variant_other_tamanho:12 MESES / Amarelo,Variant option dummy variable
-variant_other_tamanho:12 MESES / Padrão,Variant option dummy variable
-variant_other_tamanho:12 MESES / Terracota,Variant option dummy variable
-variant_other_tamanho:24 MESES,Variant option dummy variable
-variant_other_tamanho:24 MESES / Amarelo,Variant option dummy variable
-variant_other_tamanho:24 MESES / Padrão,Variant option dummy variable
-variant_other_tamanho:24 MESES / Terracota,Variant option dummy variable
-variant_other_tamanho:48 MESES,Variant option dummy variable
-variant_other_tamanho:48 MESES / Amarelo,Variant option dummy variable
-variant_other_tamanho:48 MESES / Padrão,Variant option dummy variable
-variant_other_tamanho:48 MESES / Terracota,Variant option dummy variable
-variant_other_tamanho:CINZA / L,Variant option dummy variable
-variant_other_tamanho:CINZA / M,Variant option dummy variable
-variant_other_tamanho:CINZA / S,Variant option dummy variable
+collections_Outlet,Collection dummy variable
+collections_Outlet Apparel,Collection dummy variable
+collections_Outlet BSK33,Collection dummy variable
+collections_Outlet Hoodies,Collection dummy variable
+collections_Outlet Jacket,Collection dummy variable
+collections_Outlet K100,Collection dummy variable
+collections_Outlet K200,Collection dummy variable
+collections_Outlet K230,Collection dummy variable
+collections_Outlet SL250,Collection dummy variable
+collections_Outlet STC70,Collection dummy variable
+collections_Outlet Sneakers,Collection dummy variable
+collections_Outlet Sweats,Collection dummy variable
+collections_Outlet T-shirt,Collection dummy variable
+collections_Outlet | Sapatilhas,Collection dummy variable
+collections_Pants,Collection dummy variable
+collections_Perfume,Collection dummy variable
+collections_Permanent Collection,Collection dummy variable
+collections_Permanent Collection Workwear,Collection dummy variable
+collections_Polos,Collection dummy variable
+collections_Promoção Fim de Semana,Collection dummy variable
+collections_SALDOS SS'22,Collection dummy variable
+collections_SANJO BSK33,Collection dummy variable
+collections_SK EVO 100,Collection dummy variable
+collections_SS'22 Heritage Echoes,Collection dummy variable
+collections_SS'23 // Sem saldo,Collection dummy variable
+collections_SS'23 || All Collection,Collection dummy variable
+collections_SS'23 || K100,Collection dummy variable
+collections_SS'23 || K200,Collection dummy variable
+collections_SS'23 || New In,Collection dummy variable
+collections_SS'23 || Sneakers,Collection dummy variable
+collections_SS'23 || Solid,Collection dummy variable
+collections_SS'23 || Solid | K100,Collection dummy variable
+collections_SS'23 || Solid | K200,Collection dummy variable
+collections_SS'23 || Workwear,Collection dummy variable
+collections_SS'23 || Workwear | Hoodies,Collection dummy variable
+collections_SS'23 || Workwear | Shorts,Collection dummy variable
+collections_SS'23 || Workwear | Sweats,Collection dummy variable
+collections_SS'23 || Workwear | T-shirts,Collection dummy variable
+collections_SS'23 || Workwear | Trousers,Collection dummy variable
+collections_SS24,Collection dummy variable
+collections_SS24 Sneakers,Collection dummy variable
+collections_STC 70,Collection dummy variable
+collections_STC'70,Collection dummy variable
+collections_Saldos SS'22 Sapatilhas,Collection dummy variable
+collections_Sale Burel,Collection dummy variable
+collections_Sale Canvas,Collection dummy variable
+collections_Sale Hoodie,Collection dummy variable
+collections_Sale Sweat,Collection dummy variable
+collections_Sale Workwear AW'23,Collection dummy variable
+collections_Sanjo,Collection dummy variable
+collections_Sanjo Stripes,Collection dummy variable
+collections_Sanjo Tie-Dye,Collection dummy variable
+collections_Shorts,Collection dummy variable
+collections_Skateboading,Collection dummy variable
+collections_Sl250 Marine,Collection dummy variable
+collections_Solid - Promoções,Collection dummy variable
+collections_Stc 70 Washed Low,Collection dummy variable
+collections_Sweat,Collection dummy variable
+collections_Sweats,Collection dummy variable
+collections_Sweats | Outlet,Collection dummy variable
+collections_Sweats | Permanent Collection,Collection dummy variable
+collections_Sweatshirts,Collection dummy variable
+collections_T-Shirts | Permanent Collection,Collection dummy variable
+collections_T-shirt,Collection dummy variable
+collections_T-shirts,Collection dummy variable
+collections_Teste,Collection dummy variable
+collections_Trousers,Collection dummy variable
+collections_Vestuario Timeless Resistance,Collection dummy variable
+collections_Vestuário,Collection dummy variable
+collections_Vestuário Permanente + AW22'23,Collection dummy variable
+collections_Washed,Collection dummy variable
+collections_antigo outlet,Collection dummy variable
+collections_outlet antigo,Collection dummy variable
+vendor_SANJO,Vendor dummy variable
+min_price,Price-related feature from variants
+max_price,Price-related feature from variants
+has_discount,Price-related feature from variants
+variant_size_35,Variant option dummy variable
+variant_size_36,Variant option dummy variable
+variant_size_37,Variant option dummy variable
+variant_size_38,Variant option dummy variable
+variant_size_39,Variant option dummy variable
+variant_size_40,Variant option dummy variable
+variant_size_41,Variant option dummy variable
+variant_size_42,Variant option dummy variable
+variant_size_43,Variant option dummy variable
+variant_size_44,Variant option dummy variable
+variant_size_45,Variant option dummy variable
+variant_size_46,Variant option dummy variable
+variant_other_tamanho:100ml,Variant option dummy variable
+variant_other_tamanho:24,Variant option dummy variable
+variant_other_tamanho:25,Variant option dummy variable
+variant_other_tamanho:26,Variant option dummy variable
+variant_other_tamanho:27,Variant option dummy variable
+variant_other_tamanho:28,Variant option dummy variable
+variant_other_tamanho:29,Variant option dummy variable
+variant_other_tamanho:30,Variant option dummy variable
+variant_other_tamanho:31,Variant option dummy variable
+variant_other_tamanho:32,Variant option dummy variable
+variant_other_tamanho:33,Variant option dummy variable
+variant_other_tamanho:34,Variant option dummy variable
+variant_other_tamanho:35,Variant option dummy variable
+variant_other_tamanho:35 - 40,Variant option dummy variable
+variant_other_tamanho:35-40,Variant option dummy variable
+variant_other_tamanho:36,Variant option dummy variable
+variant_other_tamanho:37,Variant option dummy variable
+variant_other_tamanho:38,Variant option dummy variable
+variant_other_tamanho:39,Variant option dummy variable
+variant_other_tamanho:40,Variant option dummy variable
+variant_other_tamanho:41,Variant option dummy variable
+variant_other_tamanho:41 - 46,Variant option dummy variable
+variant_other_tamanho:41-46,Variant option dummy variable
+variant_other_tamanho:42,Variant option dummy variable
+variant_other_tamanho:43,Variant option dummy variable
+variant_other_tamanho:44,Variant option dummy variable
+variant_other_tamanho:45,Variant option dummy variable
+variant_other_tamanho:46,Variant option dummy variable
 variant_other_tamanho:L,Variant option dummy variable
 variant_other_tamanho:M,Variant option dummy variable
-variant_other_tamanho:M/L,Variant option dummy variable
-variant_other_tamanho:PRETO / L,Variant option dummy variable
-variant_other_tamanho:PRETO / M,Variant option dummy variable
-variant_other_tamanho:PRETO / S,Variant option dummy variable
-variant_other_tamanho:ROSA / L,Variant option dummy variable
-variant_other_tamanho:ROSA / M,Variant option dummy variable
-variant_other_tamanho:ROSA / S,Variant option dummy variable
 variant_other_tamanho:S,Variant option dummy variable
-variant_other_tamanho:S/M,Variant option dummy variable
+variant_other_tamanho:U,Variant option dummy variable
 variant_other_tamanho:XL,Variant option dummy variable
 variant_other_tamanho:XS,Variant option dummy variable
-variant_other_title:Default Title,Variant option dummy variable
+variant_other_title:35,Variant option dummy variable
+variant_other_title:36,Variant option dummy variable
+variant_other_title:37,Variant option dummy variable
+variant_other_title:38,Variant option dummy variable
+variant_other_title:39,Variant option dummy variable
+variant_other_title:40,Variant option dummy variable
+variant_other_title:41,Variant option dummy variable
+variant_other_title:42,Variant option dummy variable
+variant_other_title:43,Variant option dummy variable
+variant_other_title:44,Variant option dummy variable
+variant_other_title:45,Variant option dummy variable
+variant_other_title:46,Variant option dummy variable
+variant_other_title:Offsets 1.68 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 1.81 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 1.94 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 10.7 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 1019.57 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 104.44 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 1094.81 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 11.49 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 112.15 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 1175.61 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 12.34 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 120.43 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 1262.37 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 129.32 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 13.25 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 1355.53 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 138.86 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 14.23 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 1455.57 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 149.11 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 15.28 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 1562.99 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 16.41 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 160.11 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 1678.34 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 17.62 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 171.93 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 18.92 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 1802.2 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 184.61 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 198.24 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 2.09 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 2.24 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 2.4 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 2.58 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 2.77 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 2.97 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 20.31 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 21.81 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 212.87 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 228.58 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 23.42 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 245.45 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 25.15 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 263.56 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 27 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 28.99 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 283.01 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 3.19 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 3.43 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 3.68 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 3.95 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 303.9 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 31.13 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 326.32 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 33.43 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 35.9 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 350.41 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 376.26 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 38.55 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 4.24 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 4.56 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 4.89 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 404.03 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 41.39 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 433.85 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 44.45 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 465.87 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 47.73 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 5.25 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 5.64 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 500.25 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 51.25 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 537.17 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 55.03 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 576.81 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 59.09 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 6.06 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 6.5 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 6.98 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 619.38 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 63.45 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 665.09 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 68.13 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 7.5 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 714.17 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 73.16 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 766.87 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 78.56 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 8.05 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 8.65 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 823.47 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 84.36 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 884.24 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 9.28 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 9.97 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 90.58 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 949.5 kg of CO2,Variant option dummy variable
+variant_other_title:Offsets 97.27 kg of CO2,Variant option dummy variable
 created_year,Time-based features from createdAt timestamp
 created_month,Time-based features from createdAt timestamp
 created_day,Time-based features from createdAt timestamp
@@ -474,114 +621,105 @@ created_hour,Time-based features from createdAt timestamp
 days_since_first_product,Time-based features from createdAt timestamp
 created_season,Time-based features from createdAt timestamp
 is_recent_product,Time-based features from createdAt timestamp
-release_quarter_2022Q3,Release quarter features from createdAt timestamp
-release_quarter_2022Q4,Release quarter features from createdAt timestamp
-release_quarter_2023Q1,Release quarter features from createdAt timestamp
-release_quarter_2023Q2,Release quarter features from createdAt timestamp
-release_quarter_2023Q3,Release quarter features from createdAt timestamp
-release_quarter_2023Q4,Release quarter features from createdAt timestamp
-release_quarter_2024Q1,Release quarter features from createdAt timestamp
-release_quarter_2024Q2,Release quarter features from createdAt timestamp
-release_quarter_2024Q3,Release quarter features from createdAt timestamp
 release_quarter_2024Q4,Release quarter features from createdAt timestamp
 release_quarter_2025Q1,Release quarter features from createdAt timestamp
-description_2025,TF-IDF from product descriptions
-description_2025 coleção,TF-IDF from product descriptions
-description_24,TF-IDF from product descriptions
-description_24 fevereiro,TF-IDF from product descriptions
-description_25,TF-IDF from product descriptions
-description_31,TF-IDF from product descriptions
-description_31 março,TF-IDF from product descriptions
-description_algodão,TF-IDF from product descriptions
-description_algodão orgânico,TF-IDF from product descriptions
-description_alças,TF-IDF from product descriptions
-description_alças reguláveis,TF-IDF from product descriptions
-description_amovíveis,TF-IDF from product descriptions
-description_ao,TF-IDF from product descriptions
-description_ao corpo,TF-IDF from product descriptions
-description_aperta,TF-IDF from product descriptions
-description_baixo,TF-IDF from product descriptions
-description_biquíni,TF-IDF from product descriptions
-description_bordado,TF-IDF from product descriptions
-description_cintura,TF-IDF from product descriptions
-description_coleção,TF-IDF from product descriptions
-description_coleção fall,TF-IDF from product descriptions
-description_collection,TF-IDF from product descriptions
+description_80,TF-IDF from product descriptions
+description_80 90,TF-IDF from product descriptions
+description_90,TF-IDF from product descriptions
+description_90 que,TF-IDF from product descriptions
+description_abrasão,TF-IDF from product descriptions
+description_anos,TF-IDF from product descriptions
+description_anos 80,TF-IDF from product descriptions
+description_basket,TF-IDF from product descriptions
+description_basket dos,TF-IDF from product descriptions
+description_basketbol,TF-IDF from product descriptions
+description_calçavam,TF-IDF from product descriptions
+description_calçavam clube,TF-IDF from product descriptions
+description_características,TF-IDF from product descriptions
+description_celebrar,TF-IDF from product descriptions
+description_celebrar modelo,TF-IDF from product descriptions
+description_celebremente,TF-IDF from product descriptions
+description_celebremente calçavam,TF-IDF from product descriptions
+description_clube,TF-IDF from product descriptions
+description_clube local,TF-IDF from product descriptions
 description_com,TF-IDF from product descriptions
-description_com copas,TF-IDF from product descriptions
-description_com elástico,TF-IDF from product descriptions
-description_consoante,TF-IDF from product descriptions
-description_consoante normas,TF-IDF from product descriptions
-description_copas,TF-IDF from product descriptions
-description_copas amovíveis,TF-IDF from product descriptions
-description_corpo,TF-IDF from product descriptions
-description_corpo disponível,TF-IDF from product descriptions
-description_costas,TF-IDF from product descriptions
-description_data,TF-IDF from product descriptions
-description_data promoção,TF-IDF from product descriptions
-description_disponível,TF-IDF from product descriptions
-description_disponível em,TF-IDF from product descriptions
-description_disponível nos,TF-IDF from product descriptions
-description_dois,TF-IDF from product descriptions
-description_dois formatos,TF-IDF from product descriptions
-description_durabilidade,TF-IDF from product descriptions
-description_durabilidade material,TF-IDF from product descriptions
-description_elástico,TF-IDF from product descriptions
+description_com detalhes,TF-IDF from product descriptions
+description_com mais,TF-IDF from product descriptions
+description_contemporâneo,TF-IDF from product descriptions
+description_contemporâneo às,TF-IDF from product descriptions
+description_da,TF-IDF from product descriptions
+description_da marca,TF-IDF from product descriptions
+description_da sanjo,TF-IDF from product descriptions
+description_das,TF-IDF from product descriptions
+description_desenvolvimento,TF-IDF from product descriptions
+description_desenvolvimento sobretudo,TF-IDF from product descriptions
+description_desporto,TF-IDF from product descriptions
+description_desporto foi,TF-IDF from product descriptions
+description_detalhes,TF-IDF from product descriptions
+description_dos,TF-IDF from product descriptions
+description_dos anos,TF-IDF from product descriptions
 description_em,TF-IDF from product descriptions
-description_em dois,TF-IDF from product descriptions
-description_em tamanho,TF-IDF from product descriptions
-description_está,TF-IDF from product descriptions
-description_está disponível,TF-IDF from product descriptions
-description_está utilizar,TF-IDF from product descriptions
-description_fall,TF-IDF from product descriptions
-description_fall winter,TF-IDF from product descriptions
-description_fecho,TF-IDF from product descriptions
-description_fevereiro,TF-IDF from product descriptions
-description_fevereiro 31,TF-IDF from product descriptions
-description_formatos,TF-IDF from product descriptions
-description_formatos regular,TF-IDF from product descriptions
-description_lave,TF-IDF from product descriptions
-description_lave consoante,TF-IDF from product descriptions
-description_março,TF-IDF from product descriptions
-description_março 2025,TF-IDF from product descriptions
-description_material,TF-IDF from product descriptions
+description_esta,TF-IDF from product descriptions
+description_este,TF-IDF from product descriptions
+description_foi,TF-IDF from product descriptions
+description_foi principal,TF-IDF from product descriptions
+description_forma,TF-IDF from product descriptions
+description_forro,TF-IDF from product descriptions
+description_já,TF-IDF from product descriptions
+description_já com,TF-IDF from product descriptions
+description_lo com,TF-IDF from product descriptions
+description_local,TF-IDF from product descriptions
+description_local passado,TF-IDF from product descriptions
+description_mais,TF-IDF from product descriptions
+description_mais especial,TF-IDF from product descriptions
+description_marca,TF-IDF from product descriptions
+description_marca universo,TF-IDF from product descriptions
 description_modelo,TF-IDF from product descriptions
-description_modelo está,TF-IDF from product descriptions
+description_motor,TF-IDF from product descriptions
+description_motor para,TF-IDF from product descriptions
 description_na,TF-IDF from product descriptions
-description_na cintura,TF-IDF from product descriptions
-description_nas,TF-IDF from product descriptions
-description_nas costas,TF-IDF from product descriptions
-description_normas,TF-IDF from product descriptions
-description_normas propostas,TF-IDF from product descriptions
-description_nos,TF-IDF from product descriptions
-description_nos tamanhos,TF-IDF from product descriptions
+description_nossos,TF-IDF from product descriptions
+description_nossos icónicos,TF-IDF from product descriptions
+description_original,TF-IDF from product descriptions
+description_os,TF-IDF from product descriptions
 description_para,TF-IDF from product descriptions
-description_para preservar,TF-IDF from product descriptions
-description_parte,TF-IDF from product descriptions
-description_parte baixo,TF-IDF from product descriptions
-description_preservar,TF-IDF from product descriptions
-description_preservar durabilidade,TF-IDF from product descriptions
-description_promoção,TF-IDF from product descriptions
-description_promoção 24,TF-IDF from product descriptions
-description_propostas,TF-IDF from product descriptions
-description_propostas para,TF-IDF from product descriptions
-description_regular,TF-IDF from product descriptions
-description_regular tanga,TF-IDF from product descriptions
-description_reguláveis,TF-IDF from product descriptions
-description_soft,TF-IDF from product descriptions
-description_tamanho,TF-IDF from product descriptions
-description_tamanho modelo,TF-IDF from product descriptions
-description_tamanho xs,TF-IDF from product descriptions
-description_tamanho único,TF-IDF from product descriptions
-description_tamanhos,TF-IDF from product descriptions
-description_tamanhos xs,TF-IDF from product descriptions
-description_tanga,TF-IDF from product descriptions
-description_utilizar,TF-IDF from product descriptions
-description_utilizar tamanho,TF-IDF from product descriptions
-description_winter,TF-IDF from product descriptions
-description_xl,TF-IDF from product descriptions
-description_xl modelo,TF-IDF from product descriptions
-description_xs,TF-IDF from product descriptions
-description_xs modelo,TF-IDF from product descriptions
-description_xs xl,TF-IDF from product descriptions
-description_único,TF-IDF from product descriptions
+description_para desenvolvimento,TF-IDF from product descriptions
+description_para os,TF-IDF from product descriptions
+description_passado,TF-IDF from product descriptions
+description_passado da,TF-IDF from product descriptions
+description_preservando,TF-IDF from product descriptions
+description_preservando algumas,TF-IDF from product descriptions
+description_principal,TF-IDF from product descriptions
+description_principal motor,TF-IDF from product descriptions
+description_que,TF-IDF from product descriptions
+description_que celebremente,TF-IDF from product descriptions
+description_resistente,TF-IDF from product descriptions
+description_resistência,TF-IDF from product descriptions
+description_resistência abrasão,TF-IDF from product descriptions
+description_revestidos,TF-IDF from product descriptions
+description_revestidos material,TF-IDF from product descriptions
+description_revolucionámo,TF-IDF from product descriptions
+description_revolucionámo lo,TF-IDF from product descriptions
+description_sanjo,TF-IDF from product descriptions
+description_sanjo desporto,TF-IDF from product descriptions
+description_sanjo em,TF-IDF from product descriptions
+description_sapatilha,TF-IDF from product descriptions
+description_sapatilhas,TF-IDF from product descriptions
+description_sapatilhas basket,TF-IDF from product descriptions
+description_sobretudo,TF-IDF from product descriptions
+description_sobretudo passado,TF-IDF from product descriptions
+description_sola,TF-IDF from product descriptions
+description_spin,TF-IDF from product descriptions
+description_spin contemporâneo,TF-IDF from product descriptions
+description_surge,TF-IDF from product descriptions
+description_tecido,TF-IDF from product descriptions
+description_toda,TF-IDF from product descriptions
+description_toda sapatilha,TF-IDF from product descriptions
+description_tpr,TF-IDF from product descriptions
+description_tpr que,TF-IDF from product descriptions
+description_um,TF-IDF from product descriptions
+description_um spin,TF-IDF from product descriptions
+description_universo,TF-IDF from product descriptions
+description_universo basketbol,TF-IDF from product descriptions
+description_às,TF-IDF from product descriptions
+description_às sapatilhas,TF-IDF from product descriptions

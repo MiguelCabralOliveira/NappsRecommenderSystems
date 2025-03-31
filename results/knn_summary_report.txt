@@ -1,0 +1,33 @@
+=== Weighted KNN Recommendation Summary ===
+
+Timestamp: 2025-03-31 18:30:10
+Input Products: 375
+Features Used: 689
+KNN Neighbors (k): 12
+Distance Metric: euclidean
+Weight Optimization Used: No
+
+Feature Group Weights (Effective):
+- collections: 0.8413
+- description_tfidf: 0.7577
+- numerical: 3.0624
+- price: 3.4998
+- product_type: 4.1124
+- release_quarter: 2.6790
+- seasons: 6.0619
+- tags: 0.8696
+- time_features: 1.5467
+- variant_other: 0.6293
+- variant_size: 2.1874
+- vendor: 7.5774
+
+Visualizations Generated:
+- Feature Importance: Yes
+- t-SNE Plot: Yes
+- Similarity Distribution: Yes
+
+Recommendations Exported:
+- all_recommendations.csv: Yes (3671 pairs)
+
+Model Saved:
+- Model components saved to: results\model_default_weights
