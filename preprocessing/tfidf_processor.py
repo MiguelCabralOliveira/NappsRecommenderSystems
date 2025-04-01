@@ -77,7 +77,7 @@ def process_descriptions_tfidf(df, output_prefix="products"):
     # Create TF-IDF vectorizer
     tfidf = TfidfVectorizer(
         stop_words='english',
-        max_features=100,
+        max_features=200,
         ngram_range=(1, 2)
     )
     

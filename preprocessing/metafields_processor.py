@@ -1033,30 +1033,36 @@ def calculate_color_similarities(top_n=10, output_dir="results", output_file="co
 def save_color_similarity_data(output_dir="results"):
     """
     Calculate and save color similarity data from global product colors
-    
+
     Returns:
         DataFrame with color similarity data
     """
     global ALL_PRODUCT_COLORS
-    
+
     # Check if we have color data
     if not ALL_PRODUCT_COLORS:
         print("No product color data found for similarity calculation")
         return pd.DataFrame()
-    
+
     # Create output directory if it doesn't exist
-    os.makedirs(output_dir, exist_ok=True)
-    
-    # Calculate color similarities
-    similarity_df = calculate_color_similarities(top_n=10, output_file="products_color_similarity.csv")
-    
+    os.makedirs(output_dir, exist_ok=True) # Use the passed output_dir
+
+    # --- CORRECTED CALL ---
+    # Calculate color similarities, passing the output_dir argument
+    similarity_df = calculate_color_similarities(
+        top_n=10,
+        output_dir=output_dir, # Pass the directory here
+        output_file="products_color_similarity.csv"
+    )
+    # --- END CORRECTION ---
+
     # Log the results
     if not similarity_df.empty:
         print(f"Generated color similarity data for {similarity_df['source_product_id'].nunique()} products")
         print(f"Total similarity pairs: {len(similarity_df)}")
     else:
         print("No color similarity data generated")
-    
+
     return similarity_df
 
 def remove_color_columns(df):

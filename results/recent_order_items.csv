@@ -1,0 +1,3 @@
+checkout_id,tenant_id,timestamp,product_id,variant_meta_id,product_name,sku,variant_meta_properties,price,quantity,vendor
+63808608010588,sjstarcorp,2025-03-02 15:57:44+00:00,9641402466652,49547014340956,Sanjo K100 // All Black - 42,K100_CAN_000.42,,78.0,1,SANJO
+63899441856860,sjstarcorp,2025-03-30 10:51:29+00:00,9641446867292,49547208229212,Sanjo STC 70 High // Ecru - 37,ST70_HIG_003.37,,37.0,1,SANJO
