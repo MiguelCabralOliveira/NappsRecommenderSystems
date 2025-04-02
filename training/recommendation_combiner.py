@@ -313,7 +313,7 @@ def generate_hybrid_recommendations_adaptative(
     total_recommendations: int = 12,
     strong_similarity_threshold: float = 0.3,
     high_similarity_threshold: float = 0.9,
-    min_similarity_threshold: float = 0.05,
+    min_similarity_threshold: float = 0.01,
     pop_boost_factor: float = 0.05, # Passar os fatores para a função combinadora
     group_boost_factor: float = 0.03
 ) -> pd.DataFrame:

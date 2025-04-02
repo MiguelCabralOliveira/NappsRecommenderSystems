@@ -12,6 +12,7 @@ metafield_scx_composition_parte_superior_burel_resistent,TF-IDF/Data from produc
 metafield_scx_composition_parte_superior_100_suede_premi,TF-IDF/Data from product metafields
 metafield_scx_composition_gáspea_suede_sola_100_tpr_vega,TF-IDF/Data from product metafields
 metafield_scx_composition_parte_superior_100_pele_premiu,TF-IDF/Data from product metafields
+metafield_scx_composition_upper_100_premium_leather_leat,TF-IDF/Data from product metafields
 metafield_scx_composition_parte_superior_bombazine_vegan,TF-IDF/Data from product metafields
 metafield_scx_composition_pirâmide_olfativa_notas_de_top,TF-IDF/Data from product metafields
 metafield_scx_composition_50_pre_consumer_recycle_cotton,TF-IDF/Data from product metafields
@@ -39,14 +40,24 @@ metafield_shopify_footwear-material_linho,TF-IDF/Data from product metafields
 metafield_shopify_closure-type_velcro,TF-IDF/Data from product metafields
 product_type_,Product type dummy variable
 product_type_3,Product type dummy variable
+product_type_Apparel,Product type dummy variable
 product_type_Calçado,Product type dummy variable
-product_type_Calças,Product type dummy variable
-product_type_Calções,Product type dummy variable
+product_type_Coats and jackets,Product type dummy variable
+product_type_Footwear,Product type dummy variable
 product_type_Hat,Product type dummy variable
+product_type_Hoodie,Product type dummy variable
 product_type_Meias,Product type dummy variable
-product_type_Vestuário,Product type dummy variable
+product_type_Pants,Product type dummy variable
+product_type_Shoes,Product type dummy variable
+product_type_Shorts,Product type dummy variable
+product_type_Socks,Product type dummy variable
+product_type_Sweat,Product type dummy variable
+product_type_T-shirt,Product type dummy variable
+product_type_coat,Product type dummy variable
 product_type_hoodie,Product type dummy variable
+product_type_pole,Product type dummy variable
 product_type_sweat,Product type dummy variable
+product_type_t-shirt,Product type dummy variable
 product_type_trousers,Product type dummy variable
 tag_25 ABRIL,Tag dummy variable
 tag_25ABRIL,Tag dummy variable
@@ -289,10 +300,9 @@ tag_v200linen,Tag dummy variable
 tag_vestuarioaw22,Tag dummy variable
 tag_vestuárioss22,Tag dummy variable
 tag_washedpermanente,Tag dummy variable
-collections_25 ABRIL,Collection dummy variable
-collections_25 de abril 2024,Collection dummy variable
-collections_AW 22'23 - Collection,Collection dummy variable
-collections_AW 22'23 - Vestuário,Collection dummy variable
+collections_25 APRIL ,Collection dummy variable
+collections_AW 22'23 - Clothing,Collection dummy variable
+collections_AW 22'23 - Collection ,Collection dummy variable
 collections_AW 23//24 BOMBAZINE,Collection dummy variable
 collections_AW 23//24 BUREL,Collection dummy variable
 collections_AW 23//24 CORDURA,Collection dummy variable
@@ -302,15 +312,16 @@ collections_AW 23//24 SHORTS,Collection dummy variable
 collections_AW 23//24 SWEATS,Collection dummy variable
 collections_AW 23//24 T-SHIRT,Collection dummy variable
 collections_AW 23//24 TROUSERS,Collection dummy variable
-collections_AW'21 TIMELESS RESISTANCE,Collection dummy variable
-collections_AW'23 // Permanentes,Collection dummy variable
+collections_AW'21 TIMELESS RESISTANCE ,Collection dummy variable
+collections_AW'23 // Permanent,Collection dummy variable
 collections_AW'23 || All Collection,Collection dummy variable
 collections_AW'23 || Workwear,Collection dummy variable
 collections_AW23 Sneakers,Collection dummy variable
-collections_Acessórios,Collection dummy variable
+collections_Accessories,Collection dummy variable
 collections_All products,Collection dummy variable
 collections_Apparel,Collection dummy variable
-collections_Apparel Outlet,Collection dummy variable
+collections_Apparel Outlet ,Collection dummy variable
+"collections_April 25, 2024 ",Collection dummy variable
 collections_BSK 33,Collection dummy variable
 collections_BSK 33  Permanent Collection,Collection dummy variable
 collections_BSK 33 Permanent,Collection dummy variable
@@ -318,8 +329,6 @@ collections_BSK33,Collection dummy variable
 collections_Best selling products,Collection dummy variable
 collections_Black Friday - WORKWEAR,Collection dummy variable
 collections_Black Friday 2023,Collection dummy variable
-collections_Bombazine,Collection dummy variable
-collections_Bombazine Permanente,Collection dummy variable
 collections_Bonés,Collection dummy variable
 collections_Bonés & Gorros,Collection dummy variable
 collections_Breeze Colors,Collection dummy variable
@@ -327,18 +336,17 @@ collections_Bsk33 Low Club,Collection dummy variable
 collections_Burel,Collection dummy variable
 collections_Calçado,Collection dummy variable
 collections_Camisas,Collection dummy variable
-collections_Colaborações,Collection dummy variable
+collections_Clothing,Collection dummy variable
+collections_Collaborations ,Collection dummy variable
 collections_Cordura,Collection dummy variable
+collections_Corduroy,Collection dummy variable
 collections_Desert,Collection dummy variable
-collections_Desert Permanent,Collection dummy variable
-collections_Dia Pt,Collection dummy variable
-collections_Dia da Mãe,Collection dummy variable
-collections_Dia da Mãe 2024,Collection dummy variable
-collections_Dia do Pai,Collection dummy variable
-collections_FTC 86,Collection dummy variable
-collections_Father's Day || Gift Guide,Collection dummy variable
-collections_Football Mania,Collection dummy variable
-collections_Football Mountaineering,Collection dummy variable
+collections_FTC 86 ,Collection dummy variable
+collections_Father's Day ,Collection dummy variable
+collections_Father's Day || Gift Guide ,Collection dummy variable
+collections_Football Mania ,Collection dummy variable
+collections_Football Mountaineering ,Collection dummy variable
+collections_Footwear,Collection dummy variable
 collections_Fur,Collection dummy variable
 collections_Gardening Collection 2025,Collection dummy variable
 collections_Hoodie,Collection dummy variable
@@ -369,15 +377,18 @@ collections_Kids V100 & V200 Linen,Collection dummy variable
 collections_Kids V100 & V200 Marine,Collection dummy variable
 collections_Kids V100 & V200 Wild Flowers,Collection dummy variable
 collections_Kids V200,Collection dummy variable
+collections_Kids || Permanent Collection,Collection dummy variable
 collections_Meias,Collection dummy variable
-collections_Modelo,Collection dummy variable
-collections_Modelo K100,Collection dummy variable
+collections_Model,Collection dummy variable
+collections_Model K100,Collection dummy variable
+collections_Mother's Day ,Collection dummy variable
+collections_Mother's Day 2024 ,Collection dummy variable
 collections_NEW IN // AW23,Collection dummy variable
 collections_New In,Collection dummy variable
 collections_New products,Collection dummy variable
 collections_OG Washed,Collection dummy variable
 collections_Outlet,Collection dummy variable
-collections_Outlet Apparel,Collection dummy variable
+collections_Outlet Apparel ,Collection dummy variable
 collections_Outlet BSK33,Collection dummy variable
 collections_Outlet Hoodies,Collection dummy variable
 collections_Outlet Jacket,Collection dummy variable
@@ -394,18 +405,22 @@ collections_Outlet Sneakers,Collection dummy variable
 collections_Outlet Sweats,Collection dummy variable
 collections_Outlet T-shirt,Collection dummy variable
 collections_Outlet Workwear & Desert Boot,Collection dummy variable
-collections_Outlet | Sapatilhas,Collection dummy variable
+collections_Outlet | Sneakers ,Collection dummy variable
 collections_Pants,Collection dummy variable
 collections_Perfume,Collection dummy variable
+collections_Permanent Apparel + AW22'23,Collection dummy variable
 collections_Permanent Collection,Collection dummy variable
 collections_Permanent Collection Workwear,Collection dummy variable
-collections_Polos,Collection dummy variable
-collections_Promoção Fim de Semana,Collection dummy variable
-collections_SANJO BSK33,Collection dummy variable
+collections_Permanent Corduroy,Collection dummy variable
+collections_Permanent Desert,Collection dummy variable
+collections_Permanent Skateboard,Collection dummy variable
+collections_Poles,Collection dummy variable
+collections_Pt Day ,Collection dummy variable
+collections_SANJO BSK33 ,Collection dummy variable
 collections_SK EVO 100,Collection dummy variable
-collections_SS'22 Heritage Echoes,Collection dummy variable
-collections_SS'23 // Sem saldo,Collection dummy variable
-collections_SS'23 || All Collection,Collection dummy variable
+collections_SS'22 Heritage Echoes ,Collection dummy variable
+collections_SS'23 // No balance,Collection dummy variable
+collections_SS'23 || All Collection ,Collection dummy variable
 collections_SS'23 || K100,Collection dummy variable
 collections_SS'23 || K200,Collection dummy variable
 collections_SS'23 || New In,Collection dummy variable
@@ -427,10 +442,10 @@ collections_Sale Canvas,Collection dummy variable
 collections_Sale Hoodie,Collection dummy variable
 collections_Sale Workwear AW'23,Collection dummy variable
 collections_Sanjo,Collection dummy variable
+collections_Sanjo TEST,Collection dummy variable
 collections_Shorts,Collection dummy variable
-collections_Skateboading,Collection dummy variable
 collections_Sl250 Marine,Collection dummy variable
-collections_Solid - Promoções,Collection dummy variable
+collections_Solid - Promotions,Collection dummy variable
 collections_Stc 70 Washed Low,Collection dummy variable
 collections_Sweat,Collection dummy variable
 collections_Sweats,Collection dummy variable
@@ -439,17 +454,49 @@ collections_Sweatshirts,Collection dummy variable
 collections_T-Shirts | Permanent Collection,Collection dummy variable
 collections_T-shirt,Collection dummy variable
 collections_T-shirts,Collection dummy variable
-collections_Teste,Collection dummy variable
 collections_Trousers,Collection dummy variable
 collections_Vestuário,Collection dummy variable
-collections_Vestuário Permanente + AW22'23,Collection dummy variable
 collections_Washed,Collection dummy variable
-collections_outlet antigo,Collection dummy variable
+collections_Weekend Promotion,Collection dummy variable
+collections_old outlet ,Collection dummy variable
 vendor_SANJO,Vendor dummy variable
 min_price,Price-related feature from variants
 max_price,Price-related feature from variants
 has_discount,Price-related feature from variants
-variant_other_tamanho:100ml,Variant option dummy variable
+variant_size_100ml,Variant option dummy variable
+variant_size_24,Variant option dummy variable
+variant_size_25,Variant option dummy variable
+variant_size_26,Variant option dummy variable
+variant_size_27,Variant option dummy variable
+variant_size_28,Variant option dummy variable
+variant_size_29,Variant option dummy variable
+variant_size_30,Variant option dummy variable
+variant_size_31,Variant option dummy variable
+variant_size_32,Variant option dummy variable
+variant_size_33,Variant option dummy variable
+variant_size_34,Variant option dummy variable
+variant_size_35,Variant option dummy variable
+variant_size_35 - 40,Variant option dummy variable
+variant_size_35-40,Variant option dummy variable
+variant_size_36,Variant option dummy variable
+variant_size_37,Variant option dummy variable
+variant_size_38,Variant option dummy variable
+variant_size_39,Variant option dummy variable
+variant_size_40,Variant option dummy variable
+variant_size_41,Variant option dummy variable
+variant_size_41 - 46,Variant option dummy variable
+variant_size_41-46,Variant option dummy variable
+variant_size_42,Variant option dummy variable
+variant_size_43,Variant option dummy variable
+variant_size_44,Variant option dummy variable
+variant_size_45,Variant option dummy variable
+variant_size_46,Variant option dummy variable
+variant_size_L,Variant option dummy variable
+variant_size_M,Variant option dummy variable
+variant_size_S,Variant option dummy variable
+variant_size_U,Variant option dummy variable
+variant_size_XL,Variant option dummy variable
+variant_size_XS,Variant option dummy variable
 variant_other_tamanho:24,Variant option dummy variable
 variant_other_tamanho:25,Variant option dummy variable
 variant_other_tamanho:26,Variant option dummy variable
@@ -462,7 +509,6 @@ variant_other_tamanho:32,Variant option dummy variable
 variant_other_tamanho:33,Variant option dummy variable
 variant_other_tamanho:34,Variant option dummy variable
 variant_other_tamanho:35,Variant option dummy variable
-variant_other_tamanho:35 - 40,Variant option dummy variable
 variant_other_tamanho:35-40,Variant option dummy variable
 variant_other_tamanho:36,Variant option dummy variable
 variant_other_tamanho:37,Variant option dummy variable
@@ -470,7 +516,6 @@ variant_other_tamanho:38,Variant option dummy variable
 variant_other_tamanho:39,Variant option dummy variable
 variant_other_tamanho:40,Variant option dummy variable
 variant_other_tamanho:41,Variant option dummy variable
-variant_other_tamanho:41 - 46,Variant option dummy variable
 variant_other_tamanho:41-46,Variant option dummy variable
 variant_other_tamanho:42,Variant option dummy variable
 variant_other_tamanho:43,Variant option dummy variable
@@ -480,8 +525,6 @@ variant_other_tamanho:46,Variant option dummy variable
 variant_other_tamanho:L,Variant option dummy variable
 variant_other_tamanho:M,Variant option dummy variable
 variant_other_tamanho:S,Variant option dummy variable
-variant_other_tamanho:SOCK_EMB_PAC.41-46,Variant option dummy variable
-variant_other_tamanho:Sanjo Still Fresh Socks (35-40),Variant option dummy variable
 variant_other_tamanho:U,Variant option dummy variable
 variant_other_tamanho:XL,Variant option dummy variable
 variant_other_tamanho:XS,Variant option dummy variable
@@ -620,6 +663,7 @@ title_bsk 33,TF-IDF from product titles
 title_club,TF-IDF from product titles
 title_colors,TF-IDF from product titles
 title_ecru,TF-IDF from product titles
+title_fur,TF-IDF from product titles
 title_green,TF-IDF from product titles
 title_gum,TF-IDF from product titles
 title_high,TF-IDF from product titles
@@ -629,7 +673,6 @@ title_k200,TF-IDF from product titles
 title_kids,TF-IDF from product titles
 title_kids v100,TF-IDF from product titles
 title_kids v200,TF-IDF from product titles
-title_linen,TF-IDF from product titles
 title_logo,TF-IDF from product titles
 title_low,TF-IDF from product titles
 title_marine,TF-IDF from product titles
@@ -670,6 +713,7 @@ handle_k100,TF-IDF from product handles
 handle_k200,TF-IDF from product handles
 handle_kids,TF-IDF from product handles
 handle_kids v100,TF-IDF from product handles
+handle_kids v200,TF-IDF from product handles
 handle_logo,TF-IDF from product handles
 handle_low,TF-IDF from product handles
 handle_navy,TF-IDF from product handles
@@ -677,7 +721,6 @@ handle_og,TF-IDF from product handles
 handle_sanjo,TF-IDF from product handles
 handle_sanjo bsk,TF-IDF from product handles
 handle_sanjo k100,TF-IDF from product handles
-handle_sanjo k200,TF-IDF from product handles
 handle_sanjo kids,TF-IDF from product handles
 handle_shirt,TF-IDF from product handles
 handle_ss25,TF-IDF from product handles
@@ -685,203 +728,203 @@ handle_v100,TF-IDF from product handles
 handle_v200,TF-IDF from product handles
 handle_washed,TF-IDF from product handles
 handle_white,TF-IDF from product handles
-description_80,TF-IDF from product descriptions
-description_80 90,TF-IDF from product descriptions
-description_90,TF-IDF from product descriptions
-description_90 anos,TF-IDF from product descriptions
-description_90 que,TF-IDF from product descriptions
-description_abrasão,TF-IDF from product descriptions
-description_abrasão leveza,TF-IDF from product descriptions
-description_ainda,TF-IDF from product descriptions
-description_ainda mais,TF-IDF from product descriptions
-description_algumas,TF-IDF from product descriptions
-description_algumas das,TF-IDF from product descriptions
-description_almofadada,TF-IDF from product descriptions
-description_almofadada ilhós,TF-IDF from product descriptions
-description_anos,TF-IDF from product descriptions
-description_anos 80,TF-IDF from product descriptions
-description_anos surge,TF-IDF from product descriptions
-description_apresenta,TF-IDF from product descriptions
-description_apresenta excelentes,TF-IDF from product descriptions
-description_basket,TF-IDF from product descriptions
-description_basket dos,TF-IDF from product descriptions
-description_basketbol,TF-IDF from product descriptions
-description_burel,TF-IDF from product descriptions
-description_calçavam,TF-IDF from product descriptions
-description_calçavam clube,TF-IDF from product descriptions
-description_características,TF-IDF from product descriptions
-description_características durabilidade,TF-IDF from product descriptions
-description_características originais,TF-IDF from product descriptions
-description_celebrar,TF-IDF from product descriptions
-description_celebrar modelo,TF-IDF from product descriptions
-description_celebremente,TF-IDF from product descriptions
-description_celebremente calçavam,TF-IDF from product descriptions
-description_clube,TF-IDF from product descriptions
-description_clube local,TF-IDF from product descriptions
-description_com,TF-IDF from product descriptions
-description_com detalhes,TF-IDF from product descriptions
-description_com mais,TF-IDF from product descriptions
-description_conta,TF-IDF from product descriptions
-description_conta já,TF-IDF from product descriptions
-description_contemporâneo,TF-IDF from product descriptions
-description_contemporâneo às,TF-IDF from product descriptions
-description_cosido,TF-IDF from product descriptions
-description_cosido na,TF-IDF from product descriptions
-description_da,TF-IDF from product descriptions
-description_da marca,TF-IDF from product descriptions
-description_da sanjo,TF-IDF from product descriptions
-description_da sola,TF-IDF from product descriptions
-description_das,TF-IDF from product descriptions
-description_das suas,TF-IDF from product descriptions
-description_desenvolvimento,TF-IDF from product descriptions
-description_desenvolvimento sobretudo,TF-IDF from product descriptions
-description_desporto,TF-IDF from product descriptions
-description_desporto foi,TF-IDF from product descriptions
-description_detalhes,TF-IDF from product descriptions
-description_detalhes modernos,TF-IDF from product descriptions
-description_dias,TF-IDF from product descriptions
-description_dos,TF-IDF from product descriptions
-description_dos anos,TF-IDF from product descriptions
-description_dos nossos,TF-IDF from product descriptions
-description_durabilidade,TF-IDF from product descriptions
-description_durabilidade resistência,TF-IDF from product descriptions
-description_em,TF-IDF from product descriptions
-description_em lona,TF-IDF from product descriptions
-description_em toda,TF-IDF from product descriptions
-description_em tpr,TF-IDF from product descriptions
-description_especial,TF-IDF from product descriptions
-description_especial revolucionámo,TF-IDF from product descriptions
-description_esta,TF-IDF from product descriptions
-description_este,TF-IDF from product descriptions
-description_este modelo,TF-IDF from product descriptions
-description_etiqueta,TF-IDF from product descriptions
-description_etiqueta têxtil,TF-IDF from product descriptions
-description_excelentes,TF-IDF from product descriptions
-description_excelentes características,TF-IDF from product descriptions
-description_foi,TF-IDF from product descriptions
-description_foi principal,TF-IDF from product descriptions
-description_forma,TF-IDF from product descriptions
-description_forma tornar,TF-IDF from product descriptions
-description_forro,TF-IDF from product descriptions
-description_forro interior,TF-IDF from product descriptions
-description_gáspea,TF-IDF from product descriptions
-description_gáspea em,TF-IDF from product descriptions
-description_icónicos,TF-IDF from product descriptions
-description_icónicos conta,TF-IDF from product descriptions
-description_ilhós,TF-IDF from product descriptions
-description_ilhós revestidos,TF-IDF from product descriptions
-description_interior,TF-IDF from product descriptions
-description_interior em,TF-IDF from product descriptions
-description_já,TF-IDF from product descriptions
-description_já com,TF-IDF from product descriptions
-description_k100,TF-IDF from product descriptions
-description_lateral,TF-IDF from product descriptions
-description_lateral forma,TF-IDF from product descriptions
-description_leveza,TF-IDF from product descriptions
-description_lo,TF-IDF from product descriptions
-description_lo com,TF-IDF from product descriptions
-description_local,TF-IDF from product descriptions
-description_local passado,TF-IDF from product descriptions
-description_logotipo,TF-IDF from product descriptions
-description_logotipo cosido,TF-IDF from product descriptions
-description_lona,TF-IDF from product descriptions
-description_lona logotipo,TF-IDF from product descriptions
-description_língua,TF-IDF from product descriptions
-description_língua forro,TF-IDF from product descriptions
-description_mais,TF-IDF from product descriptions
-description_mais 90,TF-IDF from product descriptions
-description_mais especial,TF-IDF from product descriptions
-description_marca,TF-IDF from product descriptions
-description_marca universo,TF-IDF from product descriptions
-description_materiais,TF-IDF from product descriptions
-description_materiais melhor,TF-IDF from product descriptions
+description_100,TF-IDF from product descriptions
+description_100 cotton,TF-IDF from product descriptions
+description_100 organic,TF-IDF from product descriptions
+description_100 vegan,TF-IDF from product descriptions
+description_240,TF-IDF from product descriptions
+description_380,TF-IDF from product descriptions
+description_50,TF-IDF from product descriptions
+description_50 cotton,TF-IDF from product descriptions
+description_50 pre,TF-IDF from product descriptions
+description_abrasion,TF-IDF from product descriptions
+description_actions,TF-IDF from product descriptions
+description_actions lower,TF-IDF from product descriptions
+description_animal,TF-IDF from product descriptions
+description_animal origin,TF-IDF from product descriptions
+description_approved,TF-IDF from product descriptions
+description_approved vegan,TF-IDF from product descriptions
+description_atmosphere,TF-IDF from product descriptions
+description_atmosphere manufacturing,TF-IDF from product descriptions
+description_basketball,TF-IDF from product descriptions
+description_bombazine,TF-IDF from product descriptions
+description_brand,TF-IDF from product descriptions
+description_canvas,TF-IDF from product descriptions
+description_canvas resistant,TF-IDF from product descriptions
+description_carbon,TF-IDF from product descriptions
+description_carbon footprint,TF-IDF from product descriptions
+description_carbon footprintadherence,TF-IDF from product descriptions
+description_certification,TF-IDF from product descriptions
+description_certification ensure,TF-IDF from product descriptions
+description_certified,TF-IDF from product descriptions
+description_certified fabrics,TF-IDF from product descriptions
+description_chemical,TF-IDF from product descriptions
+description_chemical nature,TF-IDF from product descriptions
+description_compliance,TF-IDF from product descriptions
+description_compliance social,TF-IDF from product descriptions
+description_composition,TF-IDF from product descriptions
+description_composition 100,TF-IDF from product descriptions
+description_composition 50,TF-IDF from product descriptions
+description_composition upper,TF-IDF from product descriptions
+description_consumer,TF-IDF from product descriptions
+description_consumer recycle,TF-IDF from product descriptions
+description_cordura,TF-IDF from product descriptions
+description_cotton,TF-IDF from product descriptions
+description_cotton 50,TF-IDF from product descriptions
+description_cotton canvas,TF-IDF from product descriptions
+description_cotton washed,TF-IDF from product descriptions
+description_cotton weight,TF-IDF from product descriptions
+description_details,TF-IDF from product descriptions
+description_does,TF-IDF from product descriptions
+description_does include,TF-IDF from product descriptions
+description_durability,TF-IDF from product descriptions
+description_emissions,TF-IDF from product descriptions
+description_emissions released,TF-IDF from product descriptions
+description_ensure,TF-IDF from product descriptions
+description_ensure compliance,TF-IDF from product descriptions
+description_environmental,TF-IDF from product descriptions
+description_environmental health,TF-IDF from product descriptions
+description_fabrics,TF-IDF from product descriptions
+description_fabrics markets,TF-IDF from product descriptions
+description_features,TF-IDF from product descriptions
+description_fibers,TF-IDF from product descriptions
+description_fibers animal,TF-IDF from product descriptions
+description_foam,TF-IDF from product descriptions
+description_foam lining,TF-IDF from product descriptions
+description_footprint,TF-IDF from product descriptions
+description_footprint portugal,TF-IDF from product descriptions
+description_footprint reduction,TF-IDF from product descriptions
+description_footprintadherence,TF-IDF from product descriptions
+description_footprintadherence carbon,TF-IDF from product descriptions
+description_global,TF-IDF from product descriptions
+description_global organic,TF-IDF from product descriptions
+description_gots,TF-IDF from product descriptions
+description_gots certification,TF-IDF from product descriptions
+description_group,TF-IDF from product descriptions
+description_health,TF-IDF from product descriptions
+description_health safety,TF-IDF from product descriptions
+description_hides,TF-IDF from product descriptions
+description_hides leather,TF-IDF from product descriptions
+description_history,TF-IDF from product descriptions
+description_iec,TF-IDF from product descriptions
+description_iec emissions,TF-IDF from product descriptions
+description_include,TF-IDF from product descriptions
+description_include fibers,TF-IDF from product descriptions
+description_inescopensures,TF-IDF from product descriptions
+description_inescopensures main,TF-IDF from product descriptions
+description_insole,TF-IDF from product descriptions
+description_insole memory,TF-IDF from product descriptions
+description_leather,TF-IDF from product descriptions
+description_leather silk,TF-IDF from product descriptions
+description_leather working,TF-IDF from product descriptions
+description_lining,TF-IDF from product descriptions
+description_lining mesh,TF-IDF from product descriptions
+description_logo,TF-IDF from product descriptions
+description_logo make,TF-IDF from product descriptions
+description_lower,TF-IDF from product descriptions
+description_lower iec,TF-IDF from product descriptions
+description_main,TF-IDF from product descriptions
+description_main chemical,TF-IDF from product descriptions
+description_make,TF-IDF from product descriptions
+description_manufacturing,TF-IDF from product descriptions
+description_manufacturing global,TF-IDF from product descriptions
+description_markets,TF-IDF from product descriptions
 description_material,TF-IDF from product descriptions
-description_material da,TF-IDF from product descriptions
-description_melhor,TF-IDF from product descriptions
-description_melhor qualidade,TF-IDF from product descriptions
-description_modelo,TF-IDF from product descriptions
-description_modelo ainda,TF-IDF from product descriptions
-description_modelo original,TF-IDF from product descriptions
-description_modernos,TF-IDF from product descriptions
-description_modernos materiais,TF-IDF from product descriptions
-description_modo,TF-IDF from product descriptions
-description_modo celebrar,TF-IDF from product descriptions
-description_montanha,TF-IDF from product descriptions
-description_motor,TF-IDF from product descriptions
-description_motor para,TF-IDF from product descriptions
-description_na,TF-IDF from product descriptions
-description_na lateral,TF-IDF from product descriptions
-description_na língua,TF-IDF from product descriptions
-description_nossos,TF-IDF from product descriptions
-description_nossos icónicos,TF-IDF from product descriptions
-description_originais,TF-IDF from product descriptions
-description_originais gáspea,TF-IDF from product descriptions
+description_material does,TF-IDF from product descriptions
+description_memory,TF-IDF from product descriptions
+description_memory foam,TF-IDF from product descriptions
+description_mesh,TF-IDF from product descriptions
+description_mesh sole,TF-IDF from product descriptions
+description_mesh vegan,TF-IDF from product descriptions
+description_model,TF-IDF from product descriptions
+description_m²,TF-IDF from product descriptions
+description_nature,TF-IDF from product descriptions
+description_nature material,TF-IDF from product descriptions
+description_offering,TF-IDF from product descriptions
+description_organic,TF-IDF from product descriptions
+description_organic cotton,TF-IDF from product descriptions
+description_organic textile,TF-IDF from product descriptions
+description_origin,TF-IDF from product descriptions
+description_origin hides,TF-IDF from product descriptions
 description_original,TF-IDF from product descriptions
-description_original preservando,TF-IDF from product descriptions
-description_os,TF-IDF from product descriptions
-description_palmilha,TF-IDF from product descriptions
-description_palmilha almofadada,TF-IDF from product descriptions
-description_para,TF-IDF from product descriptions
-description_para desenvolvimento,TF-IDF from product descriptions
-description_para os,TF-IDF from product descriptions
-description_parte,TF-IDF from product descriptions
-description_passado,TF-IDF from product descriptions
-description_passado da,TF-IDF from product descriptions
-description_preservando,TF-IDF from product descriptions
-description_preservando algumas,TF-IDF from product descriptions
-description_principal,TF-IDF from product descriptions
-description_principal motor,TF-IDF from product descriptions
-description_qualidade,TF-IDF from product descriptions
-description_qualidade etiqueta,TF-IDF from product descriptions
-description_que,TF-IDF from product descriptions
-description_que apresenta,TF-IDF from product descriptions
-description_que celebremente,TF-IDF from product descriptions
-description_reinventado,TF-IDF from product descriptions
-description_reinventado modo,TF-IDF from product descriptions
-description_resistente,TF-IDF from product descriptions
-description_resistência,TF-IDF from product descriptions
-description_resistência abrasão,TF-IDF from product descriptions
-description_revestidos,TF-IDF from product descriptions
-description_revestidos material,TF-IDF from product descriptions
-description_revolucionámo,TF-IDF from product descriptions
-description_revolucionámo lo,TF-IDF from product descriptions
+description_peta,TF-IDF from product descriptions
+description_peta approved,TF-IDF from product descriptions
+description_plan,TF-IDF from product descriptions
+description_plan specific,TF-IDF from product descriptions
+description_portugal,TF-IDF from product descriptions
+description_portugal composition,TF-IDF from product descriptions
+description_pre,TF-IDF from product descriptions
+description_pre consumer,TF-IDF from product descriptions
+description_premium,TF-IDF from product descriptions
+description_prioritize,TF-IDF from product descriptions
+description_prioritize workplace,TF-IDF from product descriptions
+description_properties,TF-IDF from product descriptions
+description_properties portugal,TF-IDF from product descriptions
+description_recycle,TF-IDF from product descriptions
+description_recycle cotton,TF-IDF from product descriptions
+description_recycled,TF-IDF from product descriptions
+description_recycled cotton,TF-IDF from product descriptions
+description_reduction,TF-IDF from product descriptions
+description_reduction plan,TF-IDF from product descriptions
+description_released,TF-IDF from product descriptions
+description_released atmosphere,TF-IDF from product descriptions
+description_resistance,TF-IDF from product descriptions
+description_resistant,TF-IDF from product descriptions
+description_resistant sunlight,TF-IDF from product descriptions
+description_safety,TF-IDF from product descriptions
+description_safety standards,TF-IDF from product descriptions
+description_safety value,TF-IDF from product descriptions
 description_sanjo,TF-IDF from product descriptions
-description_sanjo desporto,TF-IDF from product descriptions
-description_sanjo em,TF-IDF from product descriptions
-description_sanjo um,TF-IDF from product descriptions
-description_sapatilha,TF-IDF from product descriptions
-description_sapatilha palmilha,TF-IDF from product descriptions
-description_sapatilhas,TF-IDF from product descriptions
-description_sapatilhas basket,TF-IDF from product descriptions
-description_se,TF-IDF from product descriptions
-description_significa,TF-IDF from product descriptions
-description_silhueta,TF-IDF from product descriptions
-description_sobretudo,TF-IDF from product descriptions
-description_sobretudo passado,TF-IDF from product descriptions
-description_sola,TF-IDF from product descriptions
-description_sola em,TF-IDF from product descriptions
-description_spin,TF-IDF from product descriptions
-description_spin contemporâneo,TF-IDF from product descriptions
-description_suas,TF-IDF from product descriptions
-description_suas características,TF-IDF from product descriptions
-description_surge,TF-IDF from product descriptions
-description_surge reinventado,TF-IDF from product descriptions
-description_tecido,TF-IDF from product descriptions
-description_toda,TF-IDF from product descriptions
-description_toda sapatilha,TF-IDF from product descriptions
-description_toque,TF-IDF from product descriptions
-description_tornar,TF-IDF from product descriptions
-description_tornar este,TF-IDF from product descriptions
+description_silk,TF-IDF from product descriptions
+description_silk wool,TF-IDF from product descriptions
+description_social,TF-IDF from product descriptions
+description_social environmental,TF-IDF from product descriptions
+description_sole,TF-IDF from product descriptions
+description_sole 100,TF-IDF from product descriptions
+description_specific,TF-IDF from product descriptions
+description_specific actions,TF-IDF from product descriptions
+description_standards,TF-IDF from product descriptions
+description_standards prioritize,TF-IDF from product descriptions
+description_standardwith,TF-IDF from product descriptions
+description_standardwith gots,TF-IDF from product descriptions
+description_suede,TF-IDF from product descriptions
+description_sunlight,TF-IDF from product descriptions
+description_sunlight sole,TF-IDF from product descriptions
+description_tag,TF-IDF from product descriptions
+description_tag tongue,TF-IDF from product descriptions
+description_textile,TF-IDF from product descriptions
+description_textile standardwith,TF-IDF from product descriptions
+description_textile tag,TF-IDF from product descriptions
 description_tpr,TF-IDF from product descriptions
-description_tpr que,TF-IDF from product descriptions
-description_têxtil,TF-IDF from product descriptions
-description_têxtil na,TF-IDF from product descriptions
-description_um,TF-IDF from product descriptions
-description_um dos,TF-IDF from product descriptions
-description_um spin,TF-IDF from product descriptions
-description_um toque,TF-IDF from product descriptions
-description_uma,TF-IDF from product descriptions
-description_universo,TF-IDF from product descriptions
-description_universo basketbol,TF-IDF from product descriptions
-description_às,TF-IDF from product descriptions
-description_às sapatilhas,TF-IDF from product descriptions
+description_tpr insole,TF-IDF from product descriptions
+description_upper,TF-IDF from product descriptions
+description_upper 100,TF-IDF from product descriptions
+description_used,TF-IDF from product descriptions
+description_value,TF-IDF from product descriptions
+description_value certified,TF-IDF from product descriptions
+description_ve,TF-IDF from product descriptions
+description_ve revolutionized,TF-IDF from product descriptions
+description_vegan,TF-IDF from product descriptions
+description_vegan inescopensures,TF-IDF from product descriptions
+description_vegan tpr,TF-IDF from product descriptions
+description_washed,TF-IDF from product descriptions
+description_washed zero,TF-IDF from product descriptions
+description_waste,TF-IDF from product descriptions
+description_waste water,TF-IDF from product descriptions
+description_water,TF-IDF from product descriptions
+description_water footprint,TF-IDF from product descriptions
+description_weight,TF-IDF from product descriptions
+description_weight 240,TF-IDF from product descriptions
+description_weight 380,TF-IDF from product descriptions
+description_wool,TF-IDF from product descriptions
+description_wool carbon,TF-IDF from product descriptions
+description_working,TF-IDF from product descriptions
+description_working group,TF-IDF from product descriptions
+description_workplace,TF-IDF from product descriptions
+description_workplace safety,TF-IDF from product descriptions
+description_worn,TF-IDF from product descriptions
+description_worn local,TF-IDF from product descriptions
+description_years,TF-IDF from product descriptions
+description_years history,TF-IDF from product descriptions
+description_zero,TF-IDF from product descriptions
+description_zero waste,TF-IDF from product descriptions

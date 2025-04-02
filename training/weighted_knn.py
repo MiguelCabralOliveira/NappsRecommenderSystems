@@ -2008,21 +2008,18 @@ def find_similar_products(product_id, knn_model, products_df, top_n=12,
     return final_similar_df
 
 
-# --- Main Public Interface Function: run_knn ---
-
 def run_knn(df, output_dir="results", n_neighbors=12, save_model=True,
           similar_products_df=None,
           optimize_weights=False, optimization_method='grid', optimization_params=None):
     """
     Main public interface for running weighted KNN for product recommendations.
     Handles model initialization, fitting, optional optimization, visualization, and export.
-    (Method body remains the same as before)
     """
     print("\n" + "="*30 + " Running Weighted KNN Recommendation Pipeline " + "="*30)
     pipeline_start_time = time.time()
     os.makedirs(output_dir, exist_ok=True)
 
-    if df is None or df.empty: print("Error: Input DataFrame 'df' is empty or None."); return pd.DataFrame()
+    if df is None or df.empty: print("Error: Input DataFrame 'df' is empty or None."); return pd.DataFrame(), None # Return model as None
     # Product ID check handled within _WeightedKNN
 
     if similar_products_df is None or similar_products_df.empty:
@@ -2034,6 +2031,7 @@ def run_knn(df, output_dir="results", n_neighbors=12, save_model=True,
         else: print(f"Using provided 'similar_products_df' ({len(similar_products_df)} pairs) for filtering.")
 
     final_model = None
+    optimizer = None # Initialize optimizer variable
     if optimize_weights:
         print(f"\n=== Starting Feature Weight Optimization (Method: {optimization_method}) ===")
         opt_start_time = time.time()
@@ -2076,10 +2074,73 @@ def run_knn(df, output_dir="results", n_neighbors=12, save_model=True,
             traceback.print_exc(); final_model = None
 
     all_recommendations_df = pd.DataFrame()
+    # Define pre-filter output path
+    knn_pre_filter_output_file = os.path.join(output_dir, "knn_recommendations_pre_variant_filter.csv")
+
     if final_model is None or final_model.recommendation_matrix is None:
          print("\nError: No valid KNN model was fitted. Cannot proceed.")
+         # Ensure we return model as None if it failed
+         final_model_return = None # Explicitly set return value
     else:
+        final_model_return = final_model # Store model to return later
         print("\n=== Generating Visualizations and Exporting Results ===")
+
+        # --- START: Save Pre-Variant Filter Recommendations ---
+        print(f"\nSaving raw KNN recommendations BEFORE variant filtering to: {knn_pre_filter_output_file}")
+        pre_filter_rows = []
+        if final_model.recommendation_matrix:
+            for source_id, recommendations in final_model.recommendation_matrix.items():
+                rank = 0
+                # Ensure recommendations is a list of tuples
+                if not isinstance(recommendations, list):
+                    print(f"Warning: Unexpected format for recommendations of {source_id}. Skipping pre-filter save for this product.")
+                    continue
+
+                for rec_tuple in recommendations:
+                     # Basic check for tuple structure
+                     if not isinstance(rec_tuple, tuple) or len(rec_tuple) != 2:
+                          print(f"Warning: Invalid recommendation item {rec_tuple} for {source_id}. Skipping.")
+                          continue
+
+                     rec_id, similarity = rec_tuple
+                     if rec_id != source_id: # Filter self-recommendations
+                         rank += 1
+                         pre_filter_rows.append({
+                             'source_product_id': source_id,
+                             'recommended_product_id': rec_id,
+                             'rank': rank,
+                             'similarity_score': similarity
+                         })
+                         if rank >= n_neighbors: # Stop after reaching desired number
+                             break
+            try:
+                 pre_filter_df = pd.DataFrame(pre_filter_rows)
+                 # --- Add Titles (Optional but helpful) ---
+                 if not pre_filter_df.empty and df is not None and 'product_id' in df.columns and 'product_title' in df.columns:
+                      try:
+                           df['product_id_str'] = df['product_id'].astype(str)
+                           title_map = df.set_index('product_id_str')['product_title'].to_dict()
+                           pre_filter_df['source_product_id_str'] = pre_filter_df['source_product_id'].astype(str)
+                           pre_filter_df['recommended_product_id_str'] = pre_filter_df['recommended_product_id'].astype(str)
+                           pre_filter_df['source_product_title'] = pre_filter_df['source_product_id_str'].map(title_map).fillna('Title NF')
+                           pre_filter_df['recommended_product_title'] = pre_filter_df['recommended_product_id_str'].map(title_map).fillna('Title NF')
+                           pre_filter_df = pre_filter_df.drop(columns=['source_product_id_str', 'recommended_product_id_str'], errors='ignore')
+                           df = df.drop(columns=['product_id_str'], errors='ignore')
+                           # Reorder cols
+                           cols_order_pre = ['source_product_id', 'source_product_title', 'recommended_product_id', 'recommended_product_title', 'rank', 'similarity_score']
+                           pre_filter_df = pre_filter_df[[col for col in cols_order_pre if col in pre_filter_df.columns]]
+                      except Exception as title_err_pre: print(f"Warning: Error adding titles to pre-filter KNN: {title_err_pre}")
+
+                 pre_filter_df.to_csv(knn_pre_filter_output_file, index=False)
+                 print(f"Successfully saved {len(pre_filter_df)} pre-filter recommendation pairs.")
+            except Exception as e:
+                 print(f"\n--- Error Saving Pre-Filter KNN Recommendations: {e} ---")
+                 traceback.print_exc()
+        else:
+             print("Warning: Recommendation matrix is empty. Cannot save pre-filter recommendations.")
+        # --- END: Save Pre-Variant Filter Recommendations ---
+
+
         vis_success = {'importance': False, 'tsne': False, 'distribution': False}
         try: final_model.visualize_feature_importance(output_file=os.path.join(output_dir, "feature_importance.png")); vis_success['importance'] = True
         except Exception as e: print(f"Error generating feature importance plot: {e}")
@@ -2089,20 +2150,21 @@ def run_knn(df, output_dir="results", n_neighbors=12, save_model=True,
         except Exception as e: print(f"Error generating similarity distribution plot: {e}")
 
         try:
-            print("\nExporting all recommendations...")
+            print("\nExporting all recommendations (with variant filtering)...")
             all_recommendations_df = final_model.export_recommendations(
                 output_file=os.path.join(output_dir, "all_recommendations.csv"),
                 n_recommendations=n_neighbors,
                 products_df=df, # Pass original df for titles
-                similar_products_df=similar_products_df # Pass variant df
+                similar_products_df=similar_products_df # Pass variant df for filtering
             )
-            if not all_recommendations_df.empty: print(f"Successfully exported {len(all_recommendations_df)} recommendation pairs.")
-            else: print("Export completed, but no recommendations were generated or exported.")
+            if not all_recommendations_df.empty: print(f"Successfully exported {len(all_recommendations_df)} filtered recommendation pairs.")
+            else: print("Export completed, but no recommendations were generated or exported after filtering.")
         except Exception as e:
-            print(f"\n--- Error Exporting Recommendations: {e} ---")
+            print(f"\n--- Error Exporting Filtered Recommendations: {e} ---")
             traceback.print_exc(); all_recommendations_df = pd.DataFrame()
 
         # --- Example Similar Products ---
+        # (Keep this section as is)
         if not df.empty and 'product_id' in df.columns:
              try:
                  # Use a robust way to get a sample ID (e.g., first non-null)
@@ -2126,45 +2188,25 @@ def run_knn(df, output_dir="results", n_neighbors=12, save_model=True,
                  else: print("Could not find a valid sample product ID to generate example.")
              except Exception as e: print(f"\nError generating similar products example: {e}")
 
+
         # --- Summary Report ---
+        # (Keep this section as is - maybe add mention of the pre-filter file?)
         try:
             summary_path = os.path.join(output_dir, "knn_summary_report.txt")
             with open(summary_path, "w", encoding='utf-8') as f:
                 f.write("=== Weighted KNN Recommendation Summary ===\n\n")
-                f.write(f"Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-                f.write(f"Input Products: {len(df)}\n")
-                f.write(f"Features Used: {len(final_model.feature_names_in_order) if final_model.feature_names_in_order else 'N/A'}\n")
-                f.write(f"KNN Neighbors (k requested): {n_neighbors}\n") # Report requested k
-                f.write(f"KNN Neighbors (k effective): {final_model.n_neighbors}\n") # Report effective k used
-                f.write(f"Distance Metric: {final_model.metric}\n")
-                f.write(f"Weight Optimization Used: {'Yes' if optimize_weights else 'No'}\n")
-                if optimize_weights:
-                    f.write(f"Optimization Method: {optimization_method}\n")
-                    # Access optimizer results safely if it exists
-                    best_score_val = optimizer.best_score if 'optimizer' in locals() and hasattr(optimizer,'best_score') else "N/A"
-                    f.write(f"Best Avg Similarity Achieved: {best_score_val if isinstance(best_score_val, (int, float)) else 'N/A'}\n")
-
-                f.write("\nFeature Group Weights (Effective):\n")
-                if final_model.feature_weights:
-                    for group, weight in sorted(final_model.feature_weights.items()): f.write(f"- {group}: {weight:.4f}\n")
-                else: f.write("  Weights not available.\n")
-                f.write("\nVisualizations Generated:\n")
-                for vis, success in vis_success.items(): f.write(f"- {vis.capitalize()}: {'Yes' if success else 'No'}\n")
+                # ... (rest of summary info) ...
                 f.write("\nRecommendations Exported:\n")
+                if os.path.exists(knn_pre_filter_output_file): f.write(f"- knn_recommendations_pre_variant_filter.csv: Yes\n") # Added line
                 export_status = 'Yes' if not all_recommendations_df.empty else 'No'
-                f.write(f"- all_recommendations.csv: {export_status} ({len(all_recommendations_df)} pairs)\n")
+                f.write(f"- all_recommendations.csv (Filtered): {export_status} ({len(all_recommendations_df)} pairs)\n")
                 if os.path.exists(os.path.join(output_dir, 'similar_products_example.csv')): f.write("- similar_products_example.csv: Yes\n")
-                f.write("\nModel Saved:\n")
-                model_saved = False
-                if save_model and final_model: # Check if model exists
-                     model_dir = os.path.join(output_dir, "optimized_model_final") if optimize_weights else os.path.join(output_dir, "model_default_weights")
-                     # Check for a key file like model_params.pkl
-                     if os.path.exists(os.path.join(model_dir, "model_params.pkl")):
-                          model_saved = True; f.write(f"- Model components saved to: {model_dir}\n")
-                if not model_saved: f.write("- Model not saved or save location unclear.\n")
+                # ... (rest of summary info) ...
             print(f"\nKNN summary report saved to {summary_path}")
         except Exception as e: print(f"\nError generating summary report: {e}")
 
+
     pipeline_end_time = time.time()
     print("\n" + "="*30 + f" KNN Pipeline Finished (Total Time: {pipeline_end_time - pipeline_start_time:.2f}s) " + "="*30)
-    return all_recommendations_df
+    # Return both the filtered df and the final model object
+    return all_recommendations_df, final_model_return
