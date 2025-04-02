@@ -1,7 +1,0 @@
-{
-    "CatalogCoverage@20": 0.8407310704960835,
-    "IntraListSimilarity@20": 0.1825389002095105,
-    "PopularityBias@20": 0.034759358288770054,
-    "TotalSourceProductsEvaluated": 374,
-    "K": 20
-}

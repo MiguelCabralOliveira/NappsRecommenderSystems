@@ -1,7 +1,0 @@
-=== Weighted KNN Recommendation Summary ===
-
-
-Recommendations Exported:
-- knn_recommendations_pre_variant_filter.csv: Yes
-- all_recommendations.csv (Filtered): Yes (5119 pairs)
-- similar_products_example.csv: Yes
