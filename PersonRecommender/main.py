@@ -7,7 +7,9 @@ import traceback
 
 # --- Local Imports ---
 from data_pipeline.data_loader import load_all_data
-from data_pipeline.data_processor import process_loaded_data 
+# Import the specific person data preprocessing orchestrator
+from preprocessing.preprocess_person_data import run_person_preprocessing
+
 # Placeholders for future steps
 # from graph_builder import build_graph_data
 # from model_trainer import train_model
@@ -16,7 +18,7 @@ from data_pipeline.data_processor import process_loaded_data
 
 # --- Main Execution ---
 def main():
-    parser = argparse.ArgumentParser(description='Load, process, and prepare user interaction data.')
+    parser = argparse.ArgumentParser(description='Load, preprocess, and prepare user interaction data.')
     parser.add_argument('--shop-id', required=True, help='The tenant_id for the shop.')
     parser.add_argument('--output-dir', default='results', help='Base directory to save results.')
     parser.add_argument('--days', type=int, default=90, help='Number of past days of event data to load.')
@@ -28,109 +30,133 @@ def main():
 
     print(f"\nStarting pipeline for shop_id: {args.shop_id}")
 
+    # Define file paths consistently
+    person_loaded_path = os.path.join(run_output_dir, "person_data_loaded.csv")
+    event_loaded_path = os.path.join(run_output_dir, "person_event_data_filtered.csv")
+    events_discovered_path = os.path.join(run_output_dir, "discovered_event_types.json")
+    person_processed_path = os.path.join(run_output_dir, "person_features_processed.csv")
+    event_processed_path = os.path.join(run_output_dir, "event_data_processed.csv") # Processed event data (still placeholder)
+
     # === Step 1: Load Data ===
     print("\n=== Step 1: Loading Data ===")
+    person_df_loaded = None # Use distinct name
+    event_df_loaded = None  # Use distinct name
+    distinct_event_types = []
     try:
-        raw_person_df, raw_event_df, distinct_event_types = load_all_data(args.shop_id, args.days)
-        print("\n--- Raw Data Loading Summary ---")
-        print(f"Raw Person records loaded: {len(raw_person_df) if raw_person_df is not None else 'None'}")
-        print(f"Raw Person event records loaded: {len(raw_event_df) if raw_event_df is not None else 'None'}")
-        print(f"Distinct event types found: {len(distinct_event_types) if distinct_event_types else 'None'}")
+        person_df_loaded, event_df_loaded, distinct_event_types = load_all_data(args.shop_id, args.days)
 
-        # Save distinct event types (doesn't need processing)
+        print("\n--- Data Loading Summary ---")
+        print(f"Person records loaded: {len(person_df_loaded) if person_df_loaded is not None else 'None'}")
+        print(f"Filtered Person event records loaded: {len(event_df_loaded) if event_df_loaded is not None else 'None'}")
+        print(f"Distinct event types found (all): {len(distinct_event_types) if distinct_event_types else 'None'}")
+
+        # Save distinct event types
         if distinct_event_types:
-            events_path = os.path.join(run_output_dir, "discovered_event_types.json")
-            with open(events_path, 'w') as f: json.dump(distinct_event_types, f, indent=4)
-            print(f"Discovered event types saved to {events_path}")
+            with open(events_discovered_path, 'w') as f: json.dump(distinct_event_types, f, indent=4)
+            print(f"Discovered event types saved to {events_discovered_path}")
+
+        # --- Validation after loading ---
+        loading_successful = True
+        if person_df_loaded is None or person_df_loaded.empty:
+            print("Warning: Person data loading resulted in None or empty DataFrame.")
+            # loading_successful = False # Decide if critical
+
+        if event_df_loaded is None or event_df_loaded.empty:
+            print("Warning: Filtered Event data loading resulted in None or empty DataFrame.")
+            loading_successful = False # Event data is likely essential
+
+        if not loading_successful:
+            print("Stopping pipeline due to missing essential data after loading.")
+            return
+
+        # --- Save Loaded Data ---
+        print("\n--- Saving Loaded Data ---")
+        person_df_loaded.to_csv(person_loaded_path, index=False)
+        print(f"Loaded person data saved to {person_loaded_path}")
+        event_df_loaded.to_csv(event_loaded_path, index=False)
+        print(f"Filtered person event data saved to {event_loaded_path}")
 
     except Exception as e:
         print(f"\n--- Critical Error during Step 1 (Data Loading): {e} ---")
         traceback.print_exc()
-        return # Stop pipeline if loading fails
+        return
 
-    # === Step 2: Initial Data Processing ===
-    print("\n=== Step 2: Initial Data Processing ===")
+    # === Step 2: Preprocessing Person Data ===
+    print("\n=== Step 2: Preprocessing Person Data ===")
     try:
-        person_df, event_df = process_loaded_data(raw_person_df, raw_event_df)
+        # Ensure input file exists before calling preprocessing
+        if not os.path.exists(person_loaded_path):
+             raise FileNotFoundError(f"Person loaded file not found for preprocessing: {person_loaded_path}")
 
-        # Check if processing was successful
-        processing_successful = True
-        if person_df is None or person_df.empty:
-            print("Warning: Person data processing resulted in None or empty DataFrame.")
-            # Decide if this is critical - maybe allow proceeding if only event data is needed?
-            # processing_successful = False # Uncomment if person data is essential
+        # Call the person data preprocessing orchestrator
+        run_person_preprocessing(
+            input_path=person_loaded_path,
+            output_path=person_processed_path,
+        )
+        print("Person data preprocessing step completed.")
 
-        if event_df is None or event_df.empty:
-            print("Warning: Event data processing resulted in None or empty DataFrame. Cannot proceed.")
-            processing_successful = False # Event data is essential for the graph
-
-        if not processing_successful:
-            print("Stopping pipeline due to errors or missing data after initial processing.")
-            return
-
-        # Save the processed dataframes
-        print("\n--- Processed Data Summary ---")
-        if person_df is not None:
-            print(f"Processed Person records: {len(person_df)}")
-            person_processed_path = os.path.join(run_output_dir, "person_data_processed.csv")
-            person_df.to_csv(person_processed_path, index=False)
-            print(f"Processed person data saved to {person_processed_path}")
-            # print("\nProcessed Person DataFrame Head:")
-            # print(person_df.head()) # Optional: reduce verbosity
-
-        if event_df is not None:
-            print(f"Processed Person event records: {len(event_df)}")
-            event_processed_path = os.path.join(run_output_dir, "person_event_data_processed.csv")
-            event_df.to_csv(event_processed_path, index=False)
-            print(f"Processed person event data saved to {event_processed_path}")
-            # print("\nProcessed Person Event DataFrame Head:")
-            # print(event_df.head()) # Optional: reduce verbosity
+        # Optional: Check if output file was created
+        if not os.path.exists(person_processed_path):
+            print(f"Warning: Processed person file was not created at {person_processed_path}")
+            raise RuntimeError("Processed person file missing after preprocessing step.")
 
     except Exception as e:
-        print(f"\n--- Critical Error during Step 2 (Initial Processing): {e} ---")
+        print(f"\n--- Critical Error during Step 2 (Person Preprocessing): {e} ---")
         traceback.print_exc()
-        return # Stop pipeline if processing fails
+        return # Stop pipeline if preprocessing fails
+
+    # === Step 2b: Preprocessing Event Data (Placeholder) ===
+    print("\n=== Step 2b: Preprocessing Event Data (Placeholder) ===")
+    try:
+        if not os.path.exists(event_loaded_path):
+             print(f"Warning: Event loaded file not found at {event_loaded_path}, skipping placeholder processing.")
+        else:
+            # Placeholder: Copy event data for now
+            # Replace this with a call to an event data preprocessor when ready
+            print(f"Placeholder: Copying event data from {event_loaded_path} to {event_processed_path}")
+            shutil.copyfile(event_loaded_path, event_processed_path)
+            print("Event data placeholder processing (copy) complete.")
+            if not os.path.exists(event_processed_path):
+                 print(f"Warning: Processed event file was not created at {event_processed_path}")
+
+    except Exception as e:
+        print(f"\n--- Error during Step 2b (Event Preprocessing Placeholder): {e} ---")
+        traceback.print_exc()
+        # Decide if this is critical - likely not if it's just a placeholder
 
     # === Step 3: Graph Data Preparation (Placeholder) ===
     print("\n=== Step 3: Graph Data Preparation (Placeholder) ===")
-    # node_maps, edge_data, node_counts, interaction_details_df = build_graph_data(person_df, event_df, distinct_event_types)
-    # if node_maps is None:
-    #     print("Graph building failed. Exiting.")
-    #     return
-    # # Save graph artifacts (mappings, edge summary, interactions)
-    # print("Graph data prepared (Placeholder).")
+    # This step would now conceptually load/use:
+    # - person_processed_path
+    # - event_processed_path (currently a copy of filtered data)
+    print(f"Input for this step would be: {person_processed_path}, {event_processed_path}")
+    # node_maps, edge_data, node_counts, interaction_details_df = build_graph_data(person_processed_path, event_processed_path, ...)
+    # ...
     print("Skipping Graph Data Preparation.")
 
 
     # === Step 4: Model Training (Placeholder) ===
     print("\n=== Step 4: Model Training (Placeholder) ===")
-    # trained_model_path = train_model(node_maps, edge_data, node_counts, run_output_dir)
-    # if trained_model_path is None:
-    #     print("Model training failed. Exiting.")
-    #     return
-    # print(f"Model trained (Placeholder): {trained_model_path}")
+    # Uses artifacts from Step 3
     print("Skipping Model Training.")
 
 
     # === Step 5: Embedding Generation (Placeholder) ===
     print("\n=== Step 5: Embedding Generation (Placeholder) ===")
-    # user_embeddings_df = generate_embeddings(trained_model_path, node_maps, edge_data, node_counts, run_output_dir)
-    # if user_embeddings_df is None:
-    #     print("Embedding generation failed. Exiting.")
-    #     return
-    # print(f"Embeddings generated (Placeholder): {len(user_embeddings_df)} users.")
+    # Uses artifacts from Step 3 & 4
     print("Skipping Embedding Generation.")
 
 
     # === Step 6: Similarity Calculation (Placeholder) ===
     print("\n=== Step 6: Similarity Calculation (Placeholder) ===")
-    # calculate_similarities(user_embeddings_df, run_output_dir)
-    # print("Similarities calculated (Placeholder).")
+    # Uses embeddings from Step 5
     print("Skipping Similarity Calculation.")
 
 
-    print("\n=== Pipeline Finished (Initial Steps Complete) ===")
+    print("\n=== Pipeline Finished ===")
 
 
 if __name__ == "__main__":
+    # Need to import shutil for the placeholder copy in main
+    import shutil
     main()
