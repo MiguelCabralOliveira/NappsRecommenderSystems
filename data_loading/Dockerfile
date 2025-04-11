@@ -1,30 +1,30 @@
+# data_loading/Dockerfile
+
+# Use the official AWS Lambda Python 3.10 base image
 FROM public.ecr.aws/lambda/python:3.10
 
-# Set common Python environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONIOENCODING=utf-8 \
-    LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8
+# Set the working directory in the container
+WORKDIR /var/task
 
-# Set the working directory within the container
-WORKDIR ${LAMBDA_TASK_ROOT} # /var/task
+# Copy the requirements file first to leverage Docker cache
+# Assumes Docker build context is the NappsRecommender directory (parent of data_loading)
+COPY data_loading/requirements.txt ./requirements.txt
 
-# Copiar requirements.txt (assumindo que está em NappsRecommender/data_loading/)
-# O contexto de build deve ser NappsRecommender/
-COPY data_loading/requirements.txt .
+# Install Python dependencies
+# Upgrade pip and use --no-cache-dir to reduce image size
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Instalar dependências
-# Consider using --platform manylinux2014_x86_64 for compiled libraries if needed, though base lambda image should handle it
-RUN pip install -r requirements.txt --no-cache-dir
+# --- KEY CHANGE ---
+# Copy the *entire* data_loading directory into /var/task/data_loading
+# This preserves the package structure relative to the parent directory.
+COPY data_loading /var/task/data_loading/
+# --- END KEY CHANGE ---
 
-# Copiar TODO o conteúdo de data_loading/ para a raiz do WORKDIR (/var/task)
-# Isso inclui lambda_handlers.py, run_loading.py, utils.py, database/, shopify/
-COPY ./data_loading/ .
-
-# Definir o handler
-# O arquivo é 'lambda_handlers.py' (agora em /var/task/lambda_handlers.py)
-# A função dentro dele é 'db_loader_handler' (ou 'shopify_trigger_handler')
-# Altere abaixo para o handler que você quer que este container execute por padrão
-CMD [ "lambda_handlers.db_loader_handler" ]
-# Para o outro handler, você pode sobrescrever o CMD ou criar outra imagem/lambda
-# CMD [ "lambda_handlers.shopify_trigger_handler" ]
+# Set the CMD to your handler function, *including the package path*
+# Format: <package_name>.<module_name>.<function_name>
+# The package is now 'data_loading' because we copied the whole directory.
+#
+# **IMPORTANT**: If you intend this Lambda function to run the Shopify trigger,
+# change 'db_loader_handler' to 'shopify_trigger_handler' below.
+CMD [ "data_loading.lambda_handlers.db_loader_handler" ]
