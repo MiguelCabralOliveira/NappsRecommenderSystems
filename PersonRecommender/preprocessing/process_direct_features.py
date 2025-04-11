@@ -28,7 +28,7 @@ def process_direct_person_columns(df: pd.DataFrame) -> pd.DataFrame:
     except Exception as e:
         print(f"ERROR processing is_identified: {e}")
         traceback.print_exc()
-        processed_df['is_identified'] = 0 # Default on error
+        processed_df['is_identified'] = 0 
 
     # 2. Process created_at -> days_since_creation
     try:

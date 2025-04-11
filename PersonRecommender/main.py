@@ -4,11 +4,14 @@ import os
 import pandas as pd
 import json
 import traceback
+import shutil # Importar shutil (embora não usado ativamente agora, pode ser útil)
 
 # --- Local Imports ---
 from data_pipeline.data_loader import load_all_data
-# Import the specific person data preprocessing orchestrator
 from preprocessing.preprocess_person_data import run_person_preprocessing
+from preprocessing.process_event_interactions import extract_interactions_from_events
+# --- Adicionar import para a criação de features de produto ---
+from preprocessing.create_product_features import calculate_product_features
 
 # Placeholders for future steps
 # from graph_builder import build_graph_data
@@ -35,35 +38,29 @@ def main():
     event_loaded_path = os.path.join(run_output_dir, "person_event_data_filtered.csv")
     events_discovered_path = os.path.join(run_output_dir, "discovered_event_types.json")
     person_processed_path = os.path.join(run_output_dir, "person_features_processed.csv")
-    event_processed_path = os.path.join(run_output_dir, "event_data_processed.csv") # Processed event data (still placeholder)
+    interactions_processed_path = os.path.join(run_output_dir, "event_interactions_processed.csv")
+    # --- Definir path para as features de produto ---
+    product_features_path = os.path.join(run_output_dir, "product_features_aggregated.csv")
+    # Manter o placeholder para event_processed_path se ainda for útil para algo mais
+    # event_processed_path = os.path.join(run_output_dir, "event_data_processed.csv") # Comentado por agora
 
     # === Step 1: Load Data ===
     print("\n=== Step 1: Loading Data ===")
-    person_df_loaded = None # Use distinct name
-    event_df_loaded = None  # Use distinct name
+    person_df_loaded = None
+    event_df_loaded = None
     distinct_event_types = []
     try:
         person_df_loaded, event_df_loaded, distinct_event_types = load_all_data(args.shop_id, args.days)
 
-        print("\n--- Data Loading Summary ---")
-        print(f"Person records loaded: {len(person_df_loaded) if person_df_loaded is not None else 'None'}")
-        print(f"Filtered Person event records loaded: {len(event_df_loaded) if event_df_loaded is not None else 'None'}")
-        print(f"Distinct event types found (all): {len(distinct_event_types) if distinct_event_types else 'None'}")
-
-        # Save distinct event types
-        if distinct_event_types:
-            with open(events_discovered_path, 'w') as f: json.dump(distinct_event_types, f, indent=4)
-            print(f"Discovered event types saved to {events_discovered_path}")
-
-        # --- Validation after loading ---
+        # Validação após carregamento
         loading_successful = True
         if person_df_loaded is None or person_df_loaded.empty:
             print("Warning: Person data loading resulted in None or empty DataFrame.")
-            # loading_successful = False # Decide if critical
+            # loading_successful = False # Decidir se crítico
 
         if event_df_loaded is None or event_df_loaded.empty:
-            print("Warning: Filtered Event data loading resulted in None or empty DataFrame.")
-            loading_successful = False # Event data is likely essential
+            print("Warning: Filtered Event data loading resulted in None or empty DataFrame. Subsequent steps might fail.")
+            loading_successful = False # Event data é essencial para interações
 
         if not loading_successful:
             print("Stopping pipeline due to missing essential data after loading.")
@@ -71,10 +68,13 @@ def main():
 
         # --- Save Loaded Data ---
         print("\n--- Saving Loaded Data ---")
-        person_df_loaded.to_csv(person_loaded_path, index=False)
+        if person_df_loaded is not None: person_df_loaded.to_csv(person_loaded_path, index=False)
         print(f"Loaded person data saved to {person_loaded_path}")
-        event_df_loaded.to_csv(event_loaded_path, index=False)
+        if event_df_loaded is not None: event_df_loaded.to_csv(event_loaded_path, index=False)
         print(f"Filtered person event data saved to {event_loaded_path}")
+        if distinct_event_types:
+            with open(events_discovered_path, 'w') as f: json.dump(distinct_event_types, f, indent=4)
+            print(f"Discovered event types saved to {events_discovered_path}")
 
     except Exception as e:
         print(f"\n--- Critical Error during Step 1 (Data Loading): {e} ---")
@@ -84,53 +84,91 @@ def main():
     # === Step 2: Preprocessing Person Data ===
     print("\n=== Step 2: Preprocessing Person Data ===")
     try:
-        # Ensure input file exists before calling preprocessing
         if not os.path.exists(person_loaded_path):
              raise FileNotFoundError(f"Person loaded file not found for preprocessing: {person_loaded_path}")
-
-        # Call the person data preprocessing orchestrator
         run_person_preprocessing(
             input_path=person_loaded_path,
             output_path=person_processed_path,
         )
         print("Person data preprocessing step completed.")
-
-        # Optional: Check if output file was created
         if not os.path.exists(person_processed_path):
-            print(f"Warning: Processed person file was not created at {person_processed_path}")
             raise RuntimeError("Processed person file missing after preprocessing step.")
-
     except Exception as e:
         print(f"\n--- Critical Error during Step 2 (Person Preprocessing): {e} ---")
         traceback.print_exc()
-        return # Stop pipeline if preprocessing fails
+        return
 
-    # === Step 2b: Preprocessing Event Data (Placeholder) ===
-    print("\n=== Step 2b: Preprocessing Event Data (Placeholder) ===")
+    # === Step 2b: Preprocessing Event Data -> Extract Interactions ===
+    print("\n=== Step 2b: Processing Event Data to Extract Interactions ===")
+    interactions_df = None # Inicializar para verificar se foi criado
     try:
         if not os.path.exists(event_loaded_path):
-             print(f"Warning: Event loaded file not found at {event_loaded_path}, skipping placeholder processing.")
+             print(f"Warning: Event loaded file not found at {event_loaded_path}, skipping interaction extraction.")
+        # Tentar usar o event_df_loaded se existir
+        elif 'event_df_loaded' in locals() and event_df_loaded is not None and not event_df_loaded.empty:
+            print("Using loaded event data DataFrame for interaction extraction.")
+            interactions_df = extract_interactions_from_events(event_df_loaded)
         else:
-            # Placeholder: Copy event data for now
-            # Replace this with a call to an event data preprocessor when ready
-            print(f"Placeholder: Copying event data from {event_loaded_path} to {event_processed_path}")
-            shutil.copyfile(event_loaded_path, event_processed_path)
-            print("Event data placeholder processing (copy) complete.")
-            if not os.path.exists(event_processed_path):
-                 print(f"Warning: Processed event file was not created at {event_processed_path}")
+             print(f"Warning: Event data DataFrame not available, skipping interaction extraction.")
+
+        # Guardar o resultado se foi criado
+        if interactions_df is not None and not interactions_df.empty:
+            interactions_df.to_csv(interactions_processed_path, index=False)
+            print(f"Processed interactions saved to {interactions_processed_path}")
+        elif os.path.exists(event_loaded_path): # Só avisar se o input existia mas não gerou output
+             print("No interactions were extracted or the resulting DataFrame is empty.")
+
+        # Verificar se o ficheiro de output existe (importante para o próximo passo)
+        if not os.path.exists(interactions_processed_path) and os.path.exists(event_loaded_path):
+             print(f"Warning: Processed interactions file was not created at {interactions_processed_path}. Subsequent steps might fail.")
+             # Considerar parar aqui se as interações são essenciais
+             # return
 
     except Exception as e:
-        print(f"\n--- Error during Step 2b (Event Preprocessing Placeholder): {e} ---")
+        print(f"\n--- Critical Error during Step 2b (Event Interaction Extraction): {e} ---")
         traceback.print_exc()
-        # Decide if this is critical - likely not if it's just a placeholder
+        return # Parar se a extração de interações falhar
+
+    # === Step 2c: Create Aggregated Product Features ===
+    print("\n=== Step 2c: Creating Aggregated Product Features ===")
+    product_features_df = None # Inicializar
+    try:
+        # Tenta usar o DataFrame de interações se ainda estiver em memória
+        if 'interactions_df' in locals() and interactions_df is not None and not interactions_df.empty:
+             print("Using interactions DataFrame from memory for product feature calculation.")
+             product_features_df = calculate_product_features(interactions_df)
+        # Senão, tenta ler do ficheiro criado no passo anterior
+        elif os.path.exists(interactions_processed_path):
+             print(f"Reading interactions from file: {interactions_processed_path}")
+             interactions_df_loaded = pd.read_csv(interactions_processed_path, low_memory=False)
+             if not interactions_df_loaded.empty:
+                 product_features_df = calculate_product_features(interactions_df_loaded)
+             else:
+                 print(f"Interactions file {interactions_processed_path} is empty.")
+        else:
+             print(f"Warning: Processed interactions file not found at {interactions_processed_path}. Skipping product feature creation.")
+
+        # Guardar o resultado se foi calculado
+        if product_features_df is not None and not product_features_df.empty:
+            product_features_df.to_csv(product_features_path, index=False)
+            print(f"Processed product features saved to {product_features_path}")
+        elif os.path.exists(interactions_processed_path): # Só avisar se o input existia mas não gerou output
+             print("No product features were calculated or the resulting DataFrame is empty.")
+
+    except Exception as e:
+        print(f"\n--- Error during Step 2c (Product Feature Creation): {e} ---")
+        traceback.print_exc()
+        # Decidir se é crítico parar o pipeline (provavelmente sim para GraphSAGE)
+        # return
 
     # === Step 3: Graph Data Preparation (Placeholder) ===
     print("\n=== Step 3: Graph Data Preparation (Placeholder) ===")
-    # This step would now conceptually load/use:
-    # - person_processed_path
-    # - event_processed_path (currently a copy of filtered data)
-    print(f"Input for this step would be: {person_processed_path}, {event_processed_path}")
-    # node_maps, edge_data, node_counts, interaction_details_df = build_graph_data(person_processed_path, event_processed_path, ...)
+    # Este passo agora usaria os 3 ficheiros principais:
+    print(f"Input for this step would conceptually be:")
+    print(f"  Person Nodes Features: {person_processed_path}")
+    print(f"  Product Nodes Features: {product_features_path}") # Adicionado
+    print(f"  Interaction Edges: {interactions_processed_path}")
+    # Exemplo: graph_data = build_graph_data(person_processed_path, product_features_path, interactions_processed_path)
     # ...
     print("Skipping Graph Data Preparation.")
 
@@ -157,6 +195,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # Need to import shutil for the placeholder copy in main
-    import shutil
     main()

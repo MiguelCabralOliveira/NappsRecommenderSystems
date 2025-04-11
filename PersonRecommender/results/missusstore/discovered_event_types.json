@@ -1,0 +1,21 @@
+[
+    "Account Created",
+    "Account Logged In",
+    "Collection List Viewed",
+    "Onboarding Completed",
+    "Onboarding Started",
+    "Onboarding Step Notification Accepted",
+    "Product Searched",
+    "Product Shared",
+    "Product Viewed",
+    "Product Wishlisted",
+    "Push Notification Clicked",
+    "Push Notification Dismiss",
+    "Push Notification Received",
+    "Session Started",
+    "Shopify Checkout Created",
+    "Shopify Checkout Updated",
+    "Shopify Order Created",
+    "Shopify Order Updated",
+    "Variant Meta Added"
+]

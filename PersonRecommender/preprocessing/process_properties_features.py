@@ -125,10 +125,17 @@ def process_person_properties(df: pd.DataFrame) -> pd.DataFrame:
 
     # Timezone (Mainly Anonymous)
     print("Processing: properties -> timezone")
-    processed_df['timezone'] = temp_df.apply(
+    # Step 1: Extract the timezone value (could be string, None, or "")
+    timezone_series = temp_df.apply(
         lambda row: row['parsed_props'].get('timezone') if isinstance(row['parsed_props'], dict) else None,
         axis=1
-    ).fillna('Unknown')
+    )
+    # Step 2: Replace empty strings with None BEFORE filling Nones
+    timezone_series = timezone_series.replace('', None)
+
+    # Step 3: Now fill Nones (which now includes originally empty strings) with 'Unknown'
+    processed_df['timezone'] = timezone_series.fillna('Unknown')
+
 
     # Days Since Last Session (Mainly Anonymous)
     print("Processing: properties -> days_since_last_session")

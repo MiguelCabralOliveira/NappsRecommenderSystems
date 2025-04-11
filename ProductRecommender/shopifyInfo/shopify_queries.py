@@ -4,9 +4,8 @@ import requests
 import pandas as pd
 import json
 from dotenv import load_dotenv
-from collections.abc import Mapping # Keep this import for safety checks
+from collections.abc import Mapping 
 
-# Erro com os imports
 try:
     from .metafields_fetcher import fetch_metafields
     from .shop_settings import get_shop_settings

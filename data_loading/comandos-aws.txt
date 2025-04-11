@@ -1,0 +1,9 @@
+aws ecr get-login-password --region eu-west-3 | docker login --username AWS --password-stdin 694795525682.dkr.ecr.eu-west-3.amazonaws.com
+
+
+
+docker build --platform linux/arm64 --provenance=false -f data_loading/Dockerfile -t napps-recommender .
+
+docker tag napps-recommender:latest 694795525682.dkr.ecr.eu-west-3.amazonaws.com/napps-recommender:latest
+
+docker push 694795525682.dkr.ecr.eu-west-3.amazonaws.com/napps-recommender:latest
