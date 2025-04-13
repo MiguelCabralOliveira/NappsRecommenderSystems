@@ -3,172 +3,181 @@ import json
 import os
 import traceback
 
-# --- Use RELATIVE imports within the data_loading package ---
-# The '.' refers to the current package level (data_loading)
-
-from .database.loader import load_all_db_data
-# If you uncomment and use the Shopify functionality in a Lambda, use relative import:
-# from .shopify.loader import load_all_shopify_products
-# If you uncomment and use utils directly here, use relative import:
-# from .utils import save_dataframe
+# Imports ABSOLUTOS a partir da raiz do Lambda (/var/task)
+# Estes caminhos funcionam porque copiamos 'data_loading' para /var/task/data_loading
+# e o PYTHONPATH do Lambda inclui /var/task
+try:
+    from data_loading.database.loader import load_all_db_data
+    from data_loading.shopify.loader import load_all_shopify_products
+except ImportError as e:
+    # Adiciona logging extra se a importação falhar - útil para debug no Lambda
+    print(f"ERROR: Failed to import loader functions. Check structure and paths in Lambda environment. Error: {e}")
+    # Define stubs para permitir que o resto do ficheiro seja analisado, mas falharão se chamados
+    def load_all_db_data(*args, **kwargs):
+        raise ImportError("DB Loader function not available due to import error.")
+    def load_all_shopify_products(*args, **kwargs):
+        raise ImportError("Shopify Loader function not available due to import error.")
 
 
 # --- Configuration ---
 # GET S3 BUCKET NAME FROM LAMBDA ENVIRONMENT VARIABLE
 S3_BUCKET_NAME = os.environ.get("OUTPUT_S3_BUCKET")
 if not S3_BUCKET_NAME:
-    print("WARNING: OUTPUT_S3_BUCKET environment variable not set. Using default 'nappsrecommender'.")
-    S3_BUCKET_NAME = "napps-recommender" # Make sure this default is correct for your setup
+    print("CRITICAL WARNING: OUTPUT_S3_BUCKET environment variable not set. Using default 'napps-recommender'.")
+    S3_BUCKET_NAME = "napps-recommender" # Use o nome correto como default
 
 DEFAULT_DAYS_LIMIT = 90
 
+# --- Unified Handler ---
+def unified_data_loader_handler(event, context):
+    """
+    Lambda handler that loads data based on the 'source' parameter ('database', 'shopify', 'all').
+    Reads all necessary credentials directly from Lambda environment variables.
+    WARNING: Shopify loading can be lengthy and might exceed Lambda's 15-minute timeout limit.
+    """
+    print("--- Unified Data Loader Lambda Handler Started ---")
+    print(f"Event received: {json.dumps(event)}") # Dump event for better CloudWatch visibility
 
-# --- Handler for Database Loading ---
-def db_loader_handler(event, context):
-    """
-    Lambda handler specifically for loading database data.
-    Reads credentials directly from Lambda environment variables.
-    Uses relative imports for internal modules.
-    """
-    print("--- DB Loader Lambda Handler Started ---")
-    print(f"Event received: {json.dumps(event)}") # Log the event safely
+    # --- Extract Parameters ---
+    source = event.get('source')
+    shop_id = event.get('shop_id')
+    days_limit = int(event.get('days_limit', DEFAULT_DAYS_LIMIT)) # Default if not provided
+
+    # --- Input Validation ---
+    if not source or source not in ['database', 'shopify', 'all']:
+        print(f"ERROR: Missing or invalid required parameter 'source'. Received: '{source}'. Must be 'database', 'shopify', or 'all'.")
+        return {'statusCode': 400, 'body': json.dumps("Bad Request: Missing or invalid 'source' parameter. Must be 'database', 'shopify', or 'all'.")}
+    if not shop_id:
+        print("ERROR: Missing required parameter 'shop_id'.")
+        return {'statusCode': 400, 'body': json.dumps("Bad Request: Missing required 'shop_id' parameter.")}
+
+    # --- Setup ---
+    output_s3_prefix = f"s3://{S3_BUCKET_NAME}/{shop_id}/" # S3 prefix for outputs
+    print(f"Processing request for Shop ID: {shop_id}")
+    print(f"Data Source(s): {source}")
+    print(f"Target S3 Prefix: {output_s3_prefix}")
+    if source in ['database', 'all']:
+        print(f"Days Limit (for DB): {days_limit}")
+
+    # Tracking results
+    db_success = True # Assume success unless run and failed
+    shopify_success = True # Assume success unless run and failed
+    ran_db = False
+    ran_shopify = False
+    error_messages = []
 
     try:
-        # Extract parameters from event
-        shop_id = event.get('shop_id')
-        days_limit = int(event.get('days_limit', DEFAULT_DAYS_LIMIT))
-
-        if not shop_id:
-            raise ValueError("Missing required parameter 'shop_id'.")
-
-        # Construct the S3 output path prefix (using forward slashes is safer for S3)
-        # Ensure no double slashes if S3_BUCKET_NAME has a trailing slash
-        output_s3_prefix = f"s3://{S3_BUCKET_NAME.rstrip('/')}/{shop_id}/"
-        print(f"Shop ID: {shop_id}")
-        print(f"Target S3 Prefix: {output_s3_prefix}")
-        print(f"Days Limit: {days_limit}")
-
         # --- Database Loading ---
-        print("Reading DB credentials from environment variables...")
-        db_config = {
-            'host': os.environ.get('DB_HOST'),
-            'user': os.environ.get('DB_USER'),
-            'password': os.environ.get('DB_PASSWORD'),
-            'name': os.environ.get('DB_NAME'),
-            'port': os.environ.get('DB_PORT')
+        if source in ['database', 'all']:
+            ran_db = True
+            print("\n--- Initiating Database Loading ---")
+            print("Reading DB credentials from environment variables...")
+            # Read credentials within this block to ensure they are only checked if needed
+            db_config = {
+                'host': os.environ.get('DB_HOST'),
+                'user': os.environ.get('DB_USER'),
+                'password': os.environ.get('DB_PASSWORD'),
+                'name': os.environ.get('DB_NAME'),
+                'port': os.environ.get('DB_PORT')
+            }
+            missing_db_vars = [k for k, v in db_config.items() if v is None] # Password can be empty string, but not None
+            if missing_db_vars:
+                 raise ValueError(f"Missing required DB environment variables: {missing_db_vars}")
+            print("DB credentials retrieved from environment.")
+
+            # Execute DB loading function
+            db_success = load_all_db_data(
+                shop_id=shop_id,
+                days_limit=days_limit,
+                db_config=db_config,
+                output_base_path=output_s3_prefix
+            )
+            print(f"--- Database Loading Finished (Success: {db_success}) ---")
+            if not db_success:
+                error_messages.append("Database loading step reported errors.")
+
+        # --- Shopify Loading ---
+        if source in ['shopify', 'all']:
+            ran_shopify = True
+            print("\n--- Initiating Shopify Product Loading ---")
+            print("!!! WARNING: Shopify scraping can take significant time and MAY EXCEED the 15-minute Lambda timeout !!!")
+            print("Reading Shopify credentials from environment variables...")
+            # Read credentials within this block
+            email = os.environ.get('EMAIL')
+            password = os.environ.get('PASSWORD')
+            missing_shopify_vars = []
+            if not email: missing_shopify_vars.append('EMAIL')
+            if not password: missing_shopify_vars.append('PASSWORD')
+            if missing_shopify_vars:
+                 raise ValueError(f"Missing required Shopify environment variables: {missing_shopify_vars}")
+            print("Shopify credentials retrieved from environment.")
+
+            # Execute Shopify loading function
+            shopify_success = load_all_shopify_products(
+                shop_id=shop_id,
+                email=email,
+                password=password,
+                output_base_path=output_s3_prefix
+            )
+            print(f"--- Shopify Product Loading Finished (Success: {shopify_success}) ---")
+            if not shopify_success:
+                error_messages.append("Shopify loading step reported errors.")
+
+        # --- Determine Overall Status ---
+        final_success = True
+        if ran_db and not db_success:
+            final_success = False
+        if ran_shopify and not shopify_success:
+            final_success = False
+
+        if final_success:
+            print("\n--- Unified Data Loader Lambda Handler Finished Successfully ---")
+            return {
+                'statusCode': 200,
+                'body': json.dumps(f'Data loading process completed successfully for shop {shop_id} (Source: {source}). Output at {output_s3_prefix}')
+            }
+        else:
+            print("\n--- Unified Data Loader Lambda Handler Finished With Errors ---")
+            error_summary = "; ".join(error_messages)
+            return {
+                'statusCode': 500, # Indicate partial or full failure
+                'body': json.dumps(f'Data loading process for shop {shop_id} (Source: {source}) finished with errors: [{error_summary}]. Check logs at {output_s3_prefix} and CloudWatch.')
+            }
+
+    except ValueError as ve:
+         # Catches missing env vars or bad input parameters detected before loading starts
+         print(f"--- Lambda Handler Configuration or Input Error ---")
+         print(f"Error: {ve}")
+         traceback.print_exc() # Log traceback for config errors too
+         return {'statusCode': 400, 'body': json.dumps(f'Configuration or Bad Request Error: {ve}')}
+    except ImportError as imp_err:
+         # Catches the import error from the top try/except block if stubs were called
+         print(f"--- Lambda Handler Critical Import Error ---")
+         print(f"Error: {imp_err}")
+         traceback.print_exc()
+         return {'statusCode': 500, 'body': json.dumps(f'Critical error: Could not import necessary loader functions. Check deployment package. Error: {imp_err}')}
+    except Exception as e:
+        # Catches unexpected errors during the loading process itself
+        print(f"--- Unified Data Loader Lambda Handler Failed Critically ---")
+        print(f"Unexpected Error: {e}")
+        traceback.print_exc()
+        return {
+            'statusCode': 500,
+            'body': json.dumps(f'Critical unexpected error during data loading for shop {shop_id} (Source: {source}): {e}. Check CloudWatch logs.')
         }
-        # Validate that required variables are present
-        missing_db_vars = [k for k, v in db_config.items() if v is None]
-        if missing_db_vars:
-             raise ValueError(f"Missing required DB environment variables: {missing_db_vars}")
 
-        print("DB credentials read from environment.")
+# --- Deprecated Handlers (Optional: Keep or Remove) ---
+# You can remove db_loader_handler and shopify_trigger_handler if they are no longer needed
+# or keep them if you might deploy them as separate functions later.
 
-        # Call the imported function (using the corrected relative import)
-        db_success = load_all_db_data(
-            shop_id=shop_id,
-            days_limit=days_limit,
-            db_config=db_config,
-            output_base_path=output_s3_prefix # Pass the S3 URI prefix
-        )
+def db_loader_handler(event, context):
+     print("WARNING: db_loader_handler is deprecated. Use unified_data_loader_handler.")
+     # Optional: Forward to the new handler or return an error
+     # return unified_data_loader_handler(event, context) # Needs source='database' added
+     return {'statusCode': 410, 'body': json.dumps("This handler is deprecated. Use unified_data_loader_handler with source='database'.")}
 
-        # --- Determine Status ---
-        if db_success:
-            print("--- DB Loader Lambda Handler Finished Successfully ---")
-            return {'statusCode': 200, 'body': json.dumps(f'Database loading complete for shop {shop_id}. Output at {output_s3_prefix}')}
-        else:
-            # The function load_all_db_data should log its own errors, so we just report failure here.
-            print("--- DB Loader Lambda Handler Finished With Errors (check function logs) ---")
-            return {'statusCode': 500, 'body': json.dumps(f'Database loading for shop {shop_id} finished with errors. Check detailed logs.')}
-
-    except ValueError as ve:
-         # Catch specific configuration/input errors
-         print(f"--- Lambda Handler Input/Config Error ---")
-         print(f"Error: {ve}")
-         traceback.print_exc() # Log stack trace for debugging
-         return {'statusCode': 400, 'body': json.dumps(f'Bad Request or Configuration Error: {ve}')}
-    except Exception as e:
-        # Catch any other unexpected errors during handler execution
-        print(f"--- DB Loader Lambda Handler Failed Critically ---")
-        print(f"Error: {e}")
-        traceback.print_exc()
-        return {'statusCode': 500, 'body': json.dumps(f'Critical error during DB data loading: {e}')}
-
-
-# --- Handler for Shopify Loading Trigger ---
 def shopify_trigger_handler(event, context):
-    """
-    Lambda handler to INITIATE Shopify loading (placeholder).
-    Reads credentials directly from Lambda environment variables.
-    Uses relative imports if internal Shopify modules were called.
-    """
-    print("--- Shopify Trigger Lambda Handler Started ---")
-    print(f"Event received: {json.dumps(event)}") # Log the event safely
-
-    try:
-        shop_id = event.get('shop_id')
-        if not shop_id:
-            raise ValueError("Missing required parameter 'shop_id'.")
-
-        # Construct the S3 output path prefix (using forward slashes is safer for S3)
-        output_s3_prefix = f"s3://{S3_BUCKET_NAME.rstrip('/')}/{shop_id}/"
-        print(f"Shop ID: {shop_id}")
-        print(f"Target S3 Prefix for external process: {output_s3_prefix}")
-
-        # --- Initiate Shopify Loading ---
-        print("Reading Shopify credentials from environment variables...")
-        email = os.environ.get('EMAIL')
-        password = os.environ.get('PASSWORD')
-        # Validate that required variables are present
-        missing_shopify_vars = []
-        if not email: missing_shopify_vars.append('EMAIL')
-        if not password: missing_shopify_vars.append('PASSWORD')
-        if missing_shopify_vars:
-             raise ValueError(f"Missing required Shopify environment variables: {missing_shopify_vars}")
-
-        print("Shopify credentials read from environment.")
-
-        # --- Placeholder: Trigger External Process ---
-        # This is where you would add code (e.g., using boto3) to start
-        # a Step Function, ECS Task, Batch Job, or another Lambda
-        # to perform the actual Shopify data loading.
-        # Pass the necessary parameters securely.
-        print("ACTION REQUIRED: Implement logic to trigger external process (e.g., Step Function, Batch Job) for Shopify product fetch.")
-        print("Parameters to pass:")
-        print(f"  shop_id: {shop_id}")
-        print(f"  email: {email}") # Consider if email needs to be passed or if target process can get it
-        print(f"  password: [REDACTED - Pass securely or have target fetch it]")
-        print(f"  output_s3_uri: {output_s3_prefix}")
-
-        # Example: If you were calling load_all_shopify_products directly (NOT recommended for long tasks):
-        # shopify_success = load_all_shopify_products(
-        #     shop_id=shop_id,
-        #     email=email,
-        #     password=password, # Pass password securely if needed
-        #     output_base_path=output_s3_prefix
-        # )
-        # triggered_successfully = shopify_success # Or based on trigger call status
-
-        # Assuming the trigger call itself was successful (replace with actual status check)
-        triggered_successfully = True
-
-        # --- Determine Status based on Trigger call ---
-        if triggered_successfully:
-            print("--- Shopify Trigger Lambda Handler Finished Successfully (Process Initiated) ---")
-            return {'statusCode': 200, 'body': json.dumps(f'Shopify load initiation request processed for shop {shop_id}. Monitor external process. Target output: {output_s3_prefix}')}
-        else:
-            print("--- Shopify Trigger Lambda Handler Finished But Trigger Failed ---")
-            return {'statusCode': 500, 'body': json.dumps(f'Shopify load initiation failed for shop {shop_id}. Check trigger logic logs.')}
-
-    except ValueError as ve:
-         # Catch specific configuration/input errors
-         print(f"--- Lambda Handler Input/Config Error ---")
-         print(f"Error: {ve}")
-         traceback.print_exc() # Log stack trace for debugging
-         return {'statusCode': 400, 'body': json.dumps(f'Bad Request or Configuration Error: {ve}')}
-    except Exception as e:
-        # Catch any other unexpected errors during handler execution
-        print(f"--- Shopify Trigger Lambda Handler Failed Critically ---")
-        print(f"Error: {e}")
-        traceback.print_exc()
-        return {'statusCode': 500, 'body': json.dumps(f'Critical error initiating Shopify load: {e}')}
+     print("WARNING: shopify_trigger_handler is deprecated. Use unified_data_loader_handler.")
+     # Optional: Forward or return error
+     # return unified_data_loader_handler(event, context) # Needs source='shopify' added
+     return {'statusCode': 410, 'body': json.dumps("This handler is deprecated. Use unified_data_loader_handler with source='shopify'.")}
