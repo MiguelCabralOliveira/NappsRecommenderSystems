@@ -1,12 +1,12 @@
 # preprocessing/preprocess_product_data.py
 import argparse
 import os
-import numpy as np
 import pandas as pd
 import traceback
 import re
+import numpy as np # Import numpy for numeric checks
 
-# Import all necessary processor functions using relative imports
+# --- Import all necessary processor functions ---
 try:
     from .product_processor.availableForSale_processor import process_avaiable_for_sale
     from .product_processor.collectionHandle_processor import process_collections
@@ -19,67 +19,57 @@ try:
     from .product_processor.title_processor import process_titles_tfidf
     from .product_processor.variants_processor import process_variants
     from .product_processor.vendor_processor import process_vendors
-    # Assuming utils.py is one level up
-    from .utils import safe_json_parse
-except ImportError:
-    print("Error importing product processors. Check paths and __init__.py files.")
-    # Fallback for potential local testing issues (less ideal)
-    from product_processor.availableForSale_processor import process_avaiable_for_sale
-    from product_processor.collectionHandle_processor import process_collections
-    from product_processor.createdAt_processor import process_created_at
-    from product_processor.handle_processor import process_handles_tfidf
-    from product_processor.isGiftCard_processor import process_gift_card
-    from product_processor.metafields_processor import process_metafields
-    from product_processor.product_type_processor import process_product_type
-    from product_processor.tags_processor import process_tags
-    from product_processor.title_processor import process_titles_tfidf
-    from product_processor.variants_processor import process_variants
-    from product_processor.vendor_processor import process_vendors
-    from utils import safe_json_parse
+    # --- ADDED IMPORT for description processor ---
+    from .product_processor.tfidf_processor import process_descriptions_tfidf
+    # Assuming utils.py is one level up (though not strictly needed here)
+    # from .utils import safe_json_parse
+except ImportError as e:
+    print(f"Error importing product processors: {e}. Check paths and __init__.py files.")
+    # Add fallback imports if necessary for local testing, but prefer fixing the structure/execution
+    # from product_processor.availableForSale_processor import process_avaiable_for_sale
+    # ... etc ...
+    raise # Stop execution if imports fail critically
 
-
+# --- Helper Function (if needed, otherwise remove) ---
 def get_shop_id_from_path(path: str) -> str | None:
-    """Helper to extract shop_id, assuming path structure like '.../results/shop_id/file.csv'"""
-    # Match '/results/SHOP_ID/' part
+    """Helper to extract shop_id, assuming path structure like '.../results/{shop_id}/(raw|preprocessed)/file.csv'"""
+    # Look for '/results/SHOP_ID/' pattern
+    match = re.search(r'[\\/]results[\\/]([^\\/]+)[\\/](?:raw|preprocessed)[\\/]', path)
+    if match:
+        return match.group(1)
+    # Fallback: Try just '/results/SHOP_ID/' if subfolders aren't guaranteed
     match = re.search(r'[\\/]results[\\/]([^\\/]+)[\\/]', path)
     if match:
-        return match.group(1)
-    # Fallback: maybe shop_id is in filename like 'shop_id_products_raw.csv' in 'results/'?
-    match = re.search(r'[\\/]results[\\/]([^\\/_]+)_[^\\/]+\.csv$', path)
-    if match:
-        return match.group(1)
+         return match.group(1)
     print(f"Warning: Could not automatically determine shop_id from path: {path}")
     return None
 
-
+# --- Main Orchestration Function ---
 def run_product_preprocessing(input_path: str, output_path: str):
     """
     Orchestrates the preprocessing of product data by calling individual processors.
 
     Args:
-        input_path: Path to the raw product data CSV (e.g., products_raw.csv).
-        output_path: Path to save the processed product features CSV.
+        input_path: Path to the raw product data CSV (e.g., .../raw/shop_products_raw.csv).
+        output_path: Path to save the processed product features CSV (e.g., .../preprocessed/shop_products_final.csv).
     """
     print(f"\n--- Starting Product Data Preprocessing Orchestration ---")
     print(f"Input file: {input_path}")
     print(f"Output file: {output_path}")
 
     # Determine shop_id and output directory for auxiliary files/models
-    shop_id = get_shop_id_from_path(input_path)
+    shop_id = get_shop_id_from_path(output_path) # Use output path as it defines the target shop dir structure
     if not shop_id:
-        # Fallback: try output path
-        shop_id = get_shop_id_from_path(output_path)
-    if not shop_id:
-         # If still not found, raise error or use a default? Let's raise.
-         raise ValueError("Could not determine shop_id from input/output paths. Needed for saving models/auxiliary files.")
+         raise ValueError("Could not determine shop_id from output path. Needed for saving models/auxiliary files.")
     print(f"Determined Shop ID: {shop_id}")
 
-    # Output directory for models, references, similarity etc.
-    # Should be the directory containing the main output file.
+    # Base output directory is the one containing the final output file (.../preprocessed/)
     output_dir = os.path.dirname(output_path)
-    models_output_dir = os.path.join(output_dir, "models") # Specific subdir for models
+    # Models will go into a subdirectory within this base output directory
+    models_output_dir = os.path.join(output_dir, "models")
+    # Ensure directories exist (redundant if run_preprocessing creates them, but safe)
     os.makedirs(models_output_dir, exist_ok=True)
-    print(f"Auxiliary output directory: {output_dir}")
+    print(f"Main output directory: {output_dir}")
     print(f"Models output directory: {models_output_dir}")
 
 
@@ -91,16 +81,12 @@ def run_product_preprocessing(input_path: str, output_path: str):
         print(f"Loaded {len(df)} raw product rows from {input_path}.")
         if df.empty:
             print("Input DataFrame is empty. Creating empty output file.")
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            # Create empty file with at least product_id if possible, otherwise empty
-            pd.DataFrame(columns=['product_id']).to_csv(output_path, index=False)
+            pd.DataFrame(columns=['product_id']).to_csv(output_path, index=False) # Ensure output dir exists via get_data_paths
             print(f"Empty output file created at: {output_path}")
             return
-        # Ensure product_id exists early
         if 'product_id' not in df.columns:
             raise ValueError("Input product data must contain a 'product_id' column.")
-        # Convert product_id to string to handle potential numeric GIDs
-        df['product_id'] = df['product_id'].astype(str)
+        df['product_id'] = df['product_id'].astype(str) # Ensure consistent string type
 
     except FileNotFoundError:
         print(f"Error: Input file not found at {input_path}")
@@ -116,9 +102,9 @@ def run_product_preprocessing(input_path: str, output_path: str):
     try:
         # 1. Filtering (remove unwanted products first)
         processed_df = process_gift_card(processed_df)
-        if processed_df.empty: print("DataFrame empty after gift card filter."); raise ValueError("No products left after filtering.")
+        if processed_df.empty: raise ValueError("DataFrame empty after gift card filter.")
         processed_df = process_avaiable_for_sale(processed_df)
-        if processed_df.empty: print("DataFrame empty after available_for_sale filter."); raise ValueError("No products left after filtering.")
+        if processed_df.empty: raise ValueError("DataFrame empty after available_for_sale filter.")
 
         # 2. Basic Column Transformations & Dummies
         processed_df = process_created_at(processed_df)
@@ -127,24 +113,27 @@ def run_product_preprocessing(input_path: str, output_path: str):
 
         # 3. List/Dict Column Processing & Dummies
         processed_df = process_tags(processed_df)
-        processed_df = process_collections(processed_df) # Before metafields potentially?
+        processed_df = process_collections(processed_df) # Corrected processor
 
         # 4. Variant Processing (Extracts features, options, normalizes prices)
         processed_df = process_variants(processed_df)
 
-        # 5. Text Processing (TF-IDF on title and handle) - Needs output dir for models
+        # 5. Text Processing (TF-IDF) - Title, Handle, Description
+        # Pass models_output_dir for saving vectorizers
         processed_df = process_titles_tfidf(processed_df, models_output_dir, shop_id)
         processed_df = process_handles_tfidf(processed_df, models_output_dir, shop_id)
+        
+        # Pass output_dir for similarity report, function puts model in output_dir/models/
+        processed_df = process_descriptions_tfidf(processed_df, output_dir, shop_id)
+        
 
-        # 6. Metafields Processing (Complex - extracts features, vectorizes text, saves refs/similarity)
-        # This function saves auxiliary files itself, given the base output_dir
+        # 6. Metafields Processing (Complex - may add more features, saves aux files)
+        # This function needs the base output_dir to save refs/similarity correctly
         processed_df, references_df, color_similarity_df = process_metafields(processed_df, output_dir, shop_id)
-        # We don't strictly *need* references_df and color_similarity_df here,
-        # as they are saved by the function, but good to have them if needed later.
+        # references_df and color_similarity_df are saved by the function, not used further here
 
         # --- Final Checks ---
         print("\nPerforming final checks on processed product data...")
-        # Ensure product_id is still present and string
         if 'product_id' not in processed_df.columns:
             raise ValueError("'product_id' column lost during processing!")
         processed_df['product_id'] = processed_df['product_id'].astype(str)
@@ -156,25 +145,25 @@ def run_product_preprocessing(input_path: str, output_path: str):
                 print(f"Filling remaining NaNs in numeric column '{col}' with 0.")
                 processed_df[col] = processed_df[col].fillna(0)
 
-        # Make product_id the first column for readability
+        # Ensure product_id is the first column
         cols = ['product_id'] + [col for col in processed_df.columns if col != 'product_id']
         final_df = processed_df[cols]
 
         print(f"\nFinal Processed Product DataFrame shape: {final_df.shape}")
         print(f"Final columns ({len(final_df.columns)}): {final_df.columns.tolist()}")
-        # print("\nSample of final product data:")
-        # print(final_df.head())
-        # print("\nData types of final product data:")
-        # print(final_df.dtypes)
 
+    except ValueError as ve: # Catch value errors from empty DFs during processing
+         print(f"\n--- Processing stopped due to empty data after a step: {ve} ---")
+         # Decide if to save empty or raise error. Let's raise.
+         raise
     except Exception as e:
         print(f"\n--- Error during product processing sequence: {e} ---")
         traceback.print_exc()
-        raise # Propagate the error to the main runner
+        raise # Propagate the error
 
     # --- Save Final Processed Data ---
     try:
-        # Ensure output directory exists (should already exist from model saving)
+        # Ensure output directory exists (should already exist)
         os.makedirs(output_dir, exist_ok=True)
 
         final_df.to_csv(output_path, index=False)
@@ -199,10 +188,13 @@ if __name__ == "__main__":
     except FileNotFoundError as fnf_error:
         print(f"\nError: {fnf_error}")
         exit(1)
+    except ValueError as val_error: # Catch empty DataFrame errors etc.
+        print(f"\nError: {val_error}")
+        exit(1)
     except Exception as e:
         print(f"\n--- Product preprocessing pipeline failed: {e} ---")
         traceback.print_exc()
         exit(1)
 
-    # Example Usage (from project root):
-    # python -m preprocessing.preprocess_product_data --input results/test_shop/products_raw.csv --output results/test_shop/products_final_all_features.csv
+    # Example Usage (from project root 'NappsRecommenderSystems/'):
+    # python -m preprocessing.preprocess_product_data --input results/missusstore/raw/missusstore_shopify_products_raw.csv --output results/missusstore/preprocessed/missusstore_products_final_all_features.csv

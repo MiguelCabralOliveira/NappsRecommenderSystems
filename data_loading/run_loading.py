@@ -5,13 +5,21 @@ import os
 import traceback
 import pandas as pd
 from dotenv import load_dotenv
-import sys # Needed only if manipulating path, which we avoid now
+import sys # Needed for sys.exit
 
 # Imports RELATIVOS dentro do pacote data_loading
-from .database.loader import load_all_db_data
-from .shopify.loader import load_all_shopify_products
-# Importa save_dataframe de utils (agora no mesmo nível)
-from .utils import save_dataframe
+try:
+    from .database.loader import load_all_db_data
+    from .shopify.loader import load_all_shopify_products
+    # Importa save_dataframe de utils (agora no mesmo nível)
+    from .utils import save_dataframe
+except ImportError:
+    print("Error importing data_loading submodules. Ensure you are running from the project root with -m or check PYTHONPATH.")
+    # Fallback imports (less reliable)
+    from database.loader import load_all_db_data
+    from shopify.loader import load_all_shopify_products
+    from utils import save_dataframe
+
 
 # --- Carregamento do .env ---
 # Define o caminho para o .env um nível ACIMA do diretório atual (data_loading)
@@ -39,12 +47,11 @@ else:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Load data locally from Shopify/Database into results/raw/{shop_id}/.')
+    parser = argparse.ArgumentParser(description='Load data locally from Shopify/Database into results/{shop_id}/raw/.') # Updated description
     parser.add_argument('--source', required=True, choices=['shopify', 'database', 'all'],
                         help='Specify the data source to load.')
     parser.add_argument('--shop-id', required=True,
-                        help='The Shop ID (tenant_id). This will also determine the output subfolder (results/raw/{shop_id}).')
-    # REMOVIDO: --output-dir - agora é determinado internamente
+                        help='The Shop ID (tenant_id). Determines the output folder structure results/{shop_id}/raw/.')
     parser.add_argument('--days-limit', type=int, default=90,
                         help='Number of past days to fetch event data for (database source only).')
 
@@ -52,13 +59,16 @@ def main():
 
     print(f"--- Local Data Loading Initiated for Shop ID: {args.shop_id} ---")
 
+    # --- Define output base path including shop_id AND raw subfolder ---
+    # project_root calculated earlier is the NappsRecommenderSystems directory
+    output_base_path_abs = os.path.join(project_root, 'results', args.shop_id, 'raw')
+    # --- End define output base path ---
 
-    output_dir_abs = os.path.join(project_root, 'results', 'raw', args.shop_id)
     try:
-        os.makedirs(output_dir_abs, exist_ok=True) # Garante que o diretório exista
-        print(f"Output Target: Local Directory '{output_dir_abs}'")
+        os.makedirs(output_base_path_abs, exist_ok=True) # Garante que a estrutura completa exista
+        print(f"Output Target: Local Directory '{output_base_path_abs}'")
     except OSError as e:
-        print(f"FATAL ERROR: Could not create output directory: {output_dir_abs}")
+        print(f"FATAL ERROR: Could not create output directory: {output_base_path_abs}")
         print(f"Error details: {e}")
         sys.exit(1) # Termina o script se não conseguir criar a pasta
 
@@ -78,12 +88,12 @@ def main():
             if missing_db:
                  raise ValueError(f"Database credentials not fully set in .env file or environment. Missing: {missing_db}")
 
-            # Passa o caminho absoluto calculado para a função de loading
+            # Passa o caminho absoluto calculado (que termina em /raw/) para a função de loading
             db_success = load_all_db_data(
                 shop_id=args.shop_id,
                 days_limit=args.days_limit,
                 db_config=db_config,
-                output_base_path=output_dir_abs
+                output_base_path=output_base_path_abs
             )
             print(f"--- Database Loading Finished (Success: {db_success}) ---")
 
@@ -102,12 +112,12 @@ def main():
             if not email or not password:
                 raise ValueError("Shopify admin EMAIL and PASSWORD not set in .env file or environment.")
 
-            # Passa o caminho absoluto calculado para a função de loading
+            # Passa o caminho absoluto calculado (que termina em /raw/) para a função de loading
             shopify_success = load_all_shopify_products(
                 shop_id=args.shop_id,
                 email=email,
                 password=password,
-                output_base_path=output_dir_abs
+                output_base_path=output_base_path_abs
             )
             print(f"--- Shopify Product Loading Finished (Success: {shopify_success}) ---")
 
@@ -135,6 +145,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # Example Usage from the project root directory (e.g., NappsRecommender/):
+    # Example Usage from the project root directory (e.g., NappsRecommenderSystems/):
     # python -m data_loading.run_loading --source all --shop-id your_shop_id
-    # Output will be saved in ./results/raw/your_shop_id/
+    # Output will be saved in ./results/your_shop_id/raw/

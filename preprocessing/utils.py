@@ -1,3 +1,4 @@
+# preprocessing/utils.py
 import pandas as pd
 import json
 import ast
@@ -17,6 +18,10 @@ def safe_json_parse(json_like_str):
         cleaned_str = cleaned_str.replace(': None', ': null').replace(', None', ', null').replace('{None', '{null')
         cleaned_str = cleaned_str.replace(': True', ': true').replace(', True', ', true').replace('{True', '{true')
         cleaned_str = cleaned_str.replace(': False', ': false').replace(', False', ', false').replace('{False', '{false')
+        # Lidar com casos específicos problemáticos (adicionar mais se necessário)
+        # Exemplo: Se houver floats inválidos como .0,
+        # cleaned_str = re.sub(r':\s*\.(\d+)', r': 0.\1', cleaned_str)
+        # cleaned_str = re.sub(r',\s*\.(\d+)', r', 0.\1', cleaned_str)
         return json.loads(cleaned_str)
     except (json.JSONDecodeError, TypeError):
         pass  # Ignora o erro e tenta o próximo método

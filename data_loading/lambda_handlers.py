@@ -27,13 +27,13 @@ if not S3_BUCKET_NAME:
     S3_BUCKET_NAME = "napps-recommender" # Use o nome correto como default
 
 DEFAULT_DAYS_LIMIT = 90
+# --- End Configuration ---
 
 # --- Unified Handler ---
 def unified_data_loader_handler(event, context):
     """
     Lambda handler that loads data based on the 'source' parameter ('database', 'shopify', 'all').
-    Reads all necessary credentials directly from Lambda environment variables.
-    WARNING: Shopify loading can be lengthy and might exceed Lambda's 15-minute timeout limit.
+    Reads credentials from environment variables and saves output to s3://{BUCKET}/{shop_id}/raw/.
     """
     print("--- Unified Data Loader Lambda Handler Started ---")
     print(f"Event received: {json.dumps(event)}") # Dump event for better CloudWatch visibility
@@ -52,7 +52,10 @@ def unified_data_loader_handler(event, context):
         return {'statusCode': 400, 'body': json.dumps("Bad Request: Missing required 'shop_id' parameter.")}
 
     # --- Setup ---
-    output_s3_prefix = f"s3://{S3_BUCKET_NAME}/{shop_id}/" # S3 prefix for outputs
+    # --- MODIFIED: Define S3 prefix to include /raw/ ---
+    # Assumes S3 bucket 'contains' the conceptual 'results' level
+    output_s3_prefix = f"s3://{S3_BUCKET_NAME}/{shop_id}/raw/" # Added /raw/
+    # --- END MODIFICATION ---
     print(f"Processing request for Shop ID: {shop_id}")
     print(f"Data Source(s): {source}")
     print(f"Target S3 Prefix: {output_s3_prefix}")
@@ -72,7 +75,6 @@ def unified_data_loader_handler(event, context):
             ran_db = True
             print("\n--- Initiating Database Loading ---")
             print("Reading DB credentials from environment variables...")
-            # Read credentials within this block to ensure they are only checked if needed
             db_config = {
                 'host': os.environ.get('DB_HOST'),
                 'user': os.environ.get('DB_USER'),
@@ -80,12 +82,12 @@ def unified_data_loader_handler(event, context):
                 'name': os.environ.get('DB_NAME'),
                 'port': os.environ.get('DB_PORT')
             }
-            missing_db_vars = [k for k, v in db_config.items() if v is None] # Password can be empty string, but not None
+            missing_db_vars = [k for k, v in db_config.items() if v is None] # Check for None
             if missing_db_vars:
                  raise ValueError(f"Missing required DB environment variables: {missing_db_vars}")
             print("DB credentials retrieved from environment.")
 
-            # Execute DB loading function
+            # Execute DB loading function, passing the prefix ending in /raw/
             db_success = load_all_db_data(
                 shop_id=shop_id,
                 days_limit=days_limit,
@@ -102,7 +104,6 @@ def unified_data_loader_handler(event, context):
             print("\n--- Initiating Shopify Product Loading ---")
             print("!!! WARNING: Shopify scraping can take significant time and MAY EXCEED the 15-minute Lambda timeout !!!")
             print("Reading Shopify credentials from environment variables...")
-            # Read credentials within this block
             email = os.environ.get('EMAIL')
             password = os.environ.get('PASSWORD')
             missing_shopify_vars = []
@@ -112,7 +113,7 @@ def unified_data_loader_handler(event, context):
                  raise ValueError(f"Missing required Shopify environment variables: {missing_shopify_vars}")
             print("Shopify credentials retrieved from environment.")
 
-            # Execute Shopify loading function
+            # Execute Shopify loading function, passing the prefix ending in /raw/
             shopify_success = load_all_shopify_products(
                 shop_id=shop_id,
                 email=email,
@@ -124,11 +125,7 @@ def unified_data_loader_handler(event, context):
                 error_messages.append("Shopify loading step reported errors.")
 
         # --- Determine Overall Status ---
-        final_success = True
-        if ran_db and not db_success:
-            final_success = False
-        if ran_shopify and not shopify_success:
-            final_success = False
+        final_success = (db_success if ran_db else True) and (shopify_success if ran_shopify else True)
 
         if final_success:
             print("\n--- Unified Data Loader Lambda Handler Finished Successfully ---")
@@ -167,17 +164,10 @@ def unified_data_loader_handler(event, context):
         }
 
 # --- Deprecated Handlers (Optional: Keep or Remove) ---
-# You can remove db_loader_handler and shopify_trigger_handler if they are no longer needed
-# or keep them if you might deploy them as separate functions later.
-
 def db_loader_handler(event, context):
      print("WARNING: db_loader_handler is deprecated. Use unified_data_loader_handler.")
-     # Optional: Forward to the new handler or return an error
-     # return unified_data_loader_handler(event, context) # Needs source='database' added
      return {'statusCode': 410, 'body': json.dumps("This handler is deprecated. Use unified_data_loader_handler with source='database'.")}
 
 def shopify_trigger_handler(event, context):
      print("WARNING: shopify_trigger_handler is deprecated. Use unified_data_loader_handler.")
-     # Optional: Forward or return error
-     # return unified_data_loader_handler(event, context) # Needs source='shopify' added
      return {'statusCode': 410, 'body': json.dumps("This handler is deprecated. Use unified_data_loader_handler with source='shopify'.")}
