@@ -93,7 +93,7 @@ def extract_interactions_from_events(event_df: pd.DataFrame) -> pd.DataFrame:
                     interactions_list.append(interaction_data)
 
             # 2. Eventos com line_items
-            elif event_type in ["Shopify Order Created", "Shopify Order Updated", "Shopify Checkout Created", "Shopify Checkout Updated"]:
+            elif event_type in ["Shopify Order Created", "Shopify Checkout Created", "Shopify Checkout Updated"]:
                 line_items = properties.get('line_items')
                 order_id = properties.get('order_id')
                 checkout_id = properties.get('checkout_id')
@@ -101,9 +101,8 @@ def extract_interactions_from_events(event_df: pd.DataFrame) -> pd.DataFrame:
                 if isinstance(line_items, list) and line_items:
                     base_interaction_type = 'ordered_item' if 'Order' in event_type else 'checkout_item'
 
-                    # *** O loop for está aqui ***
                     for item_index, item in enumerate(line_items):
-                        # *** Mover o try...except para DENTRO do loop ***
+                        
                         try:
                             if isinstance(item, dict):
                                 product_id = item.get('product_id')

@@ -18,7 +18,6 @@ DESIRED_EVENT_TYPES = [
     "Shopify Checkout Created",
     "Shopify Checkout Updated",
     "Shopify Order Created",
-    "Shopify Order Updated",
     "Variant Meta Added"
 ]
 # -----------------------------------------

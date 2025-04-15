@@ -6,13 +6,11 @@ from sqlalchemy import text, Engine # Use Engine type hint
 # Este arquivo não importa outros módulos do pacote,
 # então seus imports permanecem inalterados.
 
-# --- Define the specific events to fetch ---
-# Keep this configurable or load from external config if needed
 DESIRED_EVENT_TYPES = [
     "Collection List Viewed", "Product Searched", "Product Shared",
     "Product Viewed", "Product Wishlisted", "Shopify Checkout Created",
-    "Shopify Checkout Updated", "Shopify Order Created", "Shopify Order Updated",
-    "Variant Meta Added"
+    "Shopify Checkout Updated", "Shopify Order Created",
+    "Variant Meta Added, Push Notification Clicked"
 ]
 # -----------------------------------------
 
