@@ -80,7 +80,7 @@ def main():
     # --- Argument Parser Setup ---
     # (Parser setup remains the same - includes KNN, Optimization, Hybrid args)
     parser = argparse.ArgumentParser(description='Process product data and generate recommendations')
-    parser.add_argument('--neighbors', type=int, default=20, help='Number of neighbors for KNN and K for evaluation (default: 20)') # Default K=20
+    parser.add_argument('--neighbors', type=int, default=20, help='Number of neighbors for KNN and K for evaluation (default: 20)')
     parser.add_argument('--skip-recommendations', action='store_true', help='Skip recommendation generation and evaluation')
     parser.add_argument('--skip-evaluation', action='store_true', help='Skip model evaluation step')
     parser.add_argument('--output-dir', type=str, default='results', help='Directory to save results (default: results)')

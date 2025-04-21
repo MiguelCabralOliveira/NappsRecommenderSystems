@@ -1,0 +1,8 @@
+{
+    "population_size": 40,
+    "generations": 40,
+    "mutation_rate": 0.2,      
+    "crossover_rate": 0.8,
+    "tournament_size": 3,
+    "weight_range": [0.1, 5.0] 
+  }

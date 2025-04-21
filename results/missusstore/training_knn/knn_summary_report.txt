@@ -1,0 +1,45 @@
+=== Weighted KNN Training Summary ===
+
+Timestamp: 2025-04-21 16:49:05
+Total Pipeline Duration: 45.28 seconds
+
+Input Products: 311
+Input Features: 492
+
+KNN Parameters:
+- n_neighbors (k): 20
+- algorithm: auto
+- metric: euclidean
+
+Weight Optimization: Enabled (evolutionary)
+Weights Used (Base or Optimized):
+{
+  "description_tfidf": 0.1426952560549767,
+  "title_tfidf": 0.12303551244053856,
+  "handle_tfidf": 0.17085959543741963,
+  "metafield_data": 0.20795545566468399,
+  "collections": 0.13954193793478056,
+  "tags": 1.1126583392508682,
+  "product_type": 0.4863963338518389,
+  "vendor": 2.6984016217583977,
+  "variant_size": 1.1443725703684107,
+  "variant_color": 1.0606219273408735,
+  "variant_other": 0.27228268759735663,
+  "price": 0.5279169060989567,
+  "time_features": 0.9154279412911626,
+  "release_quarter": 0.2334056474156363,
+  "other_numeric": 0.5631461806619169
+}
+
+Variant Filtering: Enabled
+- Using 1114 pairs from similar products file.
+
+Model Performance:
+- Average Recommendation Similarity: 0.2131
+
+Outputs Generated:
+- Unfiltered Recommendations: Yes (knn_recommendations_unfiltered.csv)
+- Final Recommendations: Yes (knn_recommendations_final.csv)
+- Saved Model Components: Yes
+- Evaluation Metrics: Yes
+- Visualizations Generated: importance, tsne, distribution

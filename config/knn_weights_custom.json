@@ -1,0 +1,20 @@
+
+{
+    "description_tfidf": 1.0,
+    "title_tfidf": 1.5,          
+    "handle_tfidf": 0.7,
+    "metafield_data": 1.2,       
+    "collections": 1.8,          
+    "tags": 2.0,                 
+    "product_type": 1.5,
+    "vendor": 0.8,
+    "variant_size": 0.9,         
+    "variant_color": 1.0,
+    "variant_other": 0.9,
+    "price": 0.5,                
+    "time_features": 0.4,
+    "release_quarter": 0.4,
+    "availability": 0.0,         
+    "gift_card": 0.0,            
+    "other_numeric": 0.5
+  }

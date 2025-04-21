@@ -1,0 +1,15 @@
+{
+  "k": 20,
+  "recommendations_file": "knn_recommendations_final.csv",
+  "catalog_coverage_pct": 76.50429799426934,
+  "personalization_distance_pct": 95.12776258184456,
+  "intra_list_similarity_pct": 23.777068304544642,
+  "avg_recommendation_popularity": null,
+  "avg_similarity": 0.17078468813628628,
+  "std_dev_similarity": 0.0992943476328716,
+  "p25_similarity": 0.1147977452971881,
+  "p50_similarity (median)": 0.1518376383152176,
+  "p75_similarity": 0.1974320130640561,
+  "min_similarity": 0.010583652546109,
+  "max_similarity": 0.989515723239352
+}
