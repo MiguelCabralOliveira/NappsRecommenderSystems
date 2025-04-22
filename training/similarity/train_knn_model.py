@@ -191,7 +191,7 @@ def main():
             filter_variants=args.filter_variants,
             similar_products_df=similar_products_df,
             products_df_for_titles=products_df_for_titles,
-            catalog_csv_path=catalog_csv_path, # Pass the validated catalog path
+            catalog_csv_path=catalog_csv_path, 
             skip_evaluation=args.skip_evaluation,
             save_model=args.save_model
         )

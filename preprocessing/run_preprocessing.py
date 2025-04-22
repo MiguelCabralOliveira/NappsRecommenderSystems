@@ -18,22 +18,22 @@ except ImportError as e:
 # --- End Imports ---
 
 # --- Constants ---
-SM_INPUT_CHANNEL = 'raw_data'
-SM_OUTPUT_CHANNEL = 'processed_data'
+SM_INPUT_CHANNEL = 'raw_data'      # Corresponde ao 'input_name' no ProcessingInput
+SM_OUTPUT_CHANNEL = 'processed_data' # Corresponde ao 'output_name' no ProcessingOutput
 # --- End Constants ---
 
 # --- Environment Detection ---
 def is_sagemaker_environment():
     """Checks if the script is running in a SageMaker Processing Job environment."""
-    return 'SM_CURRENT_HOST' in os.environ or os.path.exists('/opt/ml/processing/')
+    return os.path.exists('/opt/ml/processing/')
 # --- End Environment Detection ---
 
 # --- Path Management ---
 def get_data_paths(shop_id: str) -> dict:
     """
     Determines input/output paths based on environment and desired structure.
-    Inputs from: .../results/{shop_id}/raw/
-    Outputs to: .../results/{shop_id}/preprocessed/
+    SageMaker: Uses paths provided by ProcessingInput/ProcessingOutput channels.
+    Local: Constructs paths based on project structure relative to this script.
 
     Args:
         shop_id: The identifier for the specific shop.
@@ -43,15 +43,14 @@ def get_data_paths(shop_id: str) -> dict:
     """
     paths = {}
     is_sm = is_sagemaker_environment()
-    # Assume run_preprocessing.py is in preprocessing/, so project root is one level up
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
     if is_sm:
         print("Detected SageMaker environment.")
-        base_input_dir = f"/opt/ml/processing/{SM_INPUT_CHANNEL}/{shop_id}/raw"
-        base_output_dir = f"/opt/ml/processing/{SM_OUTPUT_CHANNEL}/{shop_id}/preprocessed"
-        print(f"Using SageMaker base input: {base_input_dir}")
-        print(f"Using SageMaker base output: {base_output_dir}")
+        base_input_dir = f"/opt/ml/processing/{SM_INPUT_CHANNEL}"
+        base_output_dir = f"/opt/ml/processing/{SM_OUTPUT_CHANNEL}"
+        print(f"Using SageMaker base input directory: {base_input_dir}")
+        print(f"Using SageMaker base output directory: {base_output_dir}")
     else:
         print("Detected local environment.")
         base_input_dir = os.path.join(project_root, "results", shop_id, "raw")
@@ -60,18 +59,16 @@ def get_data_paths(shop_id: str) -> dict:
         print(f"Using local base output directory: {base_output_dir}")
 
     # --- Define standard filenames ---
-    # Verify these match your actual filenames in results/{shop_id}/raw
     person_input_filename = f'{shop_id}_person_data_loaded.csv'
     product_input_filename = f'{shop_id}_shopify_products_raw.csv'
     event_input_filename = f'{shop_id}_person_event_data_filtered.csv'
 
-    # Define standard output filenames in results/{shop_id}/preprocessed
     event_output_filename = f'{shop_id}_event_interactions_processed.csv'
     person_output_filename = f'{shop_id}_person_features_processed.csv'
     product_output_filename = f'{shop_id}_products_final_all_features.csv'
     # --- End Define standard filenames ---
 
-    # Construct full paths
+    # --- Constrói os caminhos completos ---
     paths['person_input'] = os.path.join(base_input_dir, person_input_filename)
     paths['product_input'] = os.path.join(base_input_dir, product_input_filename)
     paths['event_input'] = os.path.join(base_input_dir, event_input_filename)
@@ -79,19 +76,19 @@ def get_data_paths(shop_id: str) -> dict:
     paths['event_output'] = os.path.join(base_output_dir, event_output_filename)
     paths['person_output'] = os.path.join(base_output_dir, person_output_filename)
     paths['product_output'] = os.path.join(base_output_dir, product_output_filename)
+    # --- Fim Construção ---
 
     print("\nDetermined data paths:")
     for key, value in paths.items():
         print(f"- {key}: {value}")
 
-    # Create the main output directory ('.../preprocessed/') if it doesn't exist
-    output_dir_to_create = base_output_dir
-    if output_dir_to_create:
-        os.makedirs(output_dir_to_create, exist_ok=True)
-        print(f"Ensured output directory exists: {output_dir_to_create}")
-        # Also create the 'models' subdirectory within the output path ('.../preprocessed/models/')
-        os.makedirs(os.path.join(output_dir_to_create, "models"), exist_ok=True)
-        print(f"Ensured models subdirectory exists: {os.path.join(output_dir_to_create, 'models')}")
+    # Criação dos diretórios de output
+    if base_output_dir:
+        os.makedirs(base_output_dir, exist_ok=True)
+        print(f"Ensured output directory exists: {base_output_dir}")
+        models_dir = os.path.join(base_output_dir, "models")
+        os.makedirs(models_dir, exist_ok=True)
+        print(f"Ensured models subdirectory exists: {models_dir}")
 
     return paths
 # --- End Path Management ---
@@ -104,8 +101,27 @@ def main():
     parser.add_argument('--mode', required=True, choices=['person', 'product', 'events', 'all'],
                         help='Which preprocessing pipeline(s) to run.')
     args = parser.parse_args()
-    shop_id = args.shop_id
+    shop_id = args.shop_id # Obtém shop_id dos argumentos
     mode = args.mode
+
+    # --- DEBUGGING: LISTAR FICHEIROS (Pode remover após confirmar que funciona) ---
+    print("\n--- DEBUG: Listing files in /opt/ml/processing/ ---")
+    processing_base = "/opt/ml/processing"
+    if os.path.exists(processing_base) and is_sagemaker_environment(): # Só lista se estiver em SM
+        for root, dirs, files in os.walk(processing_base):
+            # Calcula indentação para melhor visualização
+            level = root.replace(processing_base, '').count(os.sep)
+            indent = '---' * level
+            print(f"{indent}{os.path.basename(root)}/")
+            sub_indent = '---' * (level + 1)
+            for file in files:
+                print(f"{sub_indent}{file}")
+    elif is_sagemaker_environment():
+         print(f"Directory not found for debug listing: {processing_base}")
+    else:
+        print("Skipping debug listing (not in SageMaker environment).")
+    print("--- END DEBUG ---\n")
+    # --- FIM DEBUGGING ---
 
     print(f"\n=== Running Preprocessing Pipeline ===")
     print(f"Shop ID: {shop_id}")
@@ -126,114 +142,125 @@ def main():
             try:
                 if not os.path.exists(paths['product_input']):
                     raise FileNotFoundError(f"Product input file not found: {paths['product_input']}")
-                # Call with 2 arguments as per the user's original script structure
-                run_product_preprocessing(paths['product_input'], paths['product_output'])
+                # --- ALTERAÇÃO AQUI: Passa shop_id ---
+                run_product_preprocessing(paths['product_input'], paths['product_output'], shop_id)
+                # --- FIM DA ALTERAÇÃO ---
                 print("--- Product Preprocessing Completed Successfully ---")
                 step_success = True
             except FileNotFoundError as e:
                  print(f"\nProduct Processing Aborted: Required file not found.")
                  print(f"Error details: {e}")
+                 step_success = False # Marca falha
             except Exception as e:
                  print("\n--- Product Processing FAILED ---")
                  print(f"An unexpected error occurred: {e}")
                  traceback.print_exc()
-            success &= step_success
+                 step_success = False # Marca falha
+            success &= step_success # Atualiza sucesso geral
             print("="*10 + f" STEP 1: Finished Product Processing (Success: {step_success}) " + "="*10)
             if not step_success and mode != 'all':
-                 sys.exit(1) # Exit if only this mode was requested and failed
+                 print("Exiting due to failure in 'product' mode.")
+                 sys.exit(1) # Sai se só este modo foi pedido e falhou
 
         # 3. Execute Event Preprocessing if requested
-        if mode in ['events', 'all']:
+        # Só executa se o modo for 'events' ou ('all' E o passo anterior teve sucesso)
+        if mode in ['events', 'all'] and (mode == 'events' or success):
             print("\n" + "="*10 + " STEP 2: Starting Event Interaction Processing " + "="*10)
             step_success = False
             try:
                 if not os.path.exists(paths['event_input']):
                     raise FileNotFoundError(f"Event input file not found: {paths['event_input']}")
-                # Call with 2 arguments
+                # Chama com 2 argumentos
                 run_event_preprocessing(paths['event_input'], paths['event_output'])
                 print("--- Event Interaction Processing Completed Successfully ---")
                 step_success = True
             except FileNotFoundError as e:
                  print(f"\nEvent Processing Aborted: Required file not found.")
                  print(f"Error details: {e}")
+                 step_success = False # Marca falha
             except Exception as e:
                  print("\n--- Event Processing FAILED ---")
                  print(f"An unexpected error occurred: {e}")
                  traceback.print_exc()
-            success &= step_success
+                 step_success = False # Marca falha
+            success &= step_success # Atualiza sucesso geral
             print("="*10 + f" STEP 2: Finished Event Processing (Success: {step_success}) " + "="*10)
             if not step_success and mode != 'all':
-                 sys.exit(1)
+                 print("Exiting due to failure in 'events' mode.")
+                 sys.exit(1) # Sai se só este modo foi pedido e falhou
+        elif mode in ['events', 'all'] and not success:
+             print("\n" + "="*10 + " STEP 2: Skipping Event Interaction Processing (Previous Step Failed) " + "="*10)
+
 
         # 4. Execute Person Preprocessing if requested
-        if mode in ['person', 'all']:
+        # Só executa se o modo for 'person' ou ('all' E os passos anteriores tiveram sucesso)
+        if mode in ['person', 'all'] and (mode == 'person' or success):
             print("\n" + "="*10 + " STEP 3: Starting Person Preprocessing " + "="*10)
             step_success = False
-            # Check dependency: Event output file must exist
             event_output_file = paths['event_output']
+            # Verifica se o ficheiro de eventos existe (necessário)
             if not os.path.exists(event_output_file):
                  print(f"\nError: Cannot run person processing because the required event interactions file is missing:")
                  print(f"  {event_output_file}")
-                 print(f"Please run 'events' mode or 'all' mode successfully first.")
-                 success = False # Mark overall failure
-                 if mode == 'person': # Exit if only this mode was requested
-                     sys.exit(1)
+                 print(f"Ensure 'events' mode or 'all' mode ran successfully first, or the file exists if running 'person' mode alone.")
+                 success = False # Marca falha geral
+                 step_success = False # Marca falha neste passo
+                 # Não precisa sair aqui necessariamente se for modo 'all', mas marca falha
             else:
-                # Proceed only if event file exists
+                # Ficheiro de eventos existe, tenta processar pessoas
                 try:
                     if not os.path.exists(paths['person_input']):
                         raise FileNotFoundError(f"Person input file not found: {paths['person_input']}")
 
-                    # --- CORRECTED CALL: Pass 3 arguments ---
+                    # Chama a função de processamento de pessoas
                     run_person_preprocessing(paths['person_input'], paths['event_output'], paths['person_output'])
-                    # --- END CORRECTION ---
 
                     print("--- Person Preprocessing Completed Successfully ---")
                     step_success = True
                 except FileNotFoundError as e:
                      print(f"\nPerson Processing Aborted: Required file not found.")
                      print(f"Error details: {e}")
+                     step_success = False # Marca falha
                 except Exception as e:
                      print("\n--- Person Processing FAILED ---")
                      print(f"An unexpected error occurred: {e}")
                      traceback.print_exc()
-            success &= step_success # Update overall success based on this step
+                     step_success = False # Marca falha
+
+            success &= step_success # Atualiza sucesso geral
             print("="*10 + f" STEP 3: Finished Person Processing (Success: {step_success}) " + "="*10)
             if not step_success and mode != 'all':
-                 sys.exit(1)
+                 print("Exiting due to failure in 'person' mode.")
+                 sys.exit(1) # Sai se só este modo foi pedido e falhou
+        elif mode in ['person', 'all'] and not success:
+             print("\n" + "="*10 + " STEP 3: Skipping Person Preprocessing (Previous Step Failed) " + "="*10)
 
 
         # 5. Final Status Message
         end_time = time.time()
+        total_seconds = end_time - start_time
         print("\n" + "="*20 + " Processing Pipeline Finished " + "="*20)
+        print(f"Shop ID: {shop_id}")
+        print(f"Mode executed: {mode}")
         print(f"Overall Success: {success}")
-        print(f"Total execution time: {time.strftime('%H:%M:%S', time.gmtime(end_time - start_time))}")
+        print(f"Total execution time: {time.strftime('%H:%M:%S', time.gmtime(total_seconds))} ({total_seconds:.2f} seconds)")
 
         if not success:
             print("\nOne or more processing stages failed.")
-            sys.exit(1)
+            sys.exit(1) # Sai com código de erro
         else:
             print("\nAll requested processing stages completed successfully.")
+            # Código de saída 0 é o default em caso de sucesso
 
     # --- Overall Error Handling ---
     except Exception as e:
-        print("\n--- Preprocessing Pipeline FAILED Overall ---")
-        print(f"An unexpected error occurred: {e}")
+        print("\n--- Preprocessing Pipeline FAILED Overall (Unexpected Error) ---")
+        print(f"An unexpected error occurred outside the specific steps: {e}")
         traceback.print_exc()
-        sys.exit(1)
+        sys.exit(1) # Sai com código de erro
     # --- End Overall Error Handling ---
 
 # --- Script Entry Point ---
 if __name__ == "__main__":
-    # Add project root to sys.path for imports when run with -m
-    PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    if PROJECT_ROOT not in sys.path:
-        sys.path.insert(0, PROJECT_ROOT)
     main()
 # --- End Script Entry Point ---
-
-# Example Local Usage (from project root NappsRecommenderSystems/):
-# python -m preprocessing.run_preprocessing --shop-id missusstore --mode all
-# python -m preprocessing.run_preprocessing --shop-id missusstore --mode events
-# python -m preprocessing.run_preprocessing --shop-id missusstore --mode product
-# python -m preprocessing.run_preprocessing --shop-id missusstore --mode person

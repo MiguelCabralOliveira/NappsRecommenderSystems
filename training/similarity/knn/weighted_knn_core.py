@@ -445,9 +445,9 @@ class _WeightedKNN:
 
     def export_recommendations(self, output_file: str, n_recommendations: Optional[int] = None,
                              apply_variant_filter: bool = False, similar_products_df: Optional[pd.DataFrame] = None,
-                             products_df_for_titles: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+                             products_df_for_titles: Optional[pd.DataFrame] = None) -> pd.DataFrame: # Adicionado products_df_for_titles
         """
-        Export product recommendations to a CSV file.
+        Export product recommendations to a CSV file, optionally including product titles.
 
         Args:
             output_file: Path to save the recommendations CSV.
@@ -455,8 +455,8 @@ class _WeightedKNN:
             apply_variant_filter: If True, filter out recommendations listed as similar variants.
             similar_products_df: DataFrame with pairs of similar products (needed if apply_variant_filter=True).
                                  Expected columns like 'product1_id', 'product2_id'.
-            products_df_for_titles: Optional DataFrame with original product data including
-                                    'product_id' and 'product_title' to add titles to the export.
+            products_df_for_titles: Optional DataFrame with 'product_id' and 'product_title'
+                                    to add titles to the export.
 
         Returns:
             DataFrame containing the exported recommendations.
@@ -483,10 +483,9 @@ class _WeightedKNN:
         if use_variant_filter:
             col1, col2 = None, None
             if 'product1_id' in similar_products_df.columns and 'product2_id' in similar_products_df.columns: col1, col2 = 'product1_id', 'product2_id'
-            # Add fallbacks if needed: elif 'product1' in similar_products_df...
+            elif 'source_product_id' in similar_products_df.columns and 'similar_product_id' in similar_products_df.columns: col1, col2 = 'source_product_id', 'similar_product_id' # Fallback names
             if col1 and col2:
                 print("Building variant exclusion map...")
-                # Ensure IDs are strings for consistent lookup
                 similar_products_df[col1] = similar_products_df[col1].astype(str)
                 similar_products_df[col2] = similar_products_df[col2].astype(str)
                 for _, row in similar_products_df.iterrows():
@@ -502,11 +501,8 @@ class _WeightedKNN:
         for source_product_id in source_ids:
             source_product_id_str = str(source_product_id) # Use string version
             recommendations = self.recommendation_matrix.get(source_product_id_str, [])
-
-            # Initial filter (self-recommendations - should be handled in compute, but safe)
             current_recs = [(str(rec_id), sim) for rec_id, sim in recommendations if str(rec_id) != source_product_id_str]
 
-            # Apply variant filter if enabled
             variants_filtered_this_product = 0
             if use_variant_filter:
                 exclude_ids = variant_exclude_map.get(source_product_id_str, set())
@@ -516,49 +512,77 @@ class _WeightedKNN:
                     variants_filtered_this_product = count_before - len(current_recs)
                     total_variant_filtered_count += variants_filtered_this_product
 
-            # Take Top N *after* filtering
             final_recs_for_product = current_recs[:n_to_export]
 
-            # Add to export rows
             for rank, (rec_id, similarity) in enumerate(final_recs_for_product):
                 rows.append({
-                    'source_product_id': source_product_id_str, # Export consistent string IDs
+                    'source_product_id': source_product_id_str,
                     'recommended_product_id': rec_id,
                     'rank': rank + 1,
                     'similarity_score': similarity
                 })
 
-        # --- Create DataFrame and Save ---
+        # --- Create DataFrame ---
         recommendations_df = pd.DataFrame(rows)
 
-        if not recommendations_df.empty:
-             # Add titles if requested
-            if products_df_for_titles is not None and 'product_id' in products_df_for_titles.columns and 'product_title' in products_df_for_titles.columns:
-                print("Adding product titles...")
-                try:
-                     # Create map using string IDs
-                    products_df_for_titles['product_id_str'] = products_df_for_titles['product_id'].astype(str)
-                    title_map = products_df_for_titles.set_index('product_id_str')['product_title'].to_dict()
-                    recommendations_df['source_product_title'] = recommendations_df['source_product_id'].map(title_map).fillna('Title NF')
-                    recommendations_df['recommended_product_title'] = recommendations_df['recommended_product_id'].map(title_map).fillna('Title NF')
-                    # Reorder columns
-                    cols_order = ['source_product_id', 'source_product_title', 'recommended_product_id', 'recommended_product_title', 'rank', 'similarity_score']
-                    recommendations_df = recommendations_df[[col for col in cols_order if col in recommendations_df.columns]]
-                except Exception as title_err:
-                    print(f"Warning: Error adding titles: {title_err}.")
-                    # Ensure columns don't exist if mapping failed
-                    recommendations_df = recommendations_df.drop(columns=['source_product_title', 'recommended_product_title'], errors='ignore')
+        # --- ADICIONAR TÍTULOS (SE POSSÍVEL) ---
+        if not recommendations_df.empty and products_df_for_titles is not None and not products_df_for_titles.empty:
+            print("DEBUG: Attempting to add product titles...") # DEBUG
+            try:
+                # Garante que IDs são strings para o merge/map
+                products_df_for_titles['product_id_str'] = products_df_for_titles['product_id'].astype(str)
+                # Remove duplicados para criar um mapeamento limpo
+                title_map_df = products_df_for_titles[['product_id_str', 'product_title']].drop_duplicates(subset=['product_id_str'])
+                title_map = title_map_df.set_index('product_id_str')['product_title'].to_dict()
+                print(f"DEBUG: Title map created with {len(title_map)} entries.") # DEBUG
 
-            # Save the DataFrame
+                # Aplica o mapeamento
+                recommendations_df['source_product_title'] = recommendations_df['source_product_id'].map(title_map)#.fillna('Title Not Found') # Temporariamente remove fillna
+                recommendations_df['recommended_product_title'] = recommendations_df['recommended_product_id'].map(title_map)#.fillna('Title Not Found') # Temporariamente remove fillna
+
+                # DEBUG: Verifica NaNs após o map
+                src_nan_count = recommendations_df['source_product_title'].isna().sum()
+                rec_nan_count = recommendations_df['recommended_product_title'].isna().sum()
+                print(f"DEBUG: NaNs after mapping - Source Titles: {src_nan_count}, Recommended Titles: {rec_nan_count}")
+
+                # Preenche NaNs AGORA
+                recommendations_df['source_product_title'] = recommendations_df['source_product_title'].fillna('Title Not Found')
+                recommendations_df['recommended_product_title'] = recommendations_df['recommended_product_title'].fillna('Title Not Found')
+
+
+                # Reordena colunas para melhor leitura
+                cols_order = [
+                    'source_product_id', 'source_product_title',
+                    'recommended_product_id', 'recommended_product_title',
+                    'rank', 'similarity_score'
+                ]
+                # Mantém apenas as colunas que realmente existem (caso alguma falhe)
+                recommendations_df = recommendations_df[[col for col in cols_order if col in recommendations_df.columns]]
+                print("Titles added successfully.") # Mantém esta
+            except KeyError as ke: # Mais específico
+                 print(f"DEBUG: KeyError during title addition: {ke}") # DEBUG
+                 print("Warning: Could not add titles. Check if 'product_id' and 'product_title' exist in the provided title DataFrame.")
+                 recommendations_df = recommendations_df.drop(columns=['source_product_title', 'recommended_product_title'], errors='ignore')
+            except Exception as title_err:
+                print(f"DEBUG: Unexpected error during title addition: {title_err}") # DEBUG
+                print(f"Warning: An unexpected error occurred while adding titles: {title_err}.")
+                recommendations_df = recommendations_df.drop(columns=['source_product_title', 'recommended_product_title'], errors='ignore')
+        # --- FIM DA ADIÇÃO DE TÍTULOS ---
+
+
+        # --- Save DataFrame ---
+        if not recommendations_df.empty:
             if save_dataframe(recommendations_df, output_file):
                  export_end_time = time.time()
                  print(f"Recommendations exported to {output_file} (Duration: {export_end_time - export_start_time:.2f}s)")
                  if use_variant_filter: print(f"Total recommendations filtered as variants: {total_variant_filtered_count}")
-            # Else: save_dataframe prints error
+            # Else: save_dataframe imprime erro
         else:
             print(f"WARNING: No recommendations generated to export to {output_file}.")
-            # Optionally save empty file with headers
-            pd.DataFrame(columns=['source_product_id', 'recommended_product_id', 'rank', 'similarity_score']).to_csv(output_file, index=False)
+            # Opcional: Guardar ficheiro vazio com cabeçalhos (se não for None)
+            if output_file:
+                pd.DataFrame(columns=['source_product_id', 'source_product_title', 'recommended_product_id', 'recommended_product_title', 'rank', 'similarity_score']).to_csv(output_file, index=False)
+
 
         return recommendations_df
 
