@@ -1,0 +1,5 @@
+
+
+Correr localmente o preprocessing
+
+python -m preprocessing.run_preprocessing --shop-id store-id --mode all

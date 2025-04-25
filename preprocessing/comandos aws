@@ -1,0 +1,2 @@
+docker build -t 694795525682.dkr.ecr.eu-west-3.amazonaws.com/napps-recommender/preprocessing:latest -f preprocessing/Dockerfile .
+docker push 694795525682.dkr.ecr.eu-west-3.amazonaws.com/napps-recommender/preprocessing:latest
