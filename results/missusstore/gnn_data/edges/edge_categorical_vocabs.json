@@ -1,0 +1,7 @@
+{
+    "channel": {
+        "android": 1,
+        "ios": 2,
+        "__UNKNOWN__": 0
+    }
+}

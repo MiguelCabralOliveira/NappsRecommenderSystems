@@ -83,14 +83,67 @@ def _prepare_product_gnn_features(df_final: pd.DataFrame, output_dir_gnn: str):
     df_gnn = df_final[cols_to_keep_for_gnn].copy()
     print(f"Selected {len(df_gnn.columns) - 1} features for GNN processing.")
 
-    # Mapeamento ID -> Índice
-    print("Creating Product ID to index mapping...")
-    df_gnn = df_gnn.sort_values(by=ID_COL_GNN_PROD).reset_index(drop=True) # Ordenar por ID
-    product_id_to_index = {str(prod_id): index for index, prod_id in enumerate(df_gnn[ID_COL_GNN_PROD])} # Garantir string
+    # --- CÓDIGO ORIGINAL (COMENTADO OU REMOVIDO) ---
+    # print("Creating Product ID to index mapping...")
+    # df_gnn = df_gnn.sort_values(by=ID_COL_GNN_PROD).reset_index(drop=True) # Ordenar por ID
+    # product_id_to_index = {str(prod_id): index for index, prod_id in enumerate(df_gnn[ID_COL_GNN_PROD])} # Garantir string
+    # id_map_path = os.path.join(output_dir_gnn, 'product_id_to_index_map.json')
+    # with open(id_map_path, 'w') as f:
+    #     json.dump(product_id_to_index, f)
+    # print(f"Saved Product ID mapping to {id_map_path}")
+    # --- FIM CÓDIGO ORIGINAL ---
+
+    # --- NOVO CÓDIGO PARA EXTRAIR ID NUMÉRICO ---
+    print("Creating Product ID to index mapping (Extracting numeric IDs from GID)...")
+    df_gnn = df_gnn.sort_values(by=ID_COL_GNN_PROD).reset_index(drop=True) # Ordenar por ID original (GID)
+
+    product_id_to_index = {}
+    skipped_invalid_ids = 0
+    processed_ids = set() # Para verificar duplicados após extração
+
+    for index, gid_str in enumerate(df_gnn[ID_COL_GNN_PROD]):
+        numeric_id = None
+        original_gid_for_error = gid_str # Guardar para logging
+
+        # Tenta extrair se for um GID válido
+        if isinstance(gid_str, str) and gid_str.startswith('gid://shopify/Product/'):
+            try:
+                numeric_part = gid_str.split('/')[-1]
+                # Verifica se a parte extraída é realmente numérica
+                if numeric_part.isdigit():
+                    numeric_id = numeric_part
+                else:
+                     print(f"Warning: Extracted non-numeric part '{numeric_part}' from GID '{original_gid_for_error}'. Skipping.")
+            except IndexError:
+                 print(f"Warning: Could not split GID '{original_gid_for_error}' correctly. Skipping.")
+        # Considera o caso onde o ID já pode ser numérico (string ou int/float)
+        elif isinstance(gid_str, (int, float)):
+             numeric_id = str(int(gid_str)) # Converte para string inteira
+        elif isinstance(gid_str, str) and gid_str.isdigit():
+             numeric_id = gid_str # Já é uma string numérica
+
+        # Se um ID numérico foi obtido, adiciona ao mapa (verificando duplicados)
+        if numeric_id:
+            if numeric_id in processed_ids:
+                 print(f"Warning: Duplicate numeric ID '{numeric_id}' found after extraction (from GID '{original_gid_for_error}' or similar). Skipping duplicate entry.")
+                 skipped_invalid_ids += 1
+            else:
+                product_id_to_index[str(numeric_id)] = index # Mapeia o ID NUMÉRICO para o índice da linha
+                processed_ids.add(numeric_id)
+        else:
+            # ID não estava no formato GID esperado nem era numérico
+            print(f"Warning: Skipping invalid or non-extractable product ID format: '{original_gid_for_error}'")
+            skipped_invalid_ids += 1
+
+    if skipped_invalid_ids > 0:
+         print(f"Warning: Skipped a total of {skipped_invalid_ids} invalid or duplicate product IDs during map creation.")
+
     id_map_path = os.path.join(output_dir_gnn, 'product_id_to_index_map.json')
     with open(id_map_path, 'w') as f:
         json.dump(product_id_to_index, f)
-    print(f"Saved Product ID mapping to {id_map_path}")
+    print(f"Saved Product ID mapping (Numeric IDs) to {id_map_path}")
+    print(f"Final map contains {len(product_id_to_index)} valid numeric product IDs mapping to row indices.")
+    # --- FIM NOVO CÓDIGO ---
 
     df_features_gnn = df_gnn.drop(columns=[ID_COL_GNN_PROD])
 
@@ -209,7 +262,8 @@ def run_product_preprocessing(
             return
         if 'product_id' not in df.columns:
             raise ValueError("Input product data must contain a 'product_id' column.")
-        df['product_id'] = df['product_id'].astype(str)
+        # Não converter para string aqui ainda, pois pode ser GID ou numérico no raw
+        # A conversão é feita na função de preparação GNN após a extração
 
     except FileNotFoundError:
         print(f"Error: Input file not found at {input_path}")
@@ -252,7 +306,7 @@ def run_product_preprocessing(
         print("\nPerforming final checks on processed product data...")
         if 'product_id' not in processed_df.columns:
             raise ValueError("'product_id' column lost during processing!")
-        processed_df['product_id'] = processed_df['product_id'].astype(str)
+        # A coluna product_id ainda pode ser GID neste ponto, não converter para str ainda
 
         # Preencher NaNs restantes em colunas numéricas com 0 ANTES de salvar CSV e preparar GNN
         numeric_cols = processed_df.select_dtypes(include=np.number).columns
