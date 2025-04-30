@@ -9,21 +9,25 @@ import sys
 import json
 from sklearn.preprocessing import RobustScaler
 import joblib
+from tqdm import tqdm # Import tqdm if not already present in extract_interactions...
 
-# --- Import the core processing function ---
+# --- Import the core processing function and utils ---
 try:
     # Relative import from the sub-package
     from .event_processor.process_event_interactions import extract_interactions_from_events
     # Import the final columns definition as well
     from .event_processor.process_event_interactions import FINAL_OUTPUT_COLUMNS as FINAL_INTERACTION_COLUMNS_CSV
+    # Import utils if needed by _prepare_gnn_edge_data (not strictly needed here but good practice)
+    from .utils import safe_json_parse
 except ImportError:
     # Fallback
-    print("Warning: Could not use relative imports for event processor. Attempting direct import.")
+    print("Warning: Could not use relative imports for event processor/utils. Attempting direct import.")
     try:
         from event_processor.process_event_interactions import extract_interactions_from_events
         from event_processor.process_event_interactions import FINAL_OUTPUT_COLUMNS as FINAL_INTERACTION_COLUMNS_CSV
+        from utils import safe_json_parse # Assuming utils.py is in the parent directory
     except ModuleNotFoundError as e:
-         print(f"Import Error: {e}. Failed to import event_processor module.")
+         print(f"Import Error: {e}. Failed to import event_processor module or utils.")
          sys.exit(1)
 
 # --- Configurações GNN ---
@@ -44,7 +48,7 @@ TIMESTAMP_COL_GNN = 'timestamp'
 # --- Fim Configurações GNN ---
 
 
-# --- Função Auxiliar para Preparação GNN (MODIFICADA com DEBUG e timestamp simplificado) ---
+# --- Função Auxiliar para Preparação GNN (MODIFICADA com DEBUG e timestamp robusto) ---
 def _prepare_gnn_edge_data(
     interactions_df: pd.DataFrame, # Recebe o DF já processado
     person_id_map_path: str,
@@ -55,7 +59,7 @@ def _prepare_gnn_edge_data(
     """
     Internal function to prepare and save GNN-ready edge data from the processed interactions df.
     Includes debugging step to save removed interactions and check saved npz files.
-    Uses simplified timestamp handling assuming CSV is pre-processed.
+    Uses robust two-pass timestamp handling assuming CSV might be reloaded as strings.
     """
     print(f"\n--- Preparing Edge Data for GNN ---")
     print(f"Person ID map: {person_id_map_path}")
@@ -137,39 +141,95 @@ def _prepare_gnn_edge_data(
         print("\nDEBUG: Value counts for 'relation' column after mapping:")
         print(df_gnn['relation'].value_counts())
 
-        # --- VERSÃO SIMPLIFICADA Timestamp Handling ---
+        # --- DEBUG PRINT ANTES DA CONVERSÃO DE TIMESTAMP ---
+        print("\nDEBUG (inside _prepare_gnn_edge_data): Checking timestamp dtype BEFORE conversion attempt:")
+        if TIMESTAMP_COL_GNN in df_gnn.columns:
+            print(df_gnn[TIMESTAMP_COL_GNN].dtype)
+            print("Sample timestamps BEFORE conversion:")
+            print(df_gnn[TIMESTAMP_COL_GNN].head(10).to_string())
+            print(df_gnn[TIMESTAMP_COL_GNN].tail(10).to_string())
+        else:
+            print(f"'{TIMESTAMP_COL_GNN}' column not found before conversion attempt!")
+        # --- FIM DEBUG PRINT ---
+
+        # --- VERSÃO ROBUSTA Timestamp Handling (Two-Pass) ---
         print("Ensuring timestamp column is datetime and sorting...")
-        # Check if the column is already datetime (it should be from the previous step)
+        if TIMESTAMP_COL_GNN not in df_gnn.columns:
+             print(f"Error: Timestamp column '{TIMESTAMP_COL_GNN}' missing. Cannot proceed.")
+             return # Ou raise error
+
+        # Aplicar a lógica two-pass diretamente aqui
         if not pd.api.types.is_datetime64_any_dtype(df_gnn[TIMESTAMP_COL_GNN]):
-            print(f"Warning: Column '{TIMESTAMP_COL_GNN}' is not datetime type after loading CSV. Attempting conversion (this shouldn't happen)...")
-            df_gnn[TIMESTAMP_COL_GNN] = pd.to_datetime(df_gnn[TIMESTAMP_COL_GNN], errors='coerce', utc=True)
-        # Ensure it's UTC aware if it is datetime
-        elif pd.api.types.is_datetime64_any_dtype(df_gnn[TIMESTAMP_COL_GNN]):
-             if df_gnn[TIMESTAMP_COL_GNN].dt.tz is None:
-                  print(f"Warning: Column '{TIMESTAMP_COL_GNN}' is datetime but timezone naive. Localizing to UTC...")
-                  try:
-                      df_gnn[TIMESTAMP_COL_GNN] = df_gnn[TIMESTAMP_COL_GNN].dt.tz_localize('UTC', ambiguous='NaT', nonexistent='NaT')
-                  except Exception as tz_err:
-                       print(f"Error localizing timezone: {tz_err}. NaTs might be introduced.")
-             elif str(df_gnn[TIMESTAMP_COL_GNN].dt.tz) != 'UTC':
-                  print(f"Warning: Column '{TIMESTAMP_COL_GNN}' has timezone {df_gnn[TIMESTAMP_COL_GNN].dt.tz}. Converting to UTC...")
-                  df_gnn[TIMESTAMP_COL_GNN] = df_gnn[TIMESTAMP_COL_GNN].dt.tz_convert('UTC')
+            print(f"Warning: Column '{TIMESTAMP_COL_GNN}' is not datetime type. Attempting robust conversion...")
+            original_timestamps_f4 = df_gnn[TIMESTAMP_COL_GNN].astype(str).str.strip()
+            format_pass1_f4 = '%Y-%m-%d %H:%M:%S.%f%z'
+            format_pass2_f4 = '%Y-%m-%d %H:%M:%S%z'
+
+            print(f"  Attempting conversion with format 1: {format_pass1_f4}")
+            converted_pass1_f4 = pd.to_datetime(original_timestamps_f4, format=format_pass1_f4, errors='coerce', utc=True)
+            failures_pass1_mask_f4 = converted_pass1_f4.isna()
+            num_failures_pass1_f4 = failures_pass1_mask_f4.sum()
+            print(f"  Pass 1 failed for {num_failures_pass1_f4} rows.")
+
+            converted_pass2_f4 = converted_pass1_f4.copy()
+            if num_failures_pass1_f4 > 0:
+                print(f"  Attempting conversion with format 2: {format_pass2_f4} on failed rows...")
+                converted_pass2_f4[failures_pass1_mask_f4] = pd.to_datetime(
+                    original_timestamps_f4[failures_pass1_mask_f4],
+                    format=format_pass2_f4,
+                    errors='coerce',
+                    utc=True
+                )
+                num_failures_pass2_f4 = converted_pass2_f4.isna().sum()
+                print(f"  Total NaNs after both passes: {num_failures_pass2_f4}")
+                if num_failures_pass2_f4 < num_failures_pass1_f4:
+                     print(f"  Pass 2 successfully converted {num_failures_pass1_f4 - num_failures_pass2_f4} timestamps.")
+            else:
+                print("  No failures in Pass 1, skipping Pass 2.")
+                num_failures_pass2_f4 = 0
+
+            df_gnn[TIMESTAMP_COL_GNN] = converted_pass2_f4 # Assign the result back
+        else:
+            print(f"Column '{TIMESTAMP_COL_GNN}' is already datetime type. Verifying timezone...")
+            # Ensure it's UTC aware if it is datetime
+            if df_gnn[TIMESTAMP_COL_GNN].dt.tz is None:
+                print(f"Warning: Column '{TIMESTAMP_COL_GNN}' is datetime but timezone naive. Localizing to UTC...")
+                try:
+                    df_gnn[TIMESTAMP_COL_GNN] = df_gnn[TIMESTAMP_COL_GNN].dt.tz_localize('UTC', ambiguous='NaT', nonexistent='NaT')
+                except Exception as tz_err:
+                    print(f"Error localizing timezone: {tz_err}. NaTs might be introduced.")
+            elif str(df_gnn[TIMESTAMP_COL_GNN].dt.tz) != 'UTC':
+                print(f"Warning: Column '{TIMESTAMP_COL_GNN}' has timezone {df_gnn[TIMESTAMP_COL_GNN].dt.tz}. Converting to UTC...")
+                df_gnn[TIMESTAMP_COL_GNN] = df_gnn[TIMESTAMP_COL_GNN].dt.tz_convert('UTC')
 
         # Drop rows where timestamp became NaT AFTER the potential conversions above
         initial_rows_before_ts_dropna = len(df_gnn)
         df_gnn.dropna(subset=[TIMESTAMP_COL_GNN], inplace=True)
         rows_dropped_ts = initial_rows_before_ts_dropna - len(df_gnn)
         if rows_dropped_ts > 0:
-             print(f"Dropped {rows_dropped_ts} interactions due to NaT timestamps during final check/conversion.") # Updated log
+             print(f"Dropped {rows_dropped_ts} interactions due to NaT timestamps during final check/conversion.")
+        else:
+             print("No rows dropped due to NaT timestamps after robust conversion.")
 
         if df_gnn.empty:
-             print("No valid interactions remaining after final timestamp check. Skipping GNN edge generation.") # Updated log
+             print("No valid interactions remaining after final timestamp check. Skipping GNN edge generation.")
              return
+        # --- FIM Timestamp Handling Robusto ---
+
+        # --- DEBUG PRINT DEPOIS DA CONVERSÃO DE TIMESTAMP ---
+        print("\nDEBUG (inside _prepare_gnn_edge_data): Checking timestamp dtype AFTER conversion attempt:")
+        if TIMESTAMP_COL_GNN in df_gnn.columns:
+            print(df_gnn[TIMESTAMP_COL_GNN].dtype)
+            print("Sample timestamps AFTER conversion:")
+            print(df_gnn[TIMESTAMP_COL_GNN].head(10).to_string())
+            print(df_gnn[TIMESTAMP_COL_GNN].tail(10).to_string())
+        else:
+            print(f"'{TIMESTAMP_COL_GNN}' column not found AFTER conversion attempt!")
+        # --- FIM DEBUG PRINT ---
 
         # Now sort by the verified timestamp column
+        print(f"Sorting {len(df_gnn)} interactions by timestamp...")
         df_gnn = df_gnn.sort_values(by=TIMESTAMP_COL_GNN)
-        print(f"Sorted {len(df_gnn)} interactions by timestamp.")
-        # --- FIM Timestamp Handling Simplificado ---
 
         # Divisão Temporal
         print("Performing temporal split...")
@@ -283,14 +343,11 @@ def _prepare_gnn_edge_data(
 
             # Salvar edge_index (estrutura do grafo)
             edge_index_path = os.path.join(split_output_dir, 'edge_index.npz')
-            # --- INÍCIO DEBUG ADICIONAL GRAVAÇÃO NPZ ---
             print(f"    DEBUG: Dictionary keys intended for edge_index.npz in split '{split}': {list(edge_index_dict.keys())}")
             print(f"    DEBUG: Dictionary intended for edge_index.npz has {len(edge_index_dict)} items.")
-            # --- FIM DEBUG ADICIONAL GRAVAÇÃO NPZ ---
             try:
                 np.savez(edge_index_path, **edge_index_dict)
                 print(f"    Successfully called np.savez for edge_index '{edge_index_path}'.")
-                # --- INÍCIO DEBUG PÓS-SAVE ---
                 try:
                     reloaded_npz = np.load(edge_index_path)
                     keys_actually_saved = list(reloaded_npz.files)
@@ -300,19 +357,13 @@ def _prepare_gnn_edge_data(
                          print(f"    ERROR DEBUG: Mismatch! Intended to save {len(edge_index_dict)} keys but file contains {len(keys_actually_saved)}.")
                          intended_keys = set(edge_index_dict.keys())
                          missing_keys = intended_keys - set(keys_actually_saved)
-                         if missing_keys:
-                              print(f"     Missing keys: {missing_keys}")
-
+                         if missing_keys: print(f"     Missing keys: {missing_keys}")
                 except Exception as e_reload:
                     print(f"    ERROR DEBUG: Failed to reload npz immediately after saving: {e_reload}")
-                # --- FIM DEBUG PÓS-SAVE ---
-
             except Exception as e_savez:
                  print(f"    ERROR during np.savez call for edge_index: {e_savez}")
                  traceback.print_exc()
-
             print(f"    Saving edge indices finished for {edge_index_path}")
-
 
             # Salvar features de aresta (se preparadas)
             if include_edge_features and edge_features_split_dict:
@@ -328,7 +379,6 @@ def _prepare_gnn_edge_data(
                     except Exception as e_savez_feat:
                          print(f"    ERROR during np.savez call for edge_features: {e_savez_feat}")
                          traceback.print_exc()
-
 
         print("--- GNN Edge Data Preparation Finished ---")
 
@@ -383,6 +433,7 @@ def run_event_preprocessing(
     # --- Process Events to Extract Interactions ---
     try:
         print("\nExtracting and processing interactions...")
+        # This function now handles the two-pass timestamp conversion internally
         interactions_df = extract_interactions_from_events(event_df)
     except Exception as e:
         print(f"Error during event interaction extraction: {e}")
@@ -402,6 +453,7 @@ def run_event_preprocessing(
             print(f"\nEnsured intermediate output directory exists: {output_dir_csv}")
             print("\nData types in final DataFrame before save:")
             print(interactions_df.info())
+            # Save with na_rep='' to handle potential pandas NA types correctly in CSV
             interactions_df.to_csv(output_path, index=False, na_rep='')
             print(f"Successfully saved intermediate processed event interactions to: {output_path}")
 
@@ -415,16 +467,18 @@ def run_event_preprocessing(
     # This step is only called explicitly in Stage 4 of run_preprocessing.py
     # The call here might be considered redundant in the 'full_pipeline' flow,
     # but allows running this script standalone to generate CSV + attempt GNN prep (if maps exist).
+    # NOTE: The _prepare_gnn_edge_data function now handles robust timestamp parsing internally.
     try:
         if not interactions_df.empty:
+            # Check if maps exist before calling the GNN prep function
             if not os.path.exists(person_id_map_path):
                  print(f"Warning/Error: Cannot prepare GNN edges YET. Person ID map not found at: {person_id_map_path}")
             elif not os.path.exists(product_id_map_path):
                  print(f"Error: Cannot prepare GNN edges. Product ID map not found at: {product_id_map_path}")
             else:
-                 # Call the GNN preparation function (with debug logic included)
+                 # Call the GNN preparation function (with robust timestamp logic included)
                  _prepare_gnn_edge_data(
-                     interactions_df, # Pass the extracted DF
+                     interactions_df, # Pass the extracted DF (timestamps should be correct)
                      person_id_map_path,
                      product_id_map_path,
                      edge_gnn_output_dir,

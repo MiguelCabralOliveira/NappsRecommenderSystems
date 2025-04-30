@@ -216,8 +216,7 @@ def main():
                 print("="*10 + f" STAGE 3: Finished Person (Success: {person_success}) " + "="*10)
                 if not person_success and mode == 'person': sys.exit(1)
 
-        # STAGE 4: Finalizar Preparação GNN de Eventos (Depende de Person e Product maps)
-        # Só executa se as etapas anteriores foram bem-sucedidas E se eventos era parte do modo.
+        # STAGE 4: Finalizar Preparação GNN de Eventos (Depende de Person e Product maps)s
         if run_events and product_success and person_success and event_csv_success:
             print("\n" + "="*10 + " STAGE 4: Finalizing GNN Edge Preparation " + "="*10)
             step_success = False
@@ -234,14 +233,14 @@ def main():
                 interactions_df_final = pd.read_csv(
                     paths['event_processed_csv'],
                     low_memory=False,
-                    parse_dates=['timestamp'] # Adicionado parse_dates
+                    parse_dates=['timestamp'] # <--- ADICIONA ESTA LINHA
                 )
                 # --- FIM DA CORREÇÃO ---
 
                 # Verifica se o parse_dates funcionou (opcional mas bom)
                 if not pd.api.types.is_datetime64_any_dtype(interactions_df_final['timestamp']):
-                     print("WARNING: parse_dates in run_preprocessing (Stage 4) did not result in datetime dtype!")
-                     # Considerar tentar converter aqui como fallback se estritamente necessário
+                    print("WARNING: parse_dates in run_preprocessing (Stage 4) did not result in datetime dtype!")
+                    # Considerar tentar converter aqui como fallback se estritamente necessário
 
                 # Chamar a função interna de preparação GNN diretamente
                 print("Calling _prepare_gnn_edge_data...")

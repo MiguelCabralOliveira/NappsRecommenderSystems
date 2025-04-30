@@ -52,9 +52,9 @@ class HeteroGNNLinkPredictor(nn.Module):
             # For HeteroConv, specify input feature sizes as (-1, -1) to infer from data
             # Output size is hidden_channels
             conv_dict = {
-                edge_type: SAGEConv((-1, -1), hidden_channels, aggr='mean', add_self_loops=False)
-                for edge_type in edge_types
-            }
+            edge_type: SAGEConv((-1, -1), hidden_channels, aggr='mean')
+            for edge_type in edge_types
+        }
 
             # Wrap the SAGEConvs in HeteroConv
             # aggr='sum' aggregates results for node types receiving from multiple edge types

@@ -244,7 +244,7 @@ def load_hetero_graph_data(gnn_data_dir: str, device: torch.device = torch.devic
                 continue
 
             edge_index = torch.from_numpy(edge_indices_npz[edge_key_str]).long().to(device)
-            data[edge_type].edge_index = edge_index
+            data[edge_type]['edge_index'] = edge_index
             print(f"      Loaded edge index for {edge_type} ({edge_index.shape[1]} edges).")
 
         # Load edge features (if they exist for this split)

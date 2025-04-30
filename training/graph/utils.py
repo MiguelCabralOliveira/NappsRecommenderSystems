@@ -24,15 +24,22 @@ def setup_logging(log_dir: str, log_filename: str = "training.log"):
     os.makedirs(log_dir, exist_ok=True)
     log_path = os.path.join(log_dir, log_filename)
 
+    # Find existing handlers to avoid adding duplicates if called multiple times
+    # (Optional but good practice if the script might call setup_logging multiple times)
+    root_logger = logging.getLogger()
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+        handler.close()
+
     logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(message)s",
+        level=logging.DEBUG, # <--- GARANTE QUE ESTÁ DEBUG
+        format="%(asctime)s [%(levelname)s] (%(module)s:%(lineno)d) %(message)s", # Formato útil
         handlers=[
-            logging.FileHandler(log_path),
-            logging.StreamHandler() # Log to console as well
+            logging.FileHandler(log_path, mode='w'), # Sobrescreve o log a cada execução
+            logging.StreamHandler() # Log para consola
         ]
     )
-    logging.info("Logging setup complete.")
+    logging.info("Logging setup complete (Level: DEBUG).") # Mensagem atualizada
     logging.info(f"Logs will be saved to: {log_path}")
 
 def save_config(args, output_dir: str):
