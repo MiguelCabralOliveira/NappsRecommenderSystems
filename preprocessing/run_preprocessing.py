@@ -31,7 +31,7 @@ EDGE_DATA_DIR = 'edges'
 def is_sagemaker_environment():
     return os.path.exists('/opt/ml/processing/')
 
-# --- Path Management (sem alterações desde a última versão) ---
+# --- Path Management ---
 def get_data_paths(shop_id: str) -> dict:
     """Determines input/output paths for raw, intermediate, and GNN data."""
     paths = {}
@@ -71,7 +71,7 @@ def get_data_paths(shop_id: str) -> dict:
 
     # Criação dos diretórios de output
     os.makedirs(base_output_dir_intermediate, exist_ok=True)
-    os.makedirs(os.path.join(base_output_dir_intermediate, "models"), exist_ok=True)
+    os.makedirs(os.path.join(base_output_dir_intermediate, "models"), exist_ok=True) # Para modelos TF-IDF, etc.
     os.makedirs(paths['person_gnn_output_dir'], exist_ok=True)
     os.makedirs(paths['product_gnn_output_dir'], exist_ok=True)
     os.makedirs(paths['edge_gnn_output_dir'], exist_ok=True)
@@ -156,8 +156,9 @@ def main():
 
         # STAGE 2: Events (CSV Extraction Only initially)
         if run_events:
-            if not product_success: # Precisa do sucesso do produto para continuar (embora não use o mapa ainda)
+            if not product_success: # Dependência lógica do mapa de produto
                  print("\n" + "="*10 + " STAGE 2: Skipping Event CSV Extraction (Product Stage Failed) " + "="*10)
+                 event_csv_success = False # Marcar como falha se o Stage 1 falhou
             else:
                 print("\n" + "="*10 + " STAGE 2: Event Interaction Extraction (CSV) " + "="*10)
                 step_success = False
@@ -171,7 +172,7 @@ def main():
                         paths['event_processed_csv'], # Salva o CSV intermediário
                         paths['person_id_map_path'], # Passa o caminho, mesmo que ainda não exista
                         paths['product_id_map_path'], # Passa o caminho (deve existir)
-                        paths['edge_gnn_output_dir'], # Diretório de saída GNN
+                        paths['edge_gnn_output_dir'], # Diretório de saída GNN (tentativa falhará)
                         include_edge_features # Flag
                     )
                     # Verificar se o CSV foi realmente criado
@@ -189,6 +190,7 @@ def main():
         if run_person:
             if not event_csv_success: # Precisa que o CSV de eventos exista
                  print("\n" + "="*10 + " STAGE 3: Skipping Person (Event CSV Extraction Failed) " + "="*10)
+                 person_success = False # Marcar como falha
             else:
                 print("\n" + "="*10 + " STAGE 3: Person Preprocessing & GNN Prep " + "="*10)
                 step_success = False
@@ -227,12 +229,24 @@ def main():
 
                 # Carregar o DF de interações já processado
                 print(f"Loading interactions from {paths['event_processed_csv']} for final GNN edge prep...")
-                interactions_df_final = pd.read_csv(paths['event_processed_csv'], low_memory=False)
+                # --- CORREÇÃO APLICADA AQUI ---
+                # Ler o CSV especificando para fazer parse da coluna timestamp
+                interactions_df_final = pd.read_csv(
+                    paths['event_processed_csv'],
+                    low_memory=False,
+                    parse_dates=['timestamp'] # Adicionado parse_dates
+                )
+                # --- FIM DA CORREÇÃO ---
+
+                # Verifica se o parse_dates funcionou (opcional mas bom)
+                if not pd.api.types.is_datetime64_any_dtype(interactions_df_final['timestamp']):
+                     print("WARNING: parse_dates in run_preprocessing (Stage 4) did not result in datetime dtype!")
+                     # Considerar tentar converter aqui como fallback se estritamente necessário
 
                 # Chamar a função interna de preparação GNN diretamente
                 print("Calling _prepare_gnn_edge_data...")
                 _prepare_gnn_edge_data(
-                    interactions_df_final,
+                    interactions_df_final, # Passa o DF com timestamps corretos
                     paths['person_id_map_path'],
                     paths['product_id_map_path'],
                     paths['edge_gnn_output_dir'],
@@ -246,13 +260,16 @@ def main():
             print("="*10 + f" STAGE 4: Finished GNN Edge Prep (Success: {event_gnn_prep_success}) " + "="*10)
             # O sucesso geral da etapa 'events' agora depende desta etapa final
             if not event_gnn_prep_success and mode == 'events': sys.exit(1)
+        elif run_events: # Se eventos foi pedido, mas pré-requisitos falharam
+            print("\n" + "="*10 + " STAGE 4: Skipping Final GNN Edge Preparation (Previous Stage(s) Failed) " + "="*10)
+            event_gnn_prep_success = False # Marcar como falha
 
         # Final Status
         end_time = time.time()
         total_seconds = end_time - start_time
         # Sucesso geral depende do modo e do sucesso das etapas *relevantes* e suas dependências
         if mode == 'product': overall_success = product_success
-        elif mode == 'events': overall_success = product_success and event_csv_success and event_gnn_prep_success # Precisa de produto e ambas as partes de eventos
+        elif mode == 'events': overall_success = product_success and event_csv_success and person_success and event_gnn_prep_success # Precisa de tudo para GNN de eventos
         elif mode == 'person': overall_success = product_success and event_csv_success and person_success # Precisa de produto e CSV de eventos
         elif mode in ['all', 'full_pipeline']: overall_success = product_success and event_csv_success and person_success and event_gnn_prep_success # Precisa de tudo
         else: overall_success = False

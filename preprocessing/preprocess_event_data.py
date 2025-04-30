@@ -26,7 +26,7 @@ except ImportError:
          print(f"Import Error: {e}. Failed to import event_processor module.")
          sys.exit(1)
 
-# --- Configurações GNN (Movidas para cá) ---
+# --- Configurações GNN ---
 INTERACTION_TYPE_MAP_GNN = {
     "Product Viewed": "viewed", "Product Wishlisted": "wishlisted", "Product Shared": "shared",
     "Variant Meta Added": "variant_meta_added", "Shopify Checkout Created": "checkout_created",
@@ -44,7 +44,7 @@ TIMESTAMP_COL_GNN = 'timestamp'
 # --- Fim Configurações GNN ---
 
 
-# --- Função Auxiliar para Preparação GNN (Movida para dentro e MODIFICADA com DEBUG) ---
+# --- Função Auxiliar para Preparação GNN (MODIFICADA com DEBUG e timestamp simplificado) ---
 def _prepare_gnn_edge_data(
     interactions_df: pd.DataFrame, # Recebe o DF já processado
     person_id_map_path: str,
@@ -54,7 +54,8 @@ def _prepare_gnn_edge_data(
 ):
     """
     Internal function to prepare and save GNN-ready edge data from the processed interactions df.
-    Includes debugging step to save removed interactions.
+    Includes debugging step to save removed interactions and check saved npz files.
+    Uses simplified timestamp handling assuming CSV is pre-processed.
     """
     print(f"\n--- Preparing Edge Data for GNN ---")
     print(f"Person ID map: {person_id_map_path}")
@@ -95,31 +96,20 @@ def _prepare_gnn_edge_data(
 
         # --- DEBUG: Identificar e Salvar Interações Removidas ---
         print("Identifying interactions to be removed...")
-
-        # Condições de filtro separadas para clareza
         person_match = df_gnn[ID_COL_PERSON_GNN].isin(person_id_map)
         product_match = df_gnn[ID_COL_PRODUCT_GNN].isin(product_id_map)
         type_match = df_gnn[INTERACTION_COL_GNN].isin(INTERACTION_TYPE_MAP_GNN)
-
-        # Máscara para linhas que seriam MANTIDAS
         keep_mask = person_match & product_match & type_match
-        # Máscara para linhas que seriam REMOVIDAS (inverso de keep_mask)
         remove_mask = ~keep_mask
-
         removed_interactions_df = df_gnn[remove_mask].copy()
         num_removed = len(removed_interactions_df)
         print(f"Identified {num_removed} interactions that would be removed by filters.")
-
-        # Adicionar colunas de debug para indicar PORQUÊ foram removidas
         if not removed_interactions_df.empty:
             removed_interactions_df['debug_person_match'] = person_match[remove_mask]
             removed_interactions_df['debug_product_match'] = product_match[remove_mask]
             removed_interactions_df['debug_type_match'] = type_match[remove_mask]
-
-            # Salvar uma amostra (e.g., as primeiras 1000) num ficheiro CSV
-            sample_size = min(1000, num_removed) # Pega até 1000 linhas
+            sample_size = min(1000, num_removed)
             removed_sample_df = removed_interactions_df.head(sample_size)
-            # Usa o output_dir_gnn (passado para a função _prepare_gnn...) para guardar o ficheiro de debug
             debug_output_path = os.path.join(output_dir_gnn, "debug_removed_interactions_sample.csv")
             try:
                 removed_sample_df.to_csv(debug_output_path, index=False)
@@ -128,44 +118,58 @@ def _prepare_gnn_edge_data(
                  print(f"Error saving debug CSV for removed interactions: {e_save}")
         # --- FIM DEBUG ---
 
-        # Filtrar e Mapear IDs (Aplicar a máscara 'keep_mask' calculada acima)
+        # Filtrar e Mapear IDs
         print("Filtering interactions by ID maps and mapping IDs...")
-        df_gnn = df_gnn[keep_mask].copy() # Manter apenas as linhas válidas
+        df_gnn = df_gnn[keep_mask].copy()
         filtered_count = len(df_gnn)
-        removed_count_actual = initial_count - filtered_count # Recalcular só para confirmar
+        removed_count_actual = initial_count - filtered_count
         print(f"Actually removed {removed_count_actual} interactions (should match identified count).")
         print(f"Remaining interactions after filtering: {filtered_count}")
-
         if df_gnn.empty:
             print("No valid interactions remaining after map filtering. Skipping GNN edge generation.")
             return
 
-        # Mapear IDs para índices inteiros (isto só acontece nas linhas mantidas)
         print("Mapping IDs to indices...")
         df_gnn['person_idx'] = df_gnn[ID_COL_PERSON_GNN].map(person_id_map)
         df_gnn['product_idx'] = df_gnn[ID_COL_PRODUCT_GNN].map(product_id_map)
         df_gnn['relation'] = df_gnn[INTERACTION_COL_GNN].map(INTERACTION_TYPE_MAP_GNN)
 
-        # Garantir Timestamp e Ordenar
-        print("Ensuring timestamp format and sorting...")
-        if not pd.api.types.is_datetime64_any_dtype(df_gnn[TIMESTAMP_COL_GNN]):
-             df_gnn[TIMESTAMP_COL_GNN] = pd.to_datetime(df_gnn[TIMESTAMP_COL_GNN], errors='coerce', utc=True)
-        elif df_gnn[TIMESTAMP_COL_GNN].dt.tz is None:
-             df_gnn[TIMESTAMP_COL_GNN] = df_gnn[TIMESTAMP_COL_GNN].dt.tz_localize('UTC', ambiguous='NaT', nonexistent='NaT') # Lidar com NaT
-        else:
-             df_gnn[TIMESTAMP_COL_GNN] = df_gnn[TIMESTAMP_COL_GNN].dt.tz_convert('UTC')
+        print("\nDEBUG: Value counts for 'relation' column after mapping:")
+        print(df_gnn['relation'].value_counts())
 
+        # --- VERSÃO SIMPLIFICADA Timestamp Handling ---
+        print("Ensuring timestamp column is datetime and sorting...")
+        # Check if the column is already datetime (it should be from the previous step)
+        if not pd.api.types.is_datetime64_any_dtype(df_gnn[TIMESTAMP_COL_GNN]):
+            print(f"Warning: Column '{TIMESTAMP_COL_GNN}' is not datetime type after loading CSV. Attempting conversion (this shouldn't happen)...")
+            df_gnn[TIMESTAMP_COL_GNN] = pd.to_datetime(df_gnn[TIMESTAMP_COL_GNN], errors='coerce', utc=True)
+        # Ensure it's UTC aware if it is datetime
+        elif pd.api.types.is_datetime64_any_dtype(df_gnn[TIMESTAMP_COL_GNN]):
+             if df_gnn[TIMESTAMP_COL_GNN].dt.tz is None:
+                  print(f"Warning: Column '{TIMESTAMP_COL_GNN}' is datetime but timezone naive. Localizing to UTC...")
+                  try:
+                      df_gnn[TIMESTAMP_COL_GNN] = df_gnn[TIMESTAMP_COL_GNN].dt.tz_localize('UTC', ambiguous='NaT', nonexistent='NaT')
+                  except Exception as tz_err:
+                       print(f"Error localizing timezone: {tz_err}. NaTs might be introduced.")
+             elif str(df_gnn[TIMESTAMP_COL_GNN].dt.tz) != 'UTC':
+                  print(f"Warning: Column '{TIMESTAMP_COL_GNN}' has timezone {df_gnn[TIMESTAMP_COL_GNN].dt.tz}. Converting to UTC...")
+                  df_gnn[TIMESTAMP_COL_GNN] = df_gnn[TIMESTAMP_COL_GNN].dt.tz_convert('UTC')
+
+        # Drop rows where timestamp became NaT AFTER the potential conversions above
         initial_rows_before_ts_dropna = len(df_gnn)
         df_gnn.dropna(subset=[TIMESTAMP_COL_GNN], inplace=True)
         rows_dropped_ts = initial_rows_before_ts_dropna - len(df_gnn)
         if rows_dropped_ts > 0:
-             print(f"Dropped {rows_dropped_ts} interactions due to NaT timestamps after filtering.")
+             print(f"Dropped {rows_dropped_ts} interactions due to NaT timestamps during final check/conversion.") # Updated log
 
         if df_gnn.empty:
-             print("No valid interactions remaining after timestamp check. Skipping GNN edge generation.")
+             print("No valid interactions remaining after final timestamp check. Skipping GNN edge generation.") # Updated log
              return
 
+        # Now sort by the verified timestamp column
         df_gnn = df_gnn.sort_values(by=TIMESTAMP_COL_GNN)
+        print(f"Sorted {len(df_gnn)} interactions by timestamp.")
+        # --- FIM Timestamp Handling Simplificado ---
 
         # Divisão Temporal
         print("Performing temporal split...")
@@ -247,7 +251,9 @@ def _prepare_gnn_edge_data(
             edge_index_dict = {}
             edge_features_split_dict = {}
 
+            print(f"\nDEBUG: Processing groups for split '{split}':")
             for relation, group in grouped:
+                print(f"  -> Processing relation group: {relation}, Number of edges: {len(group)}")
                 edge_type = ('Person', relation, 'Product')
                 src = group['person_idx'].values
                 dst = group['product_idx'].values
@@ -256,7 +262,7 @@ def _prepare_gnn_edge_data(
                 if include_edge_features and split in edge_features_data:
                     edge_features_relation = {}
                     group_indices = group.index
-                    original_indices_in_split = df_split.index.get_indexer(group_indices) # Get positions in the split df
+                    original_indices_in_split = df_split.index.get_indexer(group_indices)
 
                     if 'numeric' in edge_features_data[split]:
                          numeric_feats_all = edge_features_data[split]['numeric']
@@ -275,10 +281,40 @@ def _prepare_gnn_edge_data(
                     if edge_features_relation:
                          edge_features_split_dict[str(edge_type)] = edge_features_relation
 
+            # Salvar edge_index (estrutura do grafo)
             edge_index_path = os.path.join(split_output_dir, 'edge_index.npz')
-            np.savez(edge_index_path, **edge_index_dict)
-            print(f"    Saved edge indices for {len(edge_index_dict)} relation types to {edge_index_path}")
+            # --- INÍCIO DEBUG ADICIONAL GRAVAÇÃO NPZ ---
+            print(f"    DEBUG: Dictionary keys intended for edge_index.npz in split '{split}': {list(edge_index_dict.keys())}")
+            print(f"    DEBUG: Dictionary intended for edge_index.npz has {len(edge_index_dict)} items.")
+            # --- FIM DEBUG ADICIONAL GRAVAÇÃO NPZ ---
+            try:
+                np.savez(edge_index_path, **edge_index_dict)
+                print(f"    Successfully called np.savez for edge_index '{edge_index_path}'.")
+                # --- INÍCIO DEBUG PÓS-SAVE ---
+                try:
+                    reloaded_npz = np.load(edge_index_path)
+                    keys_actually_saved = list(reloaded_npz.files)
+                    reloaded_npz.close()
+                    print(f"    DEBUG: Keys found immediately after reloading '{edge_index_path}': {keys_actually_saved}")
+                    if len(keys_actually_saved) != len(edge_index_dict):
+                         print(f"    ERROR DEBUG: Mismatch! Intended to save {len(edge_index_dict)} keys but file contains {len(keys_actually_saved)}.")
+                         intended_keys = set(edge_index_dict.keys())
+                         missing_keys = intended_keys - set(keys_actually_saved)
+                         if missing_keys:
+                              print(f"     Missing keys: {missing_keys}")
 
+                except Exception as e_reload:
+                    print(f"    ERROR DEBUG: Failed to reload npz immediately after saving: {e_reload}")
+                # --- FIM DEBUG PÓS-SAVE ---
+
+            except Exception as e_savez:
+                 print(f"    ERROR during np.savez call for edge_index: {e_savez}")
+                 traceback.print_exc()
+
+            print(f"    Saving edge indices finished for {edge_index_path}")
+
+
+            # Salvar features de aresta (se preparadas)
             if include_edge_features and edge_features_split_dict:
                 edge_features_path = os.path.join(split_output_dir, 'edge_features.npz')
                 save_dict = {}
@@ -286,8 +322,13 @@ def _prepare_gnn_edge_data(
                     if 'numeric' in features: save_dict[f"{edge_type_str}_numeric"] = features['numeric']
                     if 'categorical' in features: save_dict[f"{edge_type_str}_categorical"] = features['categorical']
                 if save_dict:
-                    np.savez(edge_features_path, **save_dict)
-                    print(f"    Saved edge features to {edge_features_path}")
+                    try:
+                        np.savez(edge_features_path, **save_dict)
+                        print(f"    Saved edge features to {edge_features_path}")
+                    except Exception as e_savez_feat:
+                         print(f"    ERROR during np.savez call for edge_features: {e_savez_feat}")
+                         traceback.print_exc()
+
 
         print("--- GNN Edge Data Preparation Finished ---")
 
@@ -303,11 +344,10 @@ def _prepare_gnn_edge_data(
 # --- Fim Função Auxiliar GNN ---
 
 
-# --- Função Principal Atualizada ---
+# --- Função Principal ---
 def run_event_preprocessing(
     input_path: str,
     output_path: str, # Caminho para o CSV intermediário
-    # --- Novos argumentos para GNN ---
     person_id_map_path: str,
     product_id_map_path: str,
     edge_gnn_output_dir: str,
@@ -316,14 +356,6 @@ def run_event_preprocessing(
     """
     Orchestrates the preprocessing of event data to extract interactions,
     saves the intermediate CSV, AND prepares/saves GNN-ready edge data.
-
-    Args:
-        input_path: Path to the filtered event data CSV.
-        output_path: Path to save the intermediate processed event interactions CSV.
-        person_id_map_path: Path to the person ID -> index map JSON file.
-        product_id_map_path: Path to the product ID -> index map JSON file.
-        edge_gnn_output_dir: Directory to save GNN-ready edge data (train/valid/test splits).
-        include_edge_features: Whether to prepare and save edge features.
     """
     print(f"\n--- Starting Event Data Preprocessing Orchestration ---")
     print(f"Input file: {input_path}")
@@ -333,7 +365,7 @@ def run_event_preprocessing(
     print(f"GNN Edges Output Dir: {edge_gnn_output_dir}")
     print(f"Include Edge Features: {include_edge_features}")
 
-    interactions_df = pd.DataFrame() # Inicializar
+    interactions_df = pd.DataFrame() # Initialize
 
     # --- Load Raw Event Data ---
     try:
@@ -352,11 +384,10 @@ def run_event_preprocessing(
     try:
         print("\nExtracting and processing interactions...")
         interactions_df = extract_interactions_from_events(event_df)
-        # Não fazer mais verificações de duplicatas aqui, deixa para a fase GNN
     except Exception as e:
         print(f"Error during event interaction extraction: {e}")
         traceback.print_exc()
-        raise # Parar se a extração falhar
+        raise # Stop if extraction fails
 
     # --- Save Intermediate Processed Interactions CSV ---
     try:
@@ -364,41 +395,36 @@ def run_event_preprocessing(
              print("\nInteraction DataFrame is empty after processing. Saving empty intermediate file.")
              output_dir_csv = os.path.dirname(output_path)
              if output_dir_csv: os.makedirs(output_dir_csv, exist_ok=True)
-             pd.DataFrame(columns=FINAL_INTERACTION_COLUMNS_CSV).to_csv(output_path, index=False, na_rep='') # Adiciona na_rep
+             pd.DataFrame(columns=FINAL_INTERACTION_COLUMNS_CSV).to_csv(output_path, index=False, na_rep='')
         else:
             output_dir_csv = os.path.dirname(output_path)
             os.makedirs(output_dir_csv, exist_ok=True)
             print(f"\nEnsured intermediate output directory exists: {output_dir_csv}")
-            # Verifica tipos antes de salvar
             print("\nData types in final DataFrame before save:")
             print(interactions_df.info())
-            interactions_df.to_csv(output_path, index=False, na_rep='') # Adiciona na_rep
+            interactions_df.to_csv(output_path, index=False, na_rep='')
             print(f"Successfully saved intermediate processed event interactions to: {output_path}")
 
     except Exception as e:
         print(f"Error saving intermediate event interactions CSV to '{output_path}': {e}")
         traceback.print_exc()
-        # Considerar parar aqui
+        # Consider stopping here
         # raise
 
     # --- Preparar e Salvar Dados de Aresta para GNN ---
-    # Usa o 'interactions_df' que foi salvo no CSV intermediário
-    # Este passo só é chamado explicitamente no Estágio 4 do run_preprocessing.py
-    # A chamada aqui dentro pode ser considerada redundante no fluxo 'full_pipeline',
-    # mas permite correr este script isoladamente para gerar CSV + GNN (se os mapas existirem).
+    # This step is only called explicitly in Stage 4 of run_preprocessing.py
+    # The call here might be considered redundant in the 'full_pipeline' flow,
+    # but allows running this script standalone to generate CSV + attempt GNN prep (if maps exist).
     try:
-        # Verifica se os mapas de ID existem ANTES de chamar a função
-        # Adiciona verificação se interactions_df não está vazio ANTES de chamar
         if not interactions_df.empty:
             if not os.path.exists(person_id_map_path):
-                 # Esta mensagem é normal no Estágio 2, mas um erro se este script for chamado isoladamente depois do Estágio 3
                  print(f"Warning/Error: Cannot prepare GNN edges YET. Person ID map not found at: {person_id_map_path}")
             elif not os.path.exists(product_id_map_path):
                  print(f"Error: Cannot prepare GNN edges. Product ID map not found at: {product_id_map_path}")
             else:
-                 # Chama a função de preparação GNN (com a lógica de debug incluída)
+                 # Call the GNN preparation function (with debug logic included)
                  _prepare_gnn_edge_data(
-                     interactions_df, # Passa o DF extraído
+                     interactions_df, # Pass the extracted DF
                      person_id_map_path,
                      product_id_map_path,
                      edge_gnn_output_dir,
@@ -416,12 +442,11 @@ def run_event_preprocessing(
     print(f"--- Finished Event Data Preprocessing Orchestration (including GNN prep attempt) ---")
 
 
-# --- Command Line Execution Logic (Atualizado) ---
+# --- Command Line Execution Logic ---
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Preprocess event data, extract interactions, and prepare GNN edge data.')
     parser.add_argument('--input', required=True, help='Path to the input person_event_data_filtered.csv file.')
     parser.add_argument('--output-csv', required=True, help='Path to save the intermediate event_interactions_processed.csv file.')
-    # --- Novos argumentos ---
     parser.add_argument('--person-map', required=True, help='Path to the person_id_to_index_map.json file.')
     parser.add_argument('--product-map', required=True, help='Path to the product_id_to_index_map.json file.')
     parser.add_argument('--output-gnn-dir', required=True, help='Directory to save GNN-ready edge data (train/valid/test splits).')

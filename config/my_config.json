@@ -1,0 +1,7 @@
+{
+    "lr": 0.0005,
+    "epochs": 100,
+    "hidden_channels": 256,
+    "node_emb_dim": 256,
+    "link_pred_edge": "viewed"
+  }
