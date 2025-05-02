@@ -256,10 +256,9 @@ class NodeFeatureProcessor(nn.Module):
 
 
 # --- Training and Evaluation Functions ---
-
 def train_epoch(model, node_feature_processor, loader, optimizer, device, edge_type_tuple):
     model.train()
-    node_feature_processor.train() # Set processor to train mode too
+    node_feature_processor.train()
     total_loss = total_examples = 0
     batch_num = 0
     for batch in loader:
@@ -268,27 +267,36 @@ def train_epoch(model, node_feature_processor, loader, optimizer, device, edge_t
         optimizer.zero_grad()
 
         try:
-            # 1. Process raw node features
+            # 1. Process features
             initial_x_dict = node_feature_processor(batch)
 
-            # 2. Run GNN
+            # 2. Get embeddings
             h_dict = model(initial_x_dict, batch.edge_index_dict)
 
-            # 3. Predict scores
-            # Get edge store for the target type within the batch
-            batch_edge_store = batch.get(edge_type_tuple, None)
+            # --- CORREÇÃO FINAL ---
+            # Tenta obter a store do tipo de aresta alvo
+            # O .get() retorna None se a chave não existir de todo (improvável mas seguro)
+            batch_edge_store = batch.get(edge_type_tuple)
+
+            # Verifica se a store existe E se contém os labels de supervisão
             if batch_edge_store is None or 'edge_label_index' not in batch_edge_store or 'edge_label' not in batch_edge_store:
-                 logging.warning(f"Skipping training batch {batch_num} - missing required edge data (label/index) for {edge_type_tuple}.")
-                 continue
-            # Additional check: ensure edge_label_index is not empty
-            if batch_edge_store['edge_label_index'].shape[1] == 0:
-                 logging.warning(f"Skipping training batch {batch_num} - edge_label_index for {edge_type_tuple} is empty.")
+                 logging.warning(f"Skipping training batch {batch_num} - Missing target store or supervision data for {edge_type_tuple}. Store keys: {batch_edge_store.keys() if batch_edge_store else 'None'}")
                  continue
 
-            pred_scores = model.predict_link_score(h_dict, batch_edge_store['edge_label_index'], edge_type_tuple)
+            # Verifica se os labels não estão vazios (embora o loader não deva retornar vazio)
+            if batch_edge_store.edge_label_index.shape[1] == 0:
+                 logging.warning(f"Skipping training batch {batch_num} - Supervision 'edge_label_index' for {edge_type_tuple} is empty.")
+                 continue
+
+            supervision_edge_label_index = batch_edge_store.edge_label_index
+            supervision_edge_label = batch_edge_store.edge_label
+            # --- FIM CORREÇÃO FINAL ---
+
+            # 3. Predict scores
+            pred_scores = model.predict_link_score(h_dict, supervision_edge_label_index, edge_type_tuple)
 
             # 4. Calculate Loss
-            loss = F.binary_cross_entropy_with_logits(pred_scores, batch_edge_store['edge_label'].float())
+            loss = F.binary_cross_entropy_with_logits(pred_scores, supervision_edge_label.float())
 
             # 5. Backpropagate
             loss.backward()
@@ -297,20 +305,22 @@ def train_epoch(model, node_feature_processor, loader, optimizer, device, edge_t
             total_loss += float(loss) * pred_scores.numel()
             total_examples += pred_scores.numel()
 
+        # (Bloco except permanece igual)
         except KeyError as e:
-             logging.warning(f"Skipping training batch {batch_num} due to KeyError: {e}. Check data/batch structure.")
+             logging.warning(f"Skipping training batch {batch_num} due to KeyError: {e}. Check batch structure (h_dict keys: {list(h_dict.keys()) if 'h_dict' in locals() else 'N/A'}, edge_index_dict keys: {list(batch.edge_index_dict.keys())}).", exc_info=True)
              continue
         except IndexError as e:
              logging.error(f"IndexError during training batch {batch_num}: {e}. Check node indices and embedding access.", exc_info=True)
              continue
         except Exception as e:
-             logging.error(f"Error during training batch {batch_num}: {e}", exc_info=True) # Log traceback
-             continue # Skip batch on error
+             logging.error(f"Error during training batch {batch_num}: {e}", exc_info=True)
+             continue
 
     if total_examples == 0:
         logging.warning("No examples were processed in the training epoch.")
         return 0.0
     return total_loss / total_examples
+
 
 
 @torch.no_grad()

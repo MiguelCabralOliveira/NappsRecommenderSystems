@@ -6,26 +6,12 @@ import numpy as np
 
 @torch.no_grad()
 def calculate_auc(model, node_feature_processor, loader, device, edge_type_tuple):
-    """
-    Calculates the Area Under the ROC Curve (AUC) for link prediction.
-
-    Args:
-        model: The trained HeteroGNNLinkPredictor model.
-        node_feature_processor: The NodeFeatureProcessor module.
-        loader: DataLoader (e.g., LinkNeighborLoader) for the evaluation split.
-        device: The device ('cpu' or 'cuda').
-        edge_type_tuple: The specific edge type (e.g., ('Person', 'purchased', 'Product'))
-                         for which to evaluate links.
-
-    Returns:
-        float: The calculated AUC score.
-    """
     model.eval()
-    node_feature_processor.eval() # Set processor to eval mode too
+    node_feature_processor.eval()
     all_preds = []
     all_labels = []
 
-    print(f"  Evaluating AUC for edge type: {edge_type_tuple}...")
+    print(f"  Evaluating AUC for edge type signature: {edge_type_tuple}...")
     num_batches = 0
     for batch in loader:
         batch = batch.to(device)
@@ -34,35 +20,45 @@ def calculate_auc(model, node_feature_processor, loader, device, edge_type_tuple
             # 1. Process features
             initial_x_dict = node_feature_processor(batch)
 
-            # 2. Get final embeddings
+            # 2. Get embeddings
             h_dict = model(initial_x_dict, batch.edge_index_dict)
 
-            # 3. Predict scores for the target edge type in the batch
-            # Make sure the edge type exists in the batch edge_label_index
-            if edge_type_tuple not in batch or 'edge_label_index' not in batch[edge_type_tuple]:
-                 print(f"    Warning: Skipping batch {num_batches} during AUC calculation - missing edge_label_index for {edge_type_tuple}.")
+            # --- CORREÇÃO FINAL ---
+            # Tenta obter a store do tipo de aresta alvo
+            batch_edge_store = batch.get(edge_type_tuple)
+
+            # Verifica se a store existe E se contém os labels de supervisão
+            if batch_edge_store is None or 'edge_label_index' not in batch_edge_store or 'edge_label' not in batch_edge_store:
+                 print(f"    Warning: Skipping evaluation batch {num_batches} - Missing target store or supervision data for {edge_type_tuple}. Store keys: {batch_edge_store.keys() if batch_edge_store else 'None'}")
                  continue
 
-            pred_scores = model.predict_link_score(h_dict, batch[edge_type_tuple].edge_label_index, edge_type_tuple)
+            # Verifica se os labels não estão vazios
+            if batch_edge_store.edge_label_index.shape[1] == 0:
+                 print(f"    Warning: Skipping evaluation batch {num_batches} - Supervision 'edge_label_index' for {edge_type_tuple} is empty.")
+                 continue
 
-            # Ensure labels exist
-            if 'edge_label' not in batch[edge_type_tuple]:
-                print(f"    Warning: Skipping batch {num_batches} during AUC calculation - missing edge_label for {edge_type_tuple}.")
-                continue
+            supervision_edge_label_index = batch_edge_store.edge_label_index
+            supervision_edge_label = batch_edge_store.edge_label
+            # --- FIM CORREÇÃO FINAL ---
 
+            # 3. Predict scores
+            pred_scores = model.predict_link_score(h_dict, supervision_edge_label_index, edge_type_tuple)
+
+            # Append results
             all_preds.append(pred_scores.cpu())
-            all_labels.append(batch[edge_type_tuple].edge_label.cpu())
+            all_labels.append(supervision_edge_label.cpu())
 
+        # (Bloco except permanece igual)
         except KeyError as e:
-            print(f"    Warning: Skipping batch {num_batches} due to KeyError: {e}. Likely missing node/edge type in batch.")
+            print(f"    Warning: Skipping evaluation batch {num_batches} due to KeyError: {e}. Check batch structure (h_dict keys: {list(h_dict.keys()) if 'h_dict' in locals() else 'N/A'}, edge_index_dict keys: {list(batch.edge_index_dict.keys())}).", exc_info=True)
             continue
         except Exception as e:
-             print(f"    Error during evaluation batch {num_batches}: {e}")
-             # Decide if you want to skip or raise
-             continue # Skip batch on error
+             print(f"    Error during evaluation batch {num_batches}: {e}", exc_info=True)
+             continue
 
     print(f"  Finished processing {num_batches} batches for AUC.")
 
+    # (Restante da função permanece igual)
     if not all_preds or not all_labels:
         print("  Warning: No predictions or labels collected during AUC evaluation. Returning 0.0.")
         return 0.0
@@ -71,8 +67,12 @@ def calculate_auc(model, node_feature_processor, loader, device, edge_type_tuple
     labels = torch.cat(all_labels, dim=0).numpy()
 
     if len(np.unique(labels)) < 2:
-        print(f"  Warning: Only one class present in labels ({np.unique(labels)}). AUC is not defined. Returning 0.5.")
-        return 0.5 # Or handle as appropriate (e.g., return NaN or raise error)
+        if len(labels) > 0:
+            print(f"  Warning: Only one class present in labels ({np.unique(labels)}). This might happen if only negative examples were sampled or processed. AUC is not defined. Returning 0.5.")
+            return 0.5
+        else:
+            print(f"  Warning: No labels collected. AUC is not defined. Returning 0.0.")
+            return 0.0
 
     try:
         auc = roc_auc_score(labels, preds)
@@ -83,6 +83,7 @@ def calculate_auc(model, node_feature_processor, loader, device, edge_type_tuple
          print(f"  Labels unique values: {np.unique(labels)}")
          print(f"  Predictions sample: {preds[:10]}")
          return 0.0 # Or NaN
+
 
 
 def calculate_hit_rate_at_k(model, node_feature_processor, loader, device, edge_type_tuple, k=10):
