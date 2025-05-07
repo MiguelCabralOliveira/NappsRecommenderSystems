@@ -182,11 +182,11 @@ def main():
                     step_success = True
                 except Exception as e:
                     print(f"--- Event Stage (Interaction Extraction) FAILED: {e} ---"); traceback.print_exc()
-                event_csv_success = step_success # Rastreia o sucesso da criação do CSV
+                event_csv_success = step_success 
                 print("="*10 + f" STAGE 2: Finished Event CSV Extraction (Success: {event_csv_success}) " + "="*10)
-                if not event_csv_success and mode == 'events': sys.exit(1) # Falha se SÓ eventos foi pedido
+                if not event_csv_success and mode == 'events': sys.exit(1) 
 
-        # STAGE 3: Person (Depende do CSV de Eventos)
+        
         if run_person:
             if not event_csv_success: # Precisa que o CSV de eventos exista
                  print("\n" + "="*10 + " STAGE 3: Skipping Person (Event CSV Extraction Failed) " + "="*10)
@@ -228,12 +228,12 @@ def main():
 
                 # Carregar o DF de interações já processado
                 print(f"Loading interactions from {paths['event_processed_csv']} for final GNN edge prep...")
-                # --- CORREÇÃO APLICADA AQUI ---
+                
                 # Ler o CSV especificando para fazer parse da coluna timestamp
                 interactions_df_final = pd.read_csv(
                     paths['event_processed_csv'],
                     low_memory=False,
-                    parse_dates=['timestamp'] # <--- ADICIONA ESTA LINHA
+                    parse_dates=['timestamp'] 
                 )
                 # --- FIM DA CORREÇÃO ---
 
