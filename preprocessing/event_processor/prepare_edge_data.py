@@ -44,10 +44,15 @@ def prepare_edge_data(
     product_id_map_path: str,
     output_dir: str,
     include_edge_features: bool = False # Flag para incluir features de aresta
-):
+) -> pd.Timestamp | None: # --- ALTERAÇÃO: Definir tipo de retorno ---
     """
-    Loads interactions, maps IDs, splits temporally, and saves edge data for GNN.
+    Loads interactions, maps IDs, splits temporally, saves edge data for GNN,
+    and saves the cutoff timestamp (max timestamp of train data).
     Optionally prepares and saves edge features.
+
+    Returns:
+        pd.Timestamp | None: The calculated cutoff timestamp (max timestamp from
+                             the training split) or None if it couldn't be determined.
     """
     print(f"--- Starting Edge Data Preparation for GNN ---")
     print(f"Interactions file: {interactions_path}")
@@ -57,56 +62,75 @@ def prepare_edge_data(
     print(f"Include edge features: {include_edge_features}")
 
     os.makedirs(output_dir, exist_ok=True)
+    train_cutoff_timestamp = None # Inicializar variável de retorno
 
     try:
         # 1. Carregar Dados e Mapeamentos
         print("Loading interactions and ID maps...")
-        interactions_df = pd.read_csv(interactions_path, low_memory=False, parse_dates=[TIMESTAMP_COL])
+        # --- ALTERAÇÃO: Ler timestamp como objeto inicialmente ---
+        interactions_df = pd.read_csv(interactions_path, low_memory=False) # Não fazer parse_dates aqui
         if interactions_df.empty:
             print("Interactions DataFrame is empty. Exiting.")
-            return
+            return None # Retornar None se vazio
+
+        # --- ALTERAÇÃO: Converter timestamp após leitura ---
+        if TIMESTAMP_COL not in interactions_df.columns:
+             raise KeyError(f"Timestamp column '{TIMESTAMP_COL}' not found in interactions file.")
+        print("Converting timestamp column...")
+        # Usar conversão robusta (two-pass) como em process_event_interactions
+        timestamps_obj = interactions_df[TIMESTAMP_COL].astype(str).str.strip()
+        format_pass1 = '%Y-%m-%d %H:%M:%S.%f%z'
+        format_pass2 = '%Y-%m-%d %H:%M:%S%z'
+        converted_pass1 = pd.to_datetime(timestamps_obj, format=format_pass1, errors='coerce', utc=True)
+        failures_pass1_mask = converted_pass1.isna()
+        converted_pass2 = converted_pass1.copy()
+        if failures_pass1_mask.any():
+            converted_pass2[failures_pass1_mask] = pd.to_datetime(
+                timestamps_obj[failures_pass1_mask], format=format_pass2, errors='coerce', utc=True
+            )
+        interactions_df[TIMESTAMP_COL] = converted_pass2
+        initial_rows = len(interactions_df)
+        interactions_df.dropna(subset=[TIMESTAMP_COL], inplace=True) # Remover falhas de conversão
+        if len(interactions_df) < initial_rows:
+             print(f"Warning: Dropped {initial_rows - len(interactions_df)} rows due to invalid timestamps during conversion.")
+        if interactions_df.empty:
+            print("No valid interactions remaining after timestamp conversion. Exiting.")
+            return None
+        # --- FIM ALTERAÇÃO ---
+
 
         with open(person_id_map_path, 'r') as f:
             person_id_map = json.load(f)
         with open(product_id_map_path, 'r') as f:
             product_id_map = json.load(f)
 
-        print(f"Loaded {len(interactions_df)} interactions.")
+        print(f"Loaded {len(interactions_df)} valid interactions.")
         print(f"Loaded {len(person_id_map)} person ID mappings.")
         print(f"Loaded {len(product_id_map)} product ID mappings.")
 
         # 2. Filtrar Interações Válidas e Mapear IDs
         print("Filtering interactions and mapping IDs...")
         initial_count = len(interactions_df)
-        # Manter apenas interações onde ambos os IDs existem nos mapas
         interactions_df = interactions_df[
             interactions_df[ID_COL_PERSON].isin(person_id_map) &
-            interactions_df[ID_COL_PRODUCT].isin(product_id_map)
-        ]
-        # Manter apenas interações cujo tipo está no mapa de relações
-        interactions_df = interactions_df[interactions_df[INTERACTION_COL].isin(INTERACTION_TYPE_MAP)]
+            interactions_df[ID_COL_PRODUCT].isin(product_id_map) &
+            interactions_df[INTERACTION_COL].isin(INTERACTION_TYPE_MAP)
+        ].copy() # Usar .copy() para evitar SettingWithCopyWarning
         filtered_count = len(interactions_df)
         print(f"Removed {initial_count - filtered_count} interactions due to missing IDs or unmapped interaction types.")
 
         if interactions_df.empty:
             print("No valid interactions remaining after filtering. Exiting.")
-            return
+            return None
 
-        # Mapear IDs para índices inteiros
         interactions_df['person_idx'] = interactions_df[ID_COL_PERSON].map(person_id_map)
         interactions_df['product_idx'] = interactions_df[ID_COL_PRODUCT].map(product_id_map)
-
-        # Mapear interaction_type para nome da relação
         interactions_df['relation'] = interactions_df[INTERACTION_COL].map(INTERACTION_TYPE_MAP)
 
-        # Garantir que timestamp é datetime UTC
-        if not pd.api.types.is_datetime64_any_dtype(interactions_df[TIMESTAMP_COL]):
-             interactions_df[TIMESTAMP_COL] = pd.to_datetime(interactions_df[TIMESTAMP_COL], errors='coerce', utc=True)
-        elif interactions_df[TIMESTAMP_COL].dt.tz is None:
-             interactions_df[TIMESTAMP_COL] = interactions_df[TIMESTAMP_COL].dt.tz_localize('UTC')
-        else:
-             interactions_df[TIMESTAMP_COL] = interactions_df[TIMESTAMP_COL].dt.tz_convert('UTC')
-        interactions_df.dropna(subset=[TIMESTAMP_COL], inplace=True) # Remover falhas de conversão
+        # Garantir que índices são inteiros (após map podem ser float se houver NaNs, embora filtrados)
+        interactions_df['person_idx'] = interactions_df['person_idx'].astype(int)
+        interactions_df['product_idx'] = interactions_df['product_idx'].astype(int)
+
 
         # 3. Divisão Temporal
         print("Performing temporal split (Train/Validation/Test)...")
@@ -122,10 +146,31 @@ def prepare_edge_data(
 
         print(f"Split sizes: Train={len(train_data)}, Validation={len(valid_data)}, Test={len(test_data)}")
 
+        # --- ALTERAÇÃO: Determinar e Salvar Cutoff Timestamp ---
+        if not train_data.empty:
+            train_cutoff_timestamp = train_data[TIMESTAMP_COL].max()
+            if pd.notna(train_cutoff_timestamp):
+                cutoff_file_path = os.path.join(output_dir, 'train_cutoff_timestamp.txt')
+                try:
+                    with open(cutoff_file_path, 'w') as f:
+                        f.write(train_cutoff_timestamp.isoformat())
+                    print(f"Saved train cutoff timestamp ({train_cutoff_timestamp}) to {cutoff_file_path}")
+                except Exception as e:
+                    print(f"Error saving cutoff timestamp: {e}")
+                    train_cutoff_timestamp = None # Resetar se falhar ao salvar
+            else:
+                print("Warning: Could not determine a valid max timestamp from train_data.")
+                train_cutoff_timestamp = None
+        else:
+            print("Warning: train_data is empty, cannot determine cutoff timestamp.")
+            train_cutoff_timestamp = None
+        # --- FIM ALTERAÇÃO ---
+
         datasets = {'train': train_data, 'valid': valid_data, 'test': test_data}
-        edge_features_data = {} # Para guardar features processadas
+        edge_features_data = {}
 
         # 4. (Opcional) Preparar Features de Aresta
+        # ... (código para preparar features de aresta permanece o mesmo) ...
         edge_feature_scalers = {}
         edge_feature_vocabs = {}
         edge_numeric_cols_order = []
@@ -138,32 +183,35 @@ def prepare_edge_data(
             if numeric_edge_final:
                 print(f"  Processing numeric edge features: {numeric_edge_final}")
                 scaler = RobustScaler()
-                # Fit no treino, transforma todos
-                train_numeric = train_data[numeric_edge_final].fillna(0) # Imputar NaNs
-                scaler.fit(train_numeric)
-                edge_feature_scalers['numeric'] = scaler
-                edge_numeric_cols_order = numeric_edge_final # Guardar ordem
+                train_numeric = train_data[numeric_edge_final].fillna(0)
+                # Verificar se há dados para treinar o scaler
+                if not train_numeric.empty:
+                    scaler.fit(train_numeric)
+                    edge_feature_scalers['numeric'] = scaler
+                    edge_numeric_cols_order = numeric_edge_final
 
-                for split, df_split in datasets.items():
-                    if not df_split.empty:
-                        numeric_data = df_split[numeric_edge_final].fillna(0)
-                        scaled_data = scaler.transform(numeric_data)
-                        edge_features_data.setdefault(split, {})['numeric'] = scaled_data
-                print(f"    Scaled numeric edge features using RobustScaler (fitted on train).")
-                scaler_path = os.path.join(output_dir, 'edge_numeric_scaler.joblib')
-                joblib.dump(scaler, scaler_path)
-                print(f"    Saved edge numeric scaler to {scaler_path}")
-                numeric_order_path = os.path.join(output_dir, 'edge_numeric_cols_order.json')
-                with open(numeric_order_path, 'w') as f: json.dump(edge_numeric_cols_order, f)
-                print(f"    Saved edge numeric column order to {numeric_order_path}")
+                    for split, df_split in datasets.items():
+                        if not df_split.empty:
+                            numeric_data = df_split[numeric_edge_final].fillna(0)
+                            scaled_data = scaler.transform(numeric_data)
+                            edge_features_data.setdefault(split, {})['numeric'] = scaled_data
+                    print(f"    Scaled numeric edge features using RobustScaler (fitted on train).")
+                    scaler_path = os.path.join(output_dir, 'edge_numeric_scaler.joblib')
+                    joblib.dump(scaler, scaler_path)
+                    print(f"    Saved edge numeric scaler to {scaler_path}")
+                    numeric_order_path = os.path.join(output_dir, 'edge_numeric_cols_order.json')
+                    with open(numeric_order_path, 'w') as f: json.dump(edge_numeric_cols_order, f)
+                    print(f"    Saved edge numeric column order to {numeric_order_path}")
+                else:
+                    print("    Skipping numeric edge feature scaling: No training data.")
+
 
             # --- Features Categóricas ---
             categorical_edge_final = [col for col in EDGE_CATEGORICAL_FEATURES if col in train_data.columns]
             if categorical_edge_final:
                 print(f"  Processing categorical edge features: {categorical_edge_final}")
-                edge_categorical_cols_order = categorical_edge_final # Guardar ordem
+                edge_categorical_cols_order = categorical_edge_final
                 for col in categorical_edge_final:
-                    # Criar vocabulário a partir do treino
                     train_cat = train_data[col].fillna('__UNKNOWN__').astype(str)
                     unique_values = sorted([v for v in train_cat.unique() if v != '__UNKNOWN__'])
                     vocab = {val: i+1 for i, val in enumerate(unique_values)}
@@ -171,11 +219,9 @@ def prepare_edge_data(
                     edge_feature_vocabs[col] = vocab
                     print(f"    Vocabulary size for {col}: {len(vocab)}")
 
-                    # Codificar todos os splits usando o vocabulário do treino
                     for split, df_split in datasets.items():
                         if not df_split.empty:
                             encoded_col = df_split[col].fillna('__UNKNOWN__').astype(str).map(vocab)
-                            # Lidar com valores no valid/test que não estavam no treino
                             encoded_col = encoded_col.fillna(vocab['__UNKNOWN__']).astype(int)
                             edge_features_data.setdefault(split, {}).setdefault('categorical', {})[col] = encoded_col.values
 
@@ -198,74 +244,60 @@ def prepare_edge_data(
                 print(f"    Split '{split}' is empty, skipping save.")
                 continue
 
-            # Agrupar por tipo de relação para salvar separadamente (formato comum para PyG/DGL)
             grouped = df_split.groupby('relation')
             edge_index_dict = {}
-            edge_features_split_dict = {} # Para features desta divisão
+            edge_features_split_dict = {}
 
             for relation, group in grouped:
-                # Definir tipo de aresta canônico (origem, relação, destino)
                 edge_type = ('Person', relation, 'Product')
-                # Obter índices de origem e destino
                 src = group['person_idx'].values
                 dst = group['product_idx'].values
-                # Armazenar como array [2, num_edges] - formato comum PyG
                 edge_index_dict[str(edge_type)] = np.stack([src, dst], axis=0)
 
-                # Salvar features de aresta para esta relação, se existirem
                 if include_edge_features and split in edge_features_data:
                     edge_features_relation = {}
-                    group_indices = group.index # Índices originais no df_split
+                    group_indices = group.index
 
-                    # Numéricas
                     if 'numeric' in edge_features_data[split]:
-                         # Selecionar as linhas correspondentes do array de features numéricas
                          numeric_feats_all = edge_features_data[split]['numeric']
-                         # Precisamos mapear os índices do grupo para as posições corretas no array original do split
-                         original_indices_in_split = df_split.index.get_indexer(group_indices)
+                         original_indices_in_split = df_split.index.get_indexer_for(group_indices) # Usar get_indexer_for
                          edge_features_relation['numeric'] = numeric_feats_all[original_indices_in_split]
 
-
-                    # Categóricas
                     if 'categorical' in edge_features_data[split]:
                          cat_feats_dict = edge_features_data[split]['categorical']
                          categorical_relation_data = {}
-                         original_indices_in_split = df_split.index.get_indexer(group_indices)
+                         original_indices_in_split = df_split.index.get_indexer_for(group_indices) # Usar get_indexer_for
                          for cat_col, encoded_vals_all in cat_feats_dict.items():
                               categorical_relation_data[cat_col] = encoded_vals_all[original_indices_in_split]
-                         # Empilhar features categóricas para esta relação
                          if categorical_relation_data:
                              edge_features_relation['categorical'] = np.stack(
-                                 [categorical_relation_data[col] for col in edge_categorical_cols_order], # Usar ordem salva
+                                 [categorical_relation_data[col] for col in edge_categorical_cols_order],
                                  axis=1
                              )
 
                     if edge_features_relation:
                          edge_features_split_dict[str(edge_type)] = edge_features_relation
 
-
-            # Salvar edge_index (estrutura do grafo)
             edge_index_path = os.path.join(split_output_dir, 'edge_index.npz')
             np.savez(edge_index_path, **edge_index_dict)
             print(f"    Saved edge indices for {len(edge_index_dict)} relation types to {edge_index_path}")
 
-            # Salvar features de aresta (se preparadas)
             if include_edge_features and edge_features_split_dict:
                 edge_features_path = os.path.join(split_output_dir, 'edge_features.npz')
-                # Precisamos salvar arrays numpy dentro do npz
                 save_dict = {}
                 for edge_type_str, features in edge_features_split_dict.items():
                     if 'numeric' in features:
                         save_dict[f"{edge_type_str}_numeric"] = features['numeric']
                     if 'categorical' in features:
                          save_dict[f"{edge_type_str}_categorical"] = features['categorical']
-
                 if save_dict:
                     np.savez(edge_features_path, **save_dict)
                     print(f"    Saved edge features to {edge_features_path}")
 
-
         print("--- Edge Data Preparation Completed Successfully ---")
+        # --- ALTERAÇÃO: Retornar o timestamp de corte ---
+        return train_cutoff_timestamp
+        # --- FIM ALTERAÇÃO ---
 
     except FileNotFoundError as e:
         print(f"Error: Input file not found: {e}")
@@ -277,6 +309,10 @@ def prepare_edge_data(
         print(f"An unexpected error occurred: {e}")
         traceback.print_exc()
 
+    # --- ALTERAÇÃO: Retornar None em caso de erro ---
+    return None
+    # --- FIM ALTERAÇÃO ---
+
 
 # --- Bloco para Execução Standalone ---
 if __name__ == "__main__":
@@ -284,19 +320,15 @@ if __name__ == "__main__":
     parser.add_argument('--interactions', required=True, help='Path to the input event_interactions_processed.csv file.')
     parser.add_argument('--person-map', required=True, help='Path to the person_id_to_index_map.json file.')
     parser.add_argument('--product-map', required=True, help='Path to the product_id_to_index_map.json file.')
-    parser.add_argument('--output-dir', required=True, help='Directory to save the processed train/valid/test edge data.')
+    parser.add_argument('--output-dir', required=True, help='Directory to save the processed train/valid/test edge data and cutoff timestamp.') # Descrição atualizada
     parser.add_argument('--include-edge-features', action='store_true', help='Include edge features (price, channel) in the output.')
 
     args = parser.parse_args()
 
-    # Assume product map is generated elsewhere (needs a similar script for product features)
-    # For testing, you might need to create a dummy product map if the product feature prep script isn't ready
     if not os.path.exists(args.product_map):
          print(f"Warning: Product ID map not found at {args.product_map}. Edge preparation might fail or be incomplete.")
-         # Example: Create a dummy map if needed for testing structure
-         # dummy_prod_map = {"product1": 0, "product2": 1}
-         # with open(args.product_map, 'w') as f: json.dump(dummy_prod_map, f)
 
+    # A função agora retorna o timestamp, mas não precisamos dele aqui na execução standalone
     prepare_edge_data(
         args.interactions,
         args.person_map,

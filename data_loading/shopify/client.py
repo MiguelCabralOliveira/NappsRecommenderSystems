@@ -41,7 +41,7 @@ def execute_graphql_query(store_url: str, access_token: str, query: str, variabl
         try:
             response = requests.post(endpoint, json=payload, headers=headers, timeout=60) # Add timeout
 
-            # Check for common Shopify rate limit response (though storefront is less prone)
+            
             if response.status_code == 429:
                 retry_after = int(response.headers.get("Retry-After", delay))
                 print(f"Rate limit hit (429). Retrying after {retry_after}s... (Attempt {attempt + 1}/{retries})")
