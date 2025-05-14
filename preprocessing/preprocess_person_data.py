@@ -1,3 +1,4 @@
+# preprocessing/preprocess_person_data.py
 import argparse
 import os
 import pandas as pd
@@ -14,7 +15,6 @@ try:
     from .person_processor.process_properties_features import process_person_properties
     from .person_processor.calculate_event_metrics import calculate_person_event_metrics
 except ImportError:
-    # Fallback for direct execution or different structure
     print("Warning: Could not use relative imports for person_processor. Attempting direct import.")
     try:
         from person_processor.process_direct_features import process_direct_person_columns
@@ -44,7 +44,6 @@ ID_COL_GNN = 'person_id_hex'
 
 def get_final_person_columns():
     """Returns the list of expected final columns for the intermediate person CSV."""
-    # Esta função define as colunas para o CSV *intermediário*
     return [
         'person_id_hex', 'is_identified', 'days_since_creation', 'days_since_last_update',
         'shopify_currency', 'shopify_account_age_days', 'country_iso', 'in_eu', 'timezone',
@@ -53,9 +52,11 @@ def get_final_person_columns():
         'variant_meta_added_count', 'checkout_update_count', 'order_update_count', 'is_buyer',
         'days_since_last_interaction', 'days_since_first_interaction', 'most_frequent_channel',
         'avg_purchase_value'
+        # Removidas colunas que não parecem ser geradas consistentemente ou são muito específicas
+        # 'shopify_state', 'shopify_verified_email', 'city', 'days_since_last_session'
     ]
 
-# --- Função Auxiliar para Preparação GNN (Movida para dentro) ---
+# --- Função Auxiliar para Preparação GNN ---
 def _prepare_person_gnn_features(df_final: pd.DataFrame, output_dir_gnn: str):
     """
     Internal function to prepare and save GNN-ready features from the final aggregated person df.
@@ -66,16 +67,12 @@ def _prepare_person_gnn_features(df_final: pd.DataFrame, output_dir_gnn: str):
 
     if df_final.empty:
         print("Input DataFrame for GNN prep is empty. Skipping GNN feature generation.")
-        # Criar arquivos vazios para evitar erros downstream? Ou deixar faltar?
-        # Por enquanto, vamos apenas pular.
         return
 
-    # Verificar ID Col
     if ID_COL_GNN not in df_final.columns:
          print(f"CRITICAL Error: ID column '{ID_COL_GNN}' not found in final person DataFrame. Cannot prepare GNN features.")
-         return # Ou raise Exception
+         return
 
-    # Garantir que colunas GNN existem
     available_cols = df_final.columns.tolist()
     numeric_final_gnn = [col for col in NUMERIC_COLS_TO_SCALE_GNN if col in available_cols]
     categorical_final_gnn = [col for col in CATEGORICAL_COLS_TO_EMBED_GNN if col in available_cols]
@@ -84,14 +81,12 @@ def _prepare_person_gnn_features(df_final: pd.DataFrame, output_dir_gnn: str):
     if missing_numeric: print(f"Warning: Missing expected numeric GNN columns: {missing_numeric}")
     if missing_categorical: print(f"Warning: Missing expected categorical GNN columns: {missing_categorical}")
 
-    # Selecionar Features para GNN
     cols_to_keep_for_gnn = [ID_COL_GNN] + numeric_final_gnn + categorical_final_gnn
     df_gnn = df_final[cols_to_keep_for_gnn].copy()
     print(f"Selected {len(df_gnn.columns) - 1} features for GNN processing.")
 
-    # Mapeamento ID -> Índice
     print("Creating ID to index mapping...")
-    df_gnn = df_gnn.sort_values(by=ID_COL_GNN).reset_index(drop=True) # Ordenar por ID
+    df_gnn = df_gnn.sort_values(by=ID_COL_GNN).reset_index(drop=True)
     person_id_to_index = {person_id: index for index, person_id in enumerate(df_gnn[ID_COL_GNN])}
     id_map_path = os.path.join(output_dir_gnn, 'person_id_to_index_map.json')
     with open(id_map_path, 'w') as f:
@@ -100,9 +95,8 @@ def _prepare_person_gnn_features(df_final: pd.DataFrame, output_dir_gnn: str):
 
     df_features_gnn = df_gnn.drop(columns=[ID_COL_GNN])
 
-    # Processar Features Numéricas GNN
     print("Processing numeric features for GNN...")
-    scaled_numeric_features = np.zeros((len(df_features_gnn), 0)) # Default vazio
+    scaled_numeric_features = np.zeros((len(df_features_gnn), 0))
     if numeric_final_gnn:
         df_numeric_gnn = df_features_gnn[numeric_final_gnn].copy()
         initial_nans = df_numeric_gnn.isnull().sum().sum()
@@ -125,9 +119,8 @@ def _prepare_person_gnn_features(df_final: pd.DataFrame, output_dir_gnn: str):
     with open(numeric_cols_order_path, 'w') as f: json.dump(numeric_final_gnn, f)
     print(f"Saved numeric column order to {numeric_cols_order_path}")
 
-    # Processar Features Categóricas GNN
     print("Processing categorical features for GNN...")
-    encoded_categorical_array = np.zeros((len(df_features_gnn), 0)) # Default vazio
+    encoded_categorical_array = np.zeros((len(df_features_gnn), 0))
     vocabularies = {}
     categorical_cols_order = []
     if categorical_final_gnn:
@@ -143,7 +136,8 @@ def _prepare_person_gnn_features(df_final: pd.DataFrame, output_dir_gnn: str):
             print(f"    Vocabulary size for {col}: {len(vocab)}")
             encoded_categorical_data[col] = df_categorical_gnn[col].map(vocab).values
             categorical_cols_order.append(col)
-        encoded_categorical_array = np.stack(list(encoded_categorical_data.values()), axis=1)
+        if encoded_categorical_data: # Check if dict is not empty
+            encoded_categorical_array = np.stack(list(encoded_categorical_data.values()), axis=1)
     else:
         print("No categorical features selected for GNN.")
 
@@ -159,37 +153,32 @@ def _prepare_person_gnn_features(df_final: pd.DataFrame, output_dir_gnn: str):
     print(f"Saved categorical column order to {categorical_cols_order_path}")
 
     print("--- Person Node Feature Preparation for GNN Finished ---")
-# --- Fim Função Auxiliar ---
-
 
 # --- Função Principal Atualizada ---
 def run_person_preprocessing(
     person_input_path: str,
     event_input_path: str,
-    output_path: str, # Caminho para o CSV intermediário
-    person_gnn_output_dir: str # Novo: Diretório para saídas GNN
+    output_path: str,
+    person_gnn_output_dir: str,
+    # --- NOVO ARGUMENTO ---
+    train_cutoff_timestamp: pd.Timestamp = None
 ):
     """
-    Orchestrates the preprocessing of person data: loads raw data, processes features,
-    calculates event metrics, merges them, saves the intermediate CSV,
-    AND prepares/saves GNN-ready node features.
-
-    Args:
-        person_input_path: Path to the raw person data CSV.
-        event_input_path: Path to the processed event interactions CSV.
-        output_path: Path to save the intermediate processed person features CSV.
-        person_gnn_output_dir: Directory to save GNN-ready features, scaler, vocabs, ID map.
+    Orchestrates the preprocessing of person data.
+    Calculates event metrics using an optional train_cutoff_timestamp.
     """
     print(f"\n--- Starting Person Data Preprocessing Orchestration ---")
     print(f"Person Input file: {person_input_path}")
     print(f"Event Input file (for metrics): {event_input_path}")
     print(f"Intermediate Output CSV: {output_path}")
     print(f"GNN Features Output Dir: {person_gnn_output_dir}")
+    if train_cutoff_timestamp:
+        print(f"Using Train Cutoff Timestamp for event metrics: {train_cutoff_timestamp}")
+    else:
+        print("No Train Cutoff Timestamp provided for event metrics (will use all event data).")
 
-    final_df = pd.DataFrame() # Inicializar
+    final_df = pd.DataFrame()
 
-    # --- Load Raw Person Data ---
-    # (Código de carregamento e validação inicial permanece o mesmo)
     try:
         if not os.path.exists(person_input_path):
              raise FileNotFoundError(f"Person input file not found: {person_input_path}")
@@ -198,78 +187,121 @@ def run_person_preprocessing(
 
         if person_df_raw.empty:
             print("Input person DataFrame is empty. Cannot proceed.")
-            # Talvez criar arquivos vazios? Por enquanto, apenas retorna.
             return
         if 'person_id_hex' not in person_df_raw.columns:
             raise ValueError("Input person data must contain 'person_id_hex' column.")
-        # ... (restante da validação de colunas raw) ...
+        # Garantir que 'is_identified' existe para process_person_properties
+        if 'is_identified' not in person_df_raw.columns:
+            print("Warning: 'is_identified' column missing in raw person data. Adding default False.")
+            person_df_raw['is_identified'] = False
+        if 'properties' not in person_df_raw.columns:
+            print("Warning: 'properties' column missing in raw person data. Adding empty dict string.")
+            person_df_raw['properties'] = "{}"
+
 
     except Exception as e:
         print(f"Error loading or validating input person CSV '{person_input_path}': {e}")
         traceback.print_exc()
         raise
 
-    # --- Process Direct and Properties Features ---
-    # (Código permanece o mesmo)
     try:
         print("\nProcessing direct columns...")
-        # ... (código de process_direct_person_columns) ...
-        df_direct = process_direct_person_columns(person_df_raw.copy()) # Exemplo
+        df_direct = process_direct_person_columns(person_df_raw.copy())
 
         print("\nProcessing properties columns...")
-        # ... (código de process_person_properties) ...
-        df_props = process_person_properties(person_df_raw.copy()) # Exemplo
+        df_props = process_person_properties(person_df_raw.copy())
 
     except Exception as e:
         print(f"Error during direct/properties feature processing step: {e}")
         traceback.print_exc()
         raise
 
-    # --- Merge Direct and Properties Features ---
-    # (Código permanece o mesmo)
     print("\n--- Merging Direct and Properties Features ---")
     try:
         persons_features_df = pd.merge(df_direct, df_props, on='person_id_hex', how='left')
-        # ... (tratamento de duplicatas) ...
+        # Remover duplicatas se houver, mantendo a primeira ocorrência
+        persons_features_df.drop_duplicates(subset=['person_id_hex'], keep='first', inplace=True)
+        print(f"Shape after merging direct and properties features: {persons_features_df.shape}")
     except Exception as e:
         print(f"Error during merging direct/properties features: {e}")
         traceback.print_exc()
         raise
 
-    # --- Calculate and Merge Event Metrics ---
-    # (Código permanece o mesmo)
     print("\n--- Calculating and Merging Event Metrics ---")
     try:
-        person_event_metrics_df = calculate_person_event_metrics(event_input_path)
+        # --- USAR O CUTOFF AQUI ---
+        person_event_metrics_df = calculate_person_event_metrics(event_input_path, cutoff_timestamp=train_cutoff_timestamp)
         if not person_event_metrics_df.empty:
             persons_features_df = persons_features_df.merge(
                 person_event_metrics_df, left_on='person_id_hex', right_index=True, how='left'
             )
-            # ... (fillna e type casting para métricas) ...
+            # Preencher NaNs para métricas de evento (pessoas sem eventos no período de cutoff)
+            metric_cols = person_event_metrics_df.columns
+            for col in metric_cols:
+                if col in persons_features_df.columns:
+                    if pd.api.types.is_numeric_dtype(persons_features_df[col]):
+                        persons_features_df[col] = persons_features_df[col].fillna(0)
+                    else:
+                        persons_features_df[col] = persons_features_df[col].fillna('Unknown')
+            print(f"Shape after merging event metrics: {persons_features_df.shape}")
         else:
             print("No event metrics calculated/returned. Adding default metric columns.")
-            # ... (adicionar colunas default de métricas) ...
+            default_metric_cols = [
+                'purchase_count', 'total_interactions', 'unique_products_interacted',
+                'view_count', 'wishlist_count', 'share_count', 'checkout_start_count',
+                'distinct_channels_count', 'variant_meta_added_count', 'checkout_update_count',
+                'order_update_count', 'is_buyer', 'days_since_last_interaction',
+                'days_since_first_interaction', 'avg_purchase_value'
+            ]
+            for col in default_metric_cols: persons_features_df[col] = 0
+            persons_features_df['most_frequent_channel'] = 'Unknown'
+            if 'days_since_last_interaction' in persons_features_df: persons_features_df['days_since_last_interaction'] = 9999
+            if 'days_since_first_interaction' in persons_features_df: persons_features_df['days_since_first_interaction'] = 9999
+
+
     except Exception as e:
         print(f"Error calculating or merging person event metrics: {e}")
         traceback.print_exc()
-        # ... (adicionar colunas default de métricas em caso de erro) ...
+        # Adicionar colunas default em caso de erro também
+        default_metric_cols = [
+            'purchase_count', 'total_interactions', 'unique_products_interacted',
+            'view_count', 'wishlist_count', 'share_count', 'checkout_start_count',
+            'distinct_channels_count', 'variant_meta_added_count', 'checkout_update_count',
+            'order_update_count', 'is_buyer', 'days_since_last_interaction',
+            'days_since_first_interaction', 'avg_purchase_value'
+        ]
+        for col in default_metric_cols:
+            if col not in persons_features_df.columns: persons_features_df[col] = 0
+        if 'most_frequent_channel' not in persons_features_df.columns: persons_features_df['most_frequent_channel'] = 'Unknown'
+        if 'days_since_last_interaction' in persons_features_df: persons_features_df['days_since_last_interaction'] = persons_features_df['days_since_last_interaction'].fillna(9999)
+        if 'days_since_first_interaction' in persons_features_df: persons_features_df['days_since_first_interaction'] = persons_features_df['days_since_first_interaction'].fillna(9999)
 
 
-    # --- Finalize Columns for Intermediate CSV ---
     FINAL_COLUMNS_CSV = get_final_person_columns()
     print("\nFinalizing columns for intermediate CSV...")
-    final_df = persons_features_df # Usar o df com métricas
+    final_df = persons_features_df.copy()
 
-    # (Código para adicionar colunas default se faltarem para o CSV - permanece o mesmo)
-    # ...
+    # Adicionar colunas faltantes com defaults antes de selecionar para o CSV
+    for col in FINAL_COLUMNS_CSV:
+        if col not in final_df.columns:
+            print(f"Column '{col}' missing from processed DataFrame. Adding with default.")
+            if pd.api.types.is_numeric_dtype(final_df.get(col, pd.Series(dtype=float))): # Check type of potential existing or default
+                final_df[col] = 0
+            else:
+                final_df[col] = 'Unknown' # Default para strings
+            if col in ['days_since_last_interaction', 'days_since_first_interaction']:
+                final_df[col] = 9999
+
+
     try:
-        final_df_csv = final_df[FINAL_COLUMNS_CSV].copy() # Selecionar apenas as colunas para o CSV
+        final_df_csv = final_df[FINAL_COLUMNS_CSV].copy()
         print(f"Selected columns for intermediate CSV. Shape: {final_df_csv.shape}")
     except KeyError as e:
-        # ... (tratamento de erro se colunas CSV faltarem) ...
-        raise ValueError(f"Could not select all required intermediate CSV columns.") from e
+        missing_cols = [col for col in FINAL_COLUMNS_CSV if col not in final_df.columns]
+        print(f"Error: Could not select all required intermediate CSV columns. Missing: {missing_cols}")
+        print(f"Available columns: {final_df.columns.tolist()}")
+        raise ValueError(f"Could not select all required intermediate CSV columns. Missing: {missing_cols}") from e
 
-    # --- Save Intermediate Output CSV ---
     try:
         output_dir_csv = os.path.dirname(output_path)
         os.makedirs(output_dir_csv, exist_ok=True)
@@ -279,19 +311,14 @@ def run_person_preprocessing(
     except Exception as e:
         print(f"Error saving intermediate output CSV to '{output_path}': {e}")
         traceback.print_exc()
-        # Considerar se deve parar aqui ou tentar gerar features GNN mesmo assim
-        # raise # Parar se o CSV intermediário falhar
+        raise
 
-    # --- Preparar e Salvar Features para GNN ---
-    # Usa o 'final_df' que contém todas as colunas antes da seleção final para CSV
     try:
-        _prepare_person_gnn_features(final_df, person_gnn_output_dir)
+        _prepare_person_gnn_features(final_df, person_gnn_output_dir) # Usa final_df que tem todas as colunas
     except Exception as e:
         print(f"Error during GNN feature preparation step: {e}")
         traceback.print_exc()
-        # Não relançar necessariamente, pois o CSV intermediário pode ter sido salvo
         print("Warning: GNN feature preparation failed, but intermediate CSV might be saved.")
-
 
     print(f"--- Finished Person Data Preprocessing Orchestration (including GNN prep) ---")
 
@@ -305,13 +332,27 @@ if __name__ == "__main__":
     parser.add_argument('--event-input', required=True, help='Path to the processed event interactions CSV.')
     parser.add_argument('--output-csv', required=True, help='Path to save the intermediate processed person features CSV.')
     parser.add_argument('--output-gnn-dir', required=True, help='Directory to save GNN-ready features, scaler, vocabs, and ID map.')
+    # --- NOVO ARGUMENTO PARA CUTOFF ---
+    parser.add_argument('--cutoff-timestamp', type=str, default=None,
+                        help='Optional UTC timestamp string (YYYY-MM-DD HH:MM:SS.ffffff[+/-HH:MM]) for event metrics cutoff.')
+
     args = parser.parse_args()
+
+    cutoff_ts_obj = None
+    if args.cutoff_timestamp:
+        try:
+            cutoff_ts_obj = pd.to_datetime(args.cutoff_timestamp, utc=True)
+            print(f"Using provided cutoff timestamp: {cutoff_ts_obj}")
+        except ValueError:
+            print(f"Error: Invalid cutoff_timestamp format: {args.cutoff_timestamp}. Proceeding without cutoff.")
+
     try:
         run_person_preprocessing(
             args.person_input,
             args.event_input,
             args.output_csv,
-            args.output_gnn_dir # Passar o novo argumento
+            args.output_gnn_dir,
+            train_cutoff_timestamp=cutoff_ts_obj # Passar o objeto Timestamp
         )
         print("\nPerson preprocessing & GNN prep finished successfully via command line.")
     except FileNotFoundError as fnf_error:

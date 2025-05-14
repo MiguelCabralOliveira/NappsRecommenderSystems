@@ -4,18 +4,19 @@ import os
 import traceback
 import sys
 import time
-import json # Import json
-import pandas as pd # Import pandas for Stage 4
+import json
+import pandas as pd
 
 # --- Imports ---
 try:
     from .preprocess_person_data import run_person_preprocessing
     from .preprocess_product_data import run_product_preprocessing
     from .preprocess_event_data import run_event_preprocessing
-    # Importar a função auxiliar de preparação de arestas para STAGE 4
-    from .preprocess_event_data import _prepare_gnn_edge_data
+    # --- NOVO: Importar prepare_edge_data diretamente ---
+    from .event_processor.prepare_edge_data import prepare_edge_data
 except ImportError as e:
     print(f"Import Error: {e}. Failed to import submodules.")
+    print("Please ensure that __init__.py files exist in subdirectories and paths are correct.")
     sys.exit(1)
 # --- End Imports ---
 
@@ -36,45 +37,46 @@ def get_data_paths(shop_id: str) -> dict:
     """Determines input/output paths for raw, intermediate, and GNN data."""
     paths = {}
     is_sm = is_sagemaker_environment()
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    # Ajustar project_root se a estrutura do seu projeto for diferente
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) if not is_sm else '/opt/ml/processing'
+
 
     if is_sm:
-        base_input_dir = f"/opt/ml/processing/{SM_INPUT_CHANNEL}"
-        base_output_dir_intermediate = f"/opt/ml/processing/{SM_OUTPUT_CHANNEL}"
+        base_input_dir = os.path.join(project_root, SM_INPUT_CHANNEL) # /opt/ml/processing/raw_data
+        base_output_dir_intermediate = os.path.join(project_root, SM_OUTPUT_CHANNEL) # /opt/ml/processing/processed_data
         base_output_dir_gnn = os.path.join(base_output_dir_intermediate, GNN_DATA_DIR_NAME)
     else:
         base_input_dir = os.path.join(project_root, "results", shop_id, "raw")
         base_output_dir_intermediate = os.path.join(project_root, "results", shop_id, "preprocessed")
         base_output_dir_gnn = os.path.join(project_root, "results", shop_id, GNN_DATA_DIR_NAME)
 
-    # --- Raw Inputs ---
     paths['person_raw_input'] = os.path.join(base_input_dir, f'{shop_id}_person_data_loaded.csv')
     paths['product_raw_input'] = os.path.join(base_input_dir, f'{shop_id}_shopify_products_raw.csv')
     paths['event_raw_input'] = os.path.join(base_input_dir, f'{shop_id}_person_event_data_filtered.csv')
 
-    # --- Intermediate Outputs (CSVs) ---
     paths['event_processed_csv'] = os.path.join(base_output_dir_intermediate, f'{shop_id}_event_interactions_processed.csv')
     paths['person_processed_csv'] = os.path.join(base_output_dir_intermediate, f'{shop_id}_person_features_processed.csv')
     paths['product_processed_csv'] = os.path.join(base_output_dir_intermediate, f'{shop_id}_products_final_all_features.csv')
 
-    # --- GNN Output Directories ---
     paths['person_gnn_output_dir'] = os.path.join(base_output_dir_gnn, PERSON_NODE_DIR)
     paths['product_gnn_output_dir'] = os.path.join(base_output_dir_gnn, PRODUCT_NODE_DIR)
-    paths['edge_gnn_output_dir'] = os.path.join(base_output_dir_gnn, EDGE_DATA_DIR)
+    paths['edge_gnn_output_dir'] = os.path.join(base_output_dir_gnn, EDGE_DATA_DIR) # Diretório base para edges
 
-    # --- GNN ID Map Paths (Inputs for Edge Prep) ---
     paths['person_id_map_path'] = os.path.join(paths['person_gnn_output_dir'], 'person_id_to_index_map.json')
     paths['product_id_map_path'] = os.path.join(paths['product_gnn_output_dir'], 'product_id_to_index_map.json')
+    # --- NOVO: Caminho para o ficheiro de cutoff ---
+    paths['train_cutoff_timestamp_file'] = os.path.join(paths['edge_gnn_output_dir'], 'train_cutoff_timestamp.txt')
+
 
     print("\nDetermined data paths:")
     for key, value in paths.items(): print(f"- {key}: {value}")
 
-    # Criação dos diretórios de output
     os.makedirs(base_output_dir_intermediate, exist_ok=True)
-    os.makedirs(os.path.join(base_output_dir_intermediate, "models"), exist_ok=True) # Para modelos TF-IDF, etc.
+    # Diretório para modelos TF-IDF, etc., dentro de 'preprocessed'
+    os.makedirs(os.path.join(base_output_dir_intermediate, "models"), exist_ok=True)
     os.makedirs(paths['person_gnn_output_dir'], exist_ok=True)
     os.makedirs(paths['product_gnn_output_dir'], exist_ok=True)
-    os.makedirs(paths['edge_gnn_output_dir'], exist_ok=True)
+    os.makedirs(paths['edge_gnn_output_dir'], exist_ok=True) # Garante que o diretório de edges existe
     print(f"Ensured all output directories exist.")
 
     return paths
@@ -87,8 +89,7 @@ def main():
     parser.add_argument('--mode', required=True,
                         choices=['product', 'person', 'events', 'all', 'full_pipeline'],
                         help='Which pipeline stage(s) to run. '
-                             '`all` runs product, events, person sequentially, then finalizes GNN edges. '
-                             '`full_pipeline` is equivalent to `all`.')
+                             '`all` or `full_pipeline` runs product, events (CSV), person (direct/props), GNN edges (determines cutoff), person (event metrics with cutoff).')
     parser.add_argument('--include-edge-features', action='store_true',
                         help='(Used with events/all/full_pipeline modes) Include edge features in GNN edge data.')
     args = parser.parse_args()
@@ -96,7 +97,7 @@ def main():
     mode = args.mode
     include_edge_features = args.include_edge_features
 
-    # --- DEBUGGING ---
+    # ... (DEBUG listing - pode manter se útil) ...
     print("\n--- DEBUG: Listing files in /opt/ml/processing/ ---")
     processing_base = "/opt/ml/processing"
     if os.path.exists(processing_base) and is_sagemaker_environment(): # Só lista se estiver em SM
@@ -112,9 +113,9 @@ def main():
     else:
         print("Skipping debug listing (not in SageMaker environment).")
     print("--- END DEBUG ---\n")
-    # --- FIM DEBUGGING ---
 
-    print(f"\n=== Running Preprocessing Pipeline (Integrated GNN Prep) ===")
+
+    print(f"\n=== Running Preprocessing Pipeline (Integrated GNN Prep - Corrected Order) ===")
     print(f"Shop ID: {shop_id}")
     print(f"Mode: {mode}")
     start_time = time.time()
@@ -122,156 +123,160 @@ def main():
 
     try:
         paths = get_data_paths(shop_id)
-        product_success = True
-        person_success = True
-        event_csv_success = True # Sucesso da geração do CSV de eventos
-        event_gnn_prep_success = True # Sucesso da preparação GNN de eventos (final)
+        product_success = False
+        event_csv_success = False
+        person_direct_props_success = False
+        gnn_edge_prep_success = False # Inclui geração do cutoff
+        person_final_success = False
+        train_cutoff_timestamp_value = None # Para guardar o timestamp
 
-        # Definir quais etapas executar
         run_product = mode in ['product', 'all', 'full_pipeline']
-        run_events = mode in ['events', 'all', 'full_pipeline'] # Eventos (CSV) ANTES de pessoa
-        run_person = mode in ['person', 'all', 'full_pipeline']
+        run_events_csv = mode in ['events', 'all', 'full_pipeline'] # Extração CSV
+        run_person_direct_props = mode in ['person', 'all', 'full_pipeline'] # Features diretas/props + ID map
+        run_gnn_edges = mode in ['events', 'all', 'full_pipeline'] # Prepara arestas GNN e determina cutoff
+        run_person_final = mode in ['person', 'all', 'full_pipeline'] # Métricas de evento com cutoff + GNN features
 
-        # --- Executar na ordem correta: Product -> Events (CSV) -> Person -> Events (GNN Prep) ---
+        # --- NOVA ORDEM DE EXECUÇÃO ---
 
-        # STAGE 1: Product
+        # STAGE 1: Product Preprocessing & GNN Node Features
         if run_product:
-            print("\n" + "="*10 + " STAGE 1: Product Preprocessing & GNN Prep " + "="*10)
-            step_success = False
+            print("\n" + "="*10 + " STAGE 1: Product Preprocessing & GNN Node Features " + "="*10)
             try:
                 if not os.path.exists(paths['product_raw_input']): raise FileNotFoundError(f"Product raw input not found: {paths['product_raw_input']}")
                 run_product_preprocessing(
                     paths['product_raw_input'],
                     paths['product_processed_csv'],
                     shop_id,
-                    paths['product_gnn_output_dir']
+                    paths['product_gnn_output_dir'] # Gera product_id_map.json
                 )
+                if not os.path.exists(paths['product_id_map_path']):
+                    raise RuntimeError("Product ID map was not created successfully.")
                 print("--- Product Stage Completed Successfully ---")
-                step_success = True
+                product_success = True
             except Exception as e:
                 print(f"--- Product Stage FAILED: {e} ---"); traceback.print_exc()
-            product_success = step_success
             print("="*10 + f" STAGE 1: Finished Product (Success: {product_success}) " + "="*10)
             if not product_success and mode == 'product': sys.exit(1)
 
-        # STAGE 2: Events (CSV Extraction Only initially)
-        if run_events:
-            if not product_success: # Dependência lógica do mapa de produto
-                 print("\n" + "="*10 + " STAGE 2: Skipping Event CSV Extraction (Product Stage Failed) " + "="*10)
-                 event_csv_success = False # Marcar como falha se o Stage 1 falhou
-            else:
-                print("\n" + "="*10 + " STAGE 2: Event Interaction Extraction (CSV) " + "="*10)
-                step_success = False
-                try:
-                    if not os.path.exists(paths['event_raw_input']): raise FileNotFoundError(f"Event raw input not found: {paths['event_raw_input']}")
+        # STAGE 2: Event Interaction Extraction (CSV only)
+        if run_events_csv:
+            print("\n" + "="*10 + " STAGE 2: Event Interaction Extraction (to CSV) " + "="*10)
+            try:
+                if not os.path.exists(paths['event_raw_input']): raise FileNotFoundError(f"Event raw input not found: {paths['event_raw_input']}")
+                run_event_preprocessing( # Esta função agora só faz a extração para CSV
+                    paths['event_raw_input'],
+                    paths['event_processed_csv']
+                )
+                if not os.path.exists(paths['event_processed_csv']):
+                    raise RuntimeError("Event interaction CSV was not created successfully.")
+                print("--- Event CSV Extraction Stage Completed Successfully ---")
+                event_csv_success = True
+            except Exception as e:
+                print(f"--- Event CSV Extraction Stage FAILED: {e} ---"); traceback.print_exc()
+            print("="*10 + f" STAGE 2: Finished Event CSV Extraction (Success: {event_csv_success}) " + "="*10)
+            if not event_csv_success and mode == 'events': sys.exit(1) # Se só eventos for pedido, falha aqui
 
-                    # Chamar run_event_preprocessing, mas a parte GNN falhará graciosamente sem o mapa de pessoa
-                    # O importante é gerar o event_processed_csv
-                    run_event_preprocessing(
-                        paths['event_raw_input'],
-                        paths['event_processed_csv'], # Salva o CSV intermediário
-                        paths['person_id_map_path'], # Passa o caminho, mesmo que ainda não exista
-                        paths['product_id_map_path'], # Passa o caminho (deve existir)
-                        paths['edge_gnn_output_dir'], # Diretório de saída GNN (tentativa falhará)
-                        include_edge_features # Flag
-                    )
-                    # Verificar se o CSV foi realmente criado
-                    if not os.path.exists(paths['event_processed_csv']):
-                        raise RuntimeError("Event interaction CSV was not created successfully.")
-                    print("--- Event Stage (Interaction Extraction to CSV) Completed Successfully ---")
-                    step_success = True
-                except Exception as e:
-                    print(f"--- Event Stage (Interaction Extraction) FAILED: {e} ---"); traceback.print_exc()
-                event_csv_success = step_success # Rastreia o sucesso da criação do CSV
-                print("="*10 + f" STAGE 2: Finished Event CSV Extraction (Success: {event_csv_success}) " + "="*10)
-                if not event_csv_success and mode == 'events': sys.exit(1) # Falha se SÓ eventos foi pedido
-
-        # STAGE 3: Person (Depende do CSV de Eventos)
-        if run_person:
-            if not event_csv_success: # Precisa que o CSV de eventos exista
-                 print("\n" + "="*10 + " STAGE 3: Skipping Person (Event CSV Extraction Failed) " + "="*10)
-                 person_success = False # Marcar como falha
+        # STAGE 3: Person Direct/Properties Features & GNN ID Map
+        # Esta etapa calcula features que NÃO dependem do cutoff de eventos.
+        # E gera o person_id_map.json necessário para a preparação de arestas.
+        if run_person_direct_props:
+            if not event_csv_success: # Depende do CSV de eventos para a estrutura, mesmo que não use cutoff ainda
+                print("\n" + "="*10 + " STAGE 3: Skipping Person Direct/Properties (Event CSV Failed) " + "="*10)
             else:
-                print("\n" + "="*10 + " STAGE 3: Person Preprocessing & GNN Prep " + "="*10)
-                step_success = False
+                print("\n" + "="*10 + " STAGE 3: Person Direct/Properties Features & GNN ID Map " + "="*10)
                 try:
                     if not os.path.exists(paths['person_raw_input']): raise FileNotFoundError(f"Person raw input not found: {paths['person_raw_input']}")
-                    if not os.path.exists(paths['event_processed_csv']):
-                         raise FileNotFoundError(f"Event interactions CSV ({paths['event_processed_csv']}) is required for person metrics and was not found.")
-
+                    # Chamar run_person_preprocessing SEM o cutoff_timestamp aqui.
+                    # A função irá calcular métricas com todos os eventos, mas o importante é gerar o ID map
+                    # e o person_processed_csv base que será *sobrescrito* depois.
                     run_person_preprocessing(
                         paths['person_raw_input'],
-                        paths['event_processed_csv'], # Input para métricas (agora existe)
-                        paths['person_processed_csv'], # Saída CSV intermediária
-                        paths['person_gnn_output_dir'] # Saída GNN (gera o person_id_map.json)
+                        paths['event_processed_csv'],
+                        paths['person_processed_csv'], # Cria um CSV base
+                        paths['person_gnn_output_dir'], # Gera person_id_map.json
+                        train_cutoff_timestamp=None # SEM CUTOFF NESTA FASE
                     )
-                    # Verificar se o mapa de pessoas foi criado
                     if not os.path.exists(paths['person_id_map_path']):
                         raise RuntimeError("Person ID map was not created successfully.")
-                    print("--- Person Stage Completed Successfully ---")
-                    step_success = True
+                    print("--- Person Direct/Properties & ID Map Stage Completed Successfully ---")
+                    person_direct_props_success = True
                 except Exception as e:
-                    print(f"--- Person Stage FAILED: {e} ---"); traceback.print_exc()
-                person_success = step_success
-                print("="*10 + f" STAGE 3: Finished Person (Success: {person_success}) " + "="*10)
-                if not person_success and mode == 'person': sys.exit(1)
+                    print(f"--- Person Direct/Properties & ID Map Stage FAILED: {e} ---"); traceback.print_exc()
+                print("="*10 + f" STAGE 3: Finished Person Direct/Properties & ID Map (Success: {person_direct_props_success}) " + "="*10)
+                # Não sair aqui se falhar, pois o modo 'person' completo inclui a etapa final
 
-        # STAGE 4: Finalizar Preparação GNN de Eventos (Depende de Person e Product maps)s
-        if run_events and product_success and person_success and event_csv_success:
-            print("\n" + "="*10 + " STAGE 4: Finalizing GNN Edge Preparation " + "="*10)
-            step_success = False
-            try:
-                # Verificar se os mapas de ID e o CSV de eventos existem
-                if not os.path.exists(paths['person_id_map_path']): raise FileNotFoundError(f"Person ID map needed for event GNN prep not found: {paths['person_id_map_path']}")
-                if not os.path.exists(paths['product_id_map_path']): raise FileNotFoundError(f"Product ID map needed for event GNN prep not found: {paths['product_id_map_path']}")
-                if not os.path.exists(paths['event_processed_csv']): raise FileNotFoundError(f"Event interactions CSV needed for event GNN prep not found: {paths['event_processed_csv']}")
+        # STAGE 4: GNN Edge Data Preparation (determines train_cutoff_timestamp)
+        if run_gnn_edges:
+            if not (product_success and event_csv_success and person_direct_props_success):
+                print("\n" + "="*10 + " STAGE 4: Skipping GNN Edge Preparation (Previous Stage(s) Failed) " + "="*10)
+            else:
+                print("\n" + "="*10 + " STAGE 4: GNN Edge Data Preparation " + "="*10)
+                try:
+                    if not os.path.exists(paths['person_id_map_path']): raise FileNotFoundError(f"Person ID map not found: {paths['person_id_map_path']}")
+                    if not os.path.exists(paths['product_id_map_path']): raise FileNotFoundError(f"Product ID map not found: {paths['product_id_map_path']}")
+                    if not os.path.exists(paths['event_processed_csv']): raise FileNotFoundError(f"Event interactions CSV not found: {paths['event_processed_csv']}")
 
-                # Carregar o DF de interações já processado
-                print(f"Loading interactions from {paths['event_processed_csv']} for final GNN edge prep...")
-                # --- CORREÇÃO APLICADA AQUI ---
-                # Ler o CSV especificando para fazer parse da coluna timestamp
-                interactions_df_final = pd.read_csv(
-                    paths['event_processed_csv'],
-                    low_memory=False,
-                    parse_dates=['timestamp'] # <--- ADICIONA ESTA LINHA
-                )
-                # --- FIM DA CORREÇÃO ---
+                    # Chamar prepare_edge_data do módulo event_processor
+                    # Esta função retorna o train_cutoff_timestamp e salva-o num ficheiro.
+                    train_cutoff_timestamp_value = prepare_edge_data(
+                        paths['event_processed_csv'],
+                        paths['person_id_map_path'],
+                        paths['product_id_map_path'],
+                        paths['edge_gnn_output_dir'], # Diretório onde o .txt será salvo
+                        include_edge_features
+                    )
+                    if train_cutoff_timestamp_value is None:
+                        raise RuntimeError("Failed to determine train_cutoff_timestamp during GNN edge preparation.")
+                    if not os.path.exists(paths['train_cutoff_timestamp_file']):
+                         # Verificar se o ficheiro foi salvo como esperado
+                         print(f"Warning: train_cutoff_timestamp.txt was expected but not found at {paths['train_cutoff_timestamp_file']}. Using returned value.")
 
-                # Verifica se o parse_dates funcionou (opcional mas bom)
-                if not pd.api.types.is_datetime64_any_dtype(interactions_df_final['timestamp']):
-                    print("WARNING: parse_dates in run_preprocessing (Stage 4) did not result in datetime dtype!")
-                    # Considerar tentar converter aqui como fallback se estritamente necessário
+                    print(f"--- GNN Edge Data Preparation Completed. Train Cutoff: {train_cutoff_timestamp_value} ---")
+                    gnn_edge_prep_success = True
+                except Exception as e:
+                    print(f"--- GNN Edge Data Preparation FAILED: {e} ---"); traceback.print_exc()
+                print("="*10 + f" STAGE 4: Finished GNN Edge Prep (Success: {gnn_edge_prep_success}) " + "="*10)
+                if not gnn_edge_prep_success and mode == 'events': sys.exit(1) # Se só eventos for pedido, falha aqui
 
-                # Chamar a função interna de preparação GNN diretamente
-                print("Calling _prepare_gnn_edge_data...")
-                _prepare_gnn_edge_data(
-                    interactions_df_final, # Passa o DF com timestamps corretos
-                    paths['person_id_map_path'],
-                    paths['product_id_map_path'],
-                    paths['edge_gnn_output_dir'],
-                    include_edge_features
-                )
-                print("--- GNN Edge Data Preparation Completed Successfully ---")
-                step_success = True
-            except Exception as e:
-                print(f"--- GNN Edge Preparation (Stage 4) FAILED: {e} ---"); traceback.print_exc()
-            event_gnn_prep_success = step_success # Rastreia o sucesso desta etapa final
-            print("="*10 + f" STAGE 4: Finished GNN Edge Prep (Success: {event_gnn_prep_success}) " + "="*10)
-            # O sucesso geral da etapa 'events' agora depende desta etapa final
-            if not event_gnn_prep_success and mode == 'events': sys.exit(1)
-        elif run_events: # Se eventos foi pedido, mas pré-requisitos falharam
-            print("\n" + "="*10 + " STAGE 4: Skipping Final GNN Edge Preparation (Previous Stage(s) Failed) " + "="*10)
-            event_gnn_prep_success = False # Marcar como falha
+        # STAGE 5: Person Final Features (Event Metrics with Cutoff & GNN Node Features)
+        if run_person_final:
+            if not (person_direct_props_success and gnn_edge_prep_success and train_cutoff_timestamp_value is not None):
+                print("\n" + "="*10 + " STAGE 5: Skipping Final Person Feature Processing (Previous Stage(s) or Cutoff Failed) " + "="*10)
+            else:
+                print("\n" + "="*10 + " STAGE 5: Person Final Features (Event Metrics with Cutoff & GNN Nodes) " + "="*10)
+                try:
+                    # Chamar run_person_preprocessing novamente, desta vez COM o cutoff.
+                    # Isto irá sobrescrever person_processed_csv e os GNN node features de pessoa.
+                    run_person_preprocessing(
+                        paths['person_raw_input'],
+                        paths['event_processed_csv'],
+                        paths['person_processed_csv'], # Sobrescreve
+                        paths['person_gnn_output_dir'], # Sobrescreve
+                        train_cutoff_timestamp=train_cutoff_timestamp_value # Passa o cutoff
+                    )
+                    print("--- Person Final Feature Processing Stage Completed Successfully ---")
+                    person_final_success = True
+                except Exception as e:
+                    print(f"--- Person Final Feature Processing Stage FAILED: {e} ---"); traceback.print_exc()
+                print("="*10 + f" STAGE 5: Finished Person Final Features (Success: {person_final_success}) " + "="*10)
+                if not person_final_success and mode == 'person': sys.exit(1)
+
 
         # Final Status
         end_time = time.time()
         total_seconds = end_time - start_time
-        # Sucesso geral depende do modo e do sucesso das etapas *relevantes* e suas dependências
+
         if mode == 'product': overall_success = product_success
-        elif mode == 'events': overall_success = product_success and event_csv_success and person_success and event_gnn_prep_success # Precisa de tudo para GNN de eventos
-        elif mode == 'person': overall_success = product_success and event_csv_success and person_success # Precisa de produto e CSV de eventos
-        elif mode in ['all', 'full_pipeline']: overall_success = product_success and event_csv_success and person_success and event_gnn_prep_success # Precisa de tudo
-        else: overall_success = False
+        elif mode == 'events': overall_success = product_success and event_csv_success and person_direct_props_success and gnn_edge_prep_success
+        elif mode == 'person': overall_success = product_success and event_csv_success and person_direct_props_success and gnn_edge_prep_success and person_final_success
+        elif mode in ['all', 'full_pipeline']:
+            overall_success = (product_success and
+                               event_csv_success and
+                               person_direct_props_success and
+                               gnn_edge_prep_success and
+                               person_final_success)
+        else:
+            overall_success = False # Should not happen due to choices in argparse
 
         print("\n" + "="*20 + " Processing Pipeline Finished " + "="*20)
         print(f"Shop ID: {shop_id}")
